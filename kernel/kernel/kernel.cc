@@ -4,6 +4,6 @@
 
 extern "C"
 void kernel_main(void) {
-	terminal_initialize();
-	printf("Hello, kernel World!\n");
+  terminal_initialize();
+  printf("Hello, World!\n");
 }

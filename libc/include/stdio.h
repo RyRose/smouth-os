@@ -9,9 +9,9 @@
 extern "C" {
 #endif
 
-int printf(const char*, ...);
-int putchar(int);
-int puts(const char*);
+  int printf(const char*, ...);
+  int putchar(int);
+  int puts(const char*);
 
 #ifdef __cplusplus
 }
