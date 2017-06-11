@@ -1,12 +1,16 @@
 SYSTEM_HEADER_PROJECTS="libc kernel"
 PROJECTS="libc kernel"
 
+export GTEST_DIR=googletest
+export LD_LIBRARY_PATH=$(pwd)/$GTEST_DIR/lib:$LD_LIBRARY_PATH
+
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}
 
 export AR=${HOST}-ar
 export AS=${HOST}-as
 export CC=${HOST}-g++
+export CCT="g++ -I ../${GTEST_DIR}/include -lpthread -L ../${GTEST_DIR}/lib -lgtest -lgtest_main ";
 
 export PREFIX=/usr
 export EXEC_PREFIX=$PREFIX

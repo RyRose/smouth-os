@@ -2,3 +2,6 @@
 *.iso
 sysroot
 isodir
+*.out
+*~
+googletest

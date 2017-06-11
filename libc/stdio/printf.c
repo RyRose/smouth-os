@@ -12,6 +12,35 @@ static bool print(const char* data, size_t length) {
   return true;
 }
 
+static char convert_to_char(int number) {
+  if (number < 10) {
+    return '0' + number;
+  } else {
+    return 'A' + (number % 10);
+  }
+}
+
+static int print_int(int to_print, int maxrem, int base) {
+  char converted[10];
+  int i;
+  for (i = 0; i < 9; ++i) {
+    if (to_print > 0) {
+      converted[i] = convert_to_char(to_print % base);
+      to_print /= base;
+    } else {
+      break;
+    }
+  }
+  if (i > maxrem) {
+    return -1;
+  }
+  if (!print(converted, i)) {
+    return -1;
+  }
+
+  return i;
+}
+
 int printf(const char* format, ...) {
   va_list parameters;
   va_start(parameters, format);
@@ -60,6 +89,22 @@ int printf(const char* format, ...) {
       }
       if (!print(str, len))
 	return -1;
+      written += len;
+    } else if (*format == 'd') {
+      format++;
+      int arg = va_arg(parameters, int);
+      size_t len = print_int(arg, maxrem, 10);
+      if (len == -1) {
+        return -1;
+      }
+      written += len;
+    } else if (*format == 'X') {
+      format++;
+      int arg = va_arg(parameters, int);
+      size_t len = print_int(arg, maxrem, 16);
+      if (len == -1) {
+        return -1;
+      }
       written += len;
     } else {
       format = format_begun_at;

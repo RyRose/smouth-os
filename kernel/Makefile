@@ -52,6 +52,9 @@ $(ARCHDIR)/crtn.o \
 
 all: myos.kernel
 
+test:
+	@echo "Make kernel tests."
+
 myos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CPPFLAGS) $(LINK_LIST)
 	grub2-file --is-x86-multiboot myos.kernel

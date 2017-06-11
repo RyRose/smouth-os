@@ -16,7 +16,10 @@ LIBDIR?=$(EXEC_PREFIX)/lib
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -std=gnu++14
 LIBK_CFLAGS:=$(CFLAGS)
-LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk -std=gnu++14
+LIBK_CPPFLAGS:= -D__is_libk -std=gnu++14
+
+TEST_CFLAGS:= -Wall -Wextra
+TEST_CPPFLAGS:= -std=gnu++14
 
 ARCHDIR=arch/$(HOSTARCH)
 
@@ -46,15 +49,21 @@ OBJS=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
 
+TESTOBJS=test/stdio/test_printf.t.o
+
 LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
+TEST_LIBK_OBJS=$(FREEOBJS:.o=.t.o)
 
 #BINARIES=libc.a libk.a # Not ready for libc yet.
 BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs
-.SUFFIXES: .o .libk.o .c .S
+.SUFFIXES: .o .libk.o .c .S .t.o
 
 all: $(BINARIES)
+
+test: $(TESTOBJS)
+	$(CCT) $(TESTOBJS) $(TEST_CFLAGS) $(TEST_CPPFLAGS) -o test.out
 
 libc.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
@@ -62,22 +71,30 @@ libc.a: $(OBJS)
 libk.a: $(LIBK_OBJS)
 	$(AR) rcs $@ $(LIBK_OBJS)
 
-.c.o:
+%.o: %.c
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-.c.S:
+%.o: %.S
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-.c.libk.o:
+%.libk.o: %.c
 	$(CC) -MD -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
-.S.libk.o:
+%.libk.o: %.S
 	$(CC) -MD -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
+
+%.t.o: %.c
+	$(CCT) -MD -c $< -o $@ $(TEST_CFLAGS) $(TEST_CPPFLAGS)
+
+%.t.o: %.S
+	$(CCT) -MD -c $< -o $@ $(TEST_CFLAGS) $(TEST_CPPFLAGS)
+
 
 clean:
 	rm -f $(BINARIES) *.a
 	rm -f $(OBJS) $(LIBK_OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) $(LIBK_OBJS:.o=.d) *.d */*.d */*/*.d
+	rm -f *.out
 
 install: install-headers install-libs
 
@@ -91,3 +108,4 @@ install-libs: $(BINARIES)
 
 -include $(OBJS:.o=.d)
 -include $(LIBK_OBJS:.o=.d)
+-include $(TESTOBJS:.o=.d)
