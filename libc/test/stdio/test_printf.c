@@ -9,3 +9,13 @@ TEST(Printf, ConvertToChar) {
     ASSERT_EQ(convert_to_char(i), letters[i]);
   }
 }
+
+TEST(Printf, Reverse) {
+  char even[] = "abcd";
+  reverse(even, 4);
+  ASSERT_STREQ(even, "dcba") << "even is " << even;
+
+  char odd[] = "abcde";
+  reverse(odd, 5);
+  ASSERT_STREQ(odd, "edcba") << "odd is " << odd;
+}

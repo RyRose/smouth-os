@@ -4,6 +4,18 @@
 #include <stdio.h>
 #include <string.h>
 
+static void swap(char* data, size_t first, size_t second) {
+  char temp = data[first];
+  data[first] = data[second];
+  data[second] = temp;
+}
+
+static void reverse(char* data, size_t length) {
+  for(int i = 0; i < length / 2; ++i) {
+    swap(data, i, length - 1 - i);
+  }
+}
+
 static bool print(const char* data, size_t length) {
   const unsigned char* bytes = (const unsigned char*) data;
   for (size_t i = 0; i < length; i++)
@@ -34,6 +46,9 @@ static int print_int(int to_print, int maxrem, int base) {
   if (i > maxrem) {
     return -1;
   }
+
+  reverse(converted, i);
+
   if (!print(converted, i)) {
     return -1;
   }
