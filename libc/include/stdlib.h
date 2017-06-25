@@ -10,6 +10,8 @@ extern "C" {
   __attribute__((__noreturn__))
   void abort(void);
 
+  int abs(int n);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,4 +1,6 @@
 #include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -10,9 +12,9 @@ static void swap(char* data, size_t first, size_t second) {
   data[second] = temp;
 }
 
-static void reverse(char* data, size_t length) {
-  for(int i = 0; i < length / 2; ++i) {
-    swap(data, i, length - 1 - i);
+static void reverse(char* data, size_t start, size_t end) {
+  for(int i = start; i < end / 2; ++i) {
+    swap(data, i, end - 1 - i);
   }
 }
 
@@ -24,36 +26,74 @@ static bool print(const char* data, size_t length) {
   return true;
 }
 
-static char convert_to_char(int number) {
+static char convert_to_char(uint8_t number, bool is_uppercase) {
   if (number < 10) {
     return '0' + number;
-  } else {
+  } else if (is_uppercase) {
     return 'A' + (number % 10);
+  } else {
+    return 'a' + (number % 10);
   }
 }
 
-static int print_int(int to_print, int maxrem, int base) {
-  char converted[10];
-  int i;
-  for (i = 0; i < 9; ++i) {
-    if (to_print > 0) {
-      converted[i] = convert_to_char(to_print % base);
-      to_print /= base;
-    } else {
-      break;
+static char* convert_to_string_signed(int64_t number, uint8_t base, bool is_uppercase) {
+  if (number == 0) {
+    return "0";
+  } else {
+    static char converted[65];
+    size_t i = 0;
+    bool is_negative = number < 0;
+    number = abs(number);
+    for (; i < 64; ++i) {
+      if (number > 0) {
+        converted[i] = convert_to_char(number % base, is_uppercase);
+        number /= base;
+      } else {
+        break;
+      }
     }
+
+    if (is_negative) {
+      converted[i] = '-';
+      ++i;
+    }
+
+    reverse(converted, 0, i);
+    converted[i] = '\0';
+    return converted;
   }
-  if (i > maxrem) {
+}
+
+static char* convert_to_string_unsigned(uint64_t number, uint8_t base, bool is_uppercase) {
+  if (number == 0) {
+    return "0";
+  } else {
+    static char converted[65];
+    size_t i;
+    for (i = 0; i < 64; ++i) {
+      if (number > 0) {
+        converted[i] = convert_to_char(number % base, is_uppercase);
+        number /= base;
+      } else {
+        break;
+      }
+    }
+
+    reverse(converted, 0, i);
+    converted[i] = '\0';
+    return converted;
+  }
+}
+
+static int print_string(char* string, size_t maxrem) {
+  int len = strlen(string);
+  if (maxrem < len) {
+    // TODO: Set errno to EOVERFLOW.
     return -1;
   }
-
-  reverse(converted, i);
-
-  if (!print(converted, i)) {
+  if (!print(string, len))
     return -1;
-  }
-
-  return i;
+  return len;
 }
 
 int printf(const char* format, ...) {
@@ -96,27 +136,35 @@ int printf(const char* format, ...) {
       written++;
     } else if (*format == 's') {
       format++;
-      const char* str = va_arg(parameters, const char*);
-      size_t len = strlen(str);
-      if (maxrem < len) {
-	// TODO: Set errno to EOVERFLOW.
-	return -1;
-      }
-      if (!print(str, len))
-	return -1;
-      written += len;
-    } else if (*format == 'd') {
-      format++;
-      int arg = va_arg(parameters, int);
-      size_t len = print_int(arg, maxrem, 10);
+      char* str = va_arg(parameters, char*);
+      int len = print_string(str, maxrem);
       if (len == -1) {
         return -1;
       }
       written += len;
-    } else if (*format == 'X') {
+    } else if (*format == 'd' || *format == 'i') {
       format++;
-      int arg = va_arg(parameters, int);
-      size_t len = print_int(arg, maxrem, 16);
+      int64_t arg = va_arg(parameters, int64_t);
+      char* string = convert_to_string_signed(arg, 10, true);
+      int len = print_string(string, maxrem);
+      if (len == -1) {
+        return -1;
+      }
+      written += len;
+    } else if (*format == 'X' || *format == 'x') {
+      format++;
+      uint64_t arg = va_arg(parameters, uint64_t);
+      char* string = convert_to_string_unsigned(arg, 16, *(format - 1) == 'X');
+      int len = print_string(string, maxrem);
+      if (len == -1) {
+        return -1;
+      }
+      written += len;
+    } else if (*format == 'o') {
+      format++;
+      uint64_t arg = va_arg(parameters, uint64_t);
+      char* string = convert_to_string_unsigned(arg, 8, true);
+      int len = print_string(string, maxrem);
       if (len == -1) {
         return -1;
       }
