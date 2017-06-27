@@ -47,8 +47,9 @@ $(LIBS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
 
+
 .PHONY: all clean install install-headers install-kernel
-.SUFFIXES: .o .c .cc .S
+.SUFFIXES: .o .cc .S
 
 all: myos.kernel
 
@@ -62,10 +63,10 @@ myos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
-.cc.o:
+%.o: %.cc
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-.S.o:
+%.o: %.S
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
