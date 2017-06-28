@@ -12,4 +12,10 @@ flush2:
         mov %ax, %fs
         mov %ax, %gs
         mov %ax, %ss
+
+        # TODO: Move into its own file.
+        # Sets the PE bit to enable protected mode.
+        mov %cr0, %eax
+        or $1, %eax
+        mov %eax, %cr0
         ret
