@@ -36,35 +36,7 @@ static char convert_to_char(uint8_t number, bool is_uppercase) {
   }
 }
 
-static char* convert_to_string_signed(int64_t number, uint8_t base, bool is_uppercase) {
-  if (number == 0) {
-    return "0";
-  } else {
-    static char converted[65];
-    size_t i = 0;
-    bool is_negative = number < 0;
-    number = abs(number);
-    for (; i < 64; ++i) {
-      if (number > 0) {
-        converted[i] = convert_to_char(number % base, is_uppercase);
-        number /= base;
-      } else {
-        break;
-      }
-    }
-
-    if (is_negative) {
-      converted[i] = '-';
-      ++i;
-    }
-
-    reverse(converted, 0, i);
-    converted[i] = '\0';
-    return converted;
-  }
-}
-
-static char* convert_to_string_unsigned(uint64_t number, uint8_t base, bool is_uppercase) {
+static char* convert_to_string(uint64_t number, uint8_t base, bool is_negative, bool is_uppercase) {
   if (number == 0) {
     return "0";
   } else {
@@ -77,6 +49,11 @@ static char* convert_to_string_unsigned(uint64_t number, uint8_t base, bool is_u
       } else {
         break;
       }
+    }
+
+    if (is_negative) {
+      converted[i] = '-';
+      ++i;
     }
 
     reverse(converted, 0, i);
@@ -101,31 +78,35 @@ int printf(const char* format, ...) {
   va_start(parameters, format);
 
   int written = 0;
+  int len;
+  char* string;
 
   while (*format != '\0') {
     size_t maxrem = INT_MAX - written;
 
     if (format[0] != '%' || format[1] == '%') {
-      if (format[0] == '%')
+      if (format[0] == '%') {
 	format++;
+      }
       size_t amount = 1;
-      while (format[amount] && format[amount] != '%')
+      while (format[amount] && format[amount] != '%') {
 	amount++;
+      }
       if (maxrem < amount) {
 	// TODO: Set errno to EOVERFLOW.
 	return -1;
       }
-      if (!print(format, amount))
+      if (!print(format, amount)) {
 	return -1;
+      }
       format += amount;
       written += amount;
       continue;
     }
 
-    const char* format_begun_at = format++;
-
+    ++format;
     if (*format == 'c') {
-      format++;
+      ++format;
       char c = (char) va_arg(parameters, int /* char promotes to int */);
       if (!maxrem) {
 	// TODO: Set errno to EOVERFLOW.
@@ -133,54 +114,33 @@ int printf(const char* format, ...) {
       }
       if (!print(&c, sizeof(c)))
 	return -1;
-      written++;
+      ++written;
+      continue;
     } else if (*format == 's') {
-      format++;
-      char* str = va_arg(parameters, char*);
-      int len = print_string(str, maxrem);
-      if (len == -1) {
-        return -1;
-      }
-      written += len;
+      ++format;
+      string = va_arg(parameters, char*);
     } else if (*format == 'd' || *format == 'i') {
-      format++;
-      int64_t arg = va_arg(parameters, int64_t);
-      char* string = convert_to_string_signed(arg, 10, true);
-      int len = print_string(string, maxrem);
-      if (len == -1) {
-        return -1;
-      }
-      written += len;
+      ++format;
+      int arg = va_arg(parameters, int);
+      string = convert_to_string(abs(arg), 10, arg < 0, true);
     } else if (*format == 'X' || *format == 'x') {
-      format++;
+      ++format;
       uint64_t arg = va_arg(parameters, uint64_t);
-      char* string = convert_to_string_unsigned(arg, 16, *(format - 1) == 'X');
-      int len = print_string(string, maxrem);
-      if (len == -1) {
-        return -1;
-      }
-      written += len;
+      string = convert_to_string(arg, 16, false, *(format - 1) == 'X');
     } else if (*format == 'o') {
-      format++;
+      ++format;
       uint64_t arg = va_arg(parameters, uint64_t);
-      char* string = convert_to_string_unsigned(arg, 8, true);
-      int len = print_string(string, maxrem);
-      if (len == -1) {
-        return -1;
-      }
-      written += len;
+      string = convert_to_string(arg, 8, false, true);
     } else {
-      format = format_begun_at;
-      size_t len = strlen(format);
-      if (maxrem < len) {
-	// TODO: Set errno to EOVERFLOW.
-	return -1;
-      }
-      if (!print(format, len))
-	return -1;
-      written += len;
-      format += len;
+      string = (char*) format - 1;
+      format += strlen(format);
     }
+
+    len = print_string(string, maxrem);
+    if (len == -1) {
+      return -1;
+    }
+    written += len;
   }
 
   va_end(parameters);
