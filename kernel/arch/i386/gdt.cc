@@ -1,8 +1,9 @@
+#include "kernel/arch/gdt.h"
+
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 
-#include <kernel/gdt.h>
+#include "libc/stdio/printf.h"
 
 namespace { 
 

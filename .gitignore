@@ -5,4 +5,6 @@ isodir
 *.out
 *~
 *#
-googletest
+bazel-*
+*.swp
+tools/compilers/i686-elf

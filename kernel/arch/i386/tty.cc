@@ -1,11 +1,11 @@
+#include "kernel/arch/tty.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
-#include <kernel/tty.h>
-
-#include "vga.h"
+#include "kernel/arch/i386/vga.h"
+#include "libc/string/str.h"
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;

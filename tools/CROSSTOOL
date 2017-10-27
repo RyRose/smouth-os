@@ -1,0 +1,86 @@
+major_version: "1"
+minor_version: "0"
+default_target_cpu: "i386"
+
+default_toolchain {
+  cpu: "i386"
+  toolchain_identifier: "i686-elf"
+}
+
+toolchain {
+  abi_version: "i386"
+  abi_libc_version: "i386"
+  builtin_sysroot: ""
+  compiler: "g++"
+  host_system_name: "i386"
+  target_libc: "i386"
+  target_cpu: "i386"
+  target_system_name: "i386"
+  toolchain_identifier: "i686-elf"
+
+  tool_path { name: "ar"        path: "compilers/i686-elf/bin/i686-elf-ar" }
+  tool_path { name: "as"        path: "compilers/i686-elf/bin/i686-elf-as" }
+  tool_path { name: "compat-ld" path: "compilers/i686-elf/bin/i686-elf-ld" }
+  tool_path { name: "cpp"       path: "compilers/i686-elf/bin/i686-elf-cpp" }
+  tool_path { name: "dwp"       path: "compilers/i686-elf/bin/i686-elf-dwp" }
+  tool_path { name: "gcc"       path: "compilers/i686-elf/bin/i686-elf-gcc" }
+  tool_path { name: "g++"       path: "compilers/i686-elf/bin/i686-elf-g++" }
+  tool_path { name: "gcov"      path: "compilers/i686-elf/bin/i686-elf-gcov" }
+  tool_path { name: "ld"        path: "compilers/i686-elf/bin/i686-elf-ld" }
+  tool_path { name: "nm"        path: "compilers/i686-elf/bin/i686-elf-nm" }
+  tool_path { name: "objcopy"   path: "compilers/i686-elf/bin/i686-elf-objcopy" }
+  tool_path { name: "objdump"   path: "compilers/i686-elf/bin/i686-elf-objdump" }
+#  objcopy_embed_flag: "-I"
+#  objcopy_embed_flag: "binary"
+  tool_path { name: "strip"     path: "compilers/bin/i686-elf-strip" }
+
+  # Make C++ compilation deterministic. Use linkstamping instead of these
+  # compiler symbols.
+  unfiltered_cxx_flag: "-Wno-builtin-macro-redefined"
+  unfiltered_cxx_flag: "-D__DATE__=\"redacted\""
+  unfiltered_cxx_flag: "-D__TIMESTAMP__=\"redacted\""
+  unfiltered_cxx_flag: "-D__TIME__=\"redacted\""
+
+  # Enable coloring even if there's no attached terminal. Bazel removes the
+  # escape sequences if --nocolor is specified.
+  compiler_flag: "-fdiagnostics-color=always"
+
+  compiler_flag: "-nostdlib"
+  linker_flag: "-nostdlib"
+  compiler_flag: "-ffreestanding"
+  linker_flag: "-ffreestanding"
+  compiler_flag: "-nostartfiles"
+  linker_flag: "-nostartfiles"
+
+  compiler_flag: "-fno-exceptions"
+  linker_flag: "-fno-exceptions"
+  compiler_flag: "-fno-rtti"
+  linker_flag: "-fno-rtti"
+
+  compiler_flag: "-std=gnu++14"
+  linker_flag: "-std=gnu++14"
+  compiler_flag: "-lk"
+  compiler_flag: "-lgcc"
+  linker_flag: "-lgcc"
+
+  compiler_flag: "-O2"
+  linker_flag: "-O2"
+  compiler_flag: "-g"
+  linker_flag: "-g"
+
+  compiler_flag: "-MD"
+
+  compiler_flag: "-isystem"
+  compiler_flag: "tools/compilers/i686-elf/lib/gcc/i686-elf/7.2.0/include"
+#  compiler_flag: "-isystem"
+#  compiler_flag: "tools/compilers/lib/gcc/i686-elf/7.2.0/include-fixed"
+
+
+  # All warnings are enabled. Maybe enable -Werror as well?
+  compiler_flag: "-Wall"
+  compiler_flag: "-Wextra"
+#  # Enable a few more warnings that aren't part of -Wall.
+#  compiler_flag: "-Wunused-but-set-parameter"
+#  # But disable some that are problematic.
+#  compiler_flag: "-Wno-free-nonheap-object" # has false positives
+}
