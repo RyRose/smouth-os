@@ -10,12 +10,3 @@ cc_library(
   ]
 )
 
-cc_library(
-  name = "gdt",
-  srcs = [
-    "gdt.cc"
-  ],
-  hdrs = [
-    "//kernel/arch:gdt.h",
-  ]
-)

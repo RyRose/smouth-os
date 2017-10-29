@@ -1,28 +1,14 @@
 package(default_visibility=["//visibility:public"])
 
-exports_files(["tty.h", "gdt.h"])
+load("//kernel/arch:arch.bzl", "arch_library")
 
-cc_library(
-  name = "tty",
-  hdrs = ["tty.h"],
-  deps = select({
-    "//tools:i386" : ["//kernel/arch/i386:tty"],
-    "//conditions:default" : ["//kernel/arch/local:tty"]
-  }),
-)
+arch_library(name = "tty")
 
-cc_library(
-  name = "gdt",
-  hdrs = ["gdt.h"],
-  deps = select({
-    "//tools:i386" : ["//kernel/arch/i386:gdt"],
-    "//conditions:default" : ["//kernel/arch/local:gdt"]
-  }),
-)
+arch_library(name = "gdt")
 
 cc_library(
   name = "boot",
   deps = select({
-    "//tools:i386" : ["//kernel/arch/i386:boot"],
+    "//tools:i386" : ["//kernel/arch/i386/boot"],
   }),
 )

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "kernel/arch/i386/vga.h"
+#include "kernel/arch/i386/tty/vga.h"
 #include "libc/string/str.h"
 
 static const size_t VGA_WIDTH = 80;
