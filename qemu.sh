@@ -13,5 +13,5 @@ if [ ! -d "tools/compilers/$TARGET" ]; then
   ./tools/install.sh $TARGET || exit $?;
 fi
 
-bazel build :iso --crosstool_top=//tools:toolchain --cpu=$1 --host_cpu=$1 || exit $?
-qemu-system-$1 -cdrom bazel-genfiles/os.iso -monitor stdio $2 $3 $4 $5
+bazel build :iso --crosstool_top=//tools:toolchain --cpu=$1 --host_cpu=$1 --strip=never || exit $?
+qemu-system-$1 -cdrom bazel-genfiles/os.iso -monitor stdio -s
