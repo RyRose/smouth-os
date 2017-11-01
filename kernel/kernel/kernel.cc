@@ -15,6 +15,6 @@ void kernel_main(void) {
     printf("address: %X, length: %X, ", regions[i].address, regions[i].length);
     printf("type: %s\n", words[regions[i].type - 1]);
   }
-//  uint64_t gdt_ptr = installGdt();
-//  printf("Enabled gdt and protected mode. gdt_ptr: %X.\n", gdt_ptr);
+  uint64_t gdt_ptr = installGdt();
+  printf("Enabled gdt. gdt_ptr: %X.\n", gdt_ptr);
 }
