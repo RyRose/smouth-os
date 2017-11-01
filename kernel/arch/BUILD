@@ -6,6 +6,8 @@ arch_library(name = "tty")
 
 arch_library(name = "gdt")
 
+arch_library(name = "memory_detection")
+
 cc_library(
   name = "boot",
   deps = select({

@@ -7,5 +7,20 @@ cc_library(
     "crti.S",
     "crtn.S"
   ],
+  deps = [
+    ":multiboot",
+  ],
+  alwayslink = 1,
+)
+
+cc_library(
+  name = "multiboot",
+  srcs = [
+    "meminfo.cc",
+  ],
+  hdrs = [
+    "meminfo.h",
+    "multiboot.h"
+  ],
   alwayslink = 1,
 )

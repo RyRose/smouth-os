@@ -8,6 +8,7 @@ cc_binary (
     "//kernel/arch:boot",
     "//kernel/arch:gdt",
     "//kernel/arch:tty",
+    "//kernel/arch:memory_detection",
     "//kernel/arch/i386:linker.ld",
     ":crt"
   ],
