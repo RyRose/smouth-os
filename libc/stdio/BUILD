@@ -1,3 +1,5 @@
+package(default_visibility = ["//libc:__subpackages__"])
+
 cc_library(
   name = "stdio",
   deps = [
@@ -18,6 +20,8 @@ cc_library(
     ],
     deps = [
         ":putchar",
+        "//libc/stdlib:arithmetic",
+        "//libc/string:str"
     ]
 )
 
@@ -49,6 +53,7 @@ cc_library(
 
 cc_test(
     name = "printf_test",
+    size = "small",
     srcs = [
         "printf_test.cc",
         "printf.cc"

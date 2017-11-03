@@ -1,5 +1,7 @@
 #include "libc/string/mem.h"
 
+namespace string {
+
 void* memmove(void* dstptr, const void* srcptr, size_t size) {
   unsigned char* dst = (unsigned char*) dstptr;
   const unsigned char* src = (const unsigned char*) srcptr;
@@ -11,4 +13,6 @@ void* memmove(void* dstptr, const void* srcptr, size_t size) {
       dst[i-1] = src[i-1];
   }
   return dstptr;
+}
+
 }

@@ -1,3 +1,4 @@
+package(default_visibility = ["//libc:__subpackages__"])
 
 cc_library(
   name = "string",

@@ -3,6 +3,10 @@
 
 #include <stddef.h>
 
+namespace string {
+
 size_t strlen(const char*);
+
+}
 
 #endif

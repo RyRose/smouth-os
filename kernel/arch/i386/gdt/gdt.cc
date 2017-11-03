@@ -20,7 +20,7 @@ namespace {
     // Check the limit to make sure that it can be encoded
     if ((source.limit > 65536) && ((source.limit & 0xFFF) != 0xFFF)) {
       // TODO: Replace with kernel error.
-      printf("GdtEntry limit is bad.");
+      stdio::printf("GdtEntry limit is bad.");
     }
     if (source.limit > 65536) {
       // Adjust granularity if required

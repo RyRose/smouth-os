@@ -1,168 +1,118 @@
-
 #include "libc/stdio/printf.h"
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdarg.h>
 #include <stddef.h>
 
 #include "libc/stdio/putchar.h"
+#include "libc/stdlib/arithmetic.h"
+#include "libc/string/str.h"
 
-constexpr int INT_MAX = 32000;
+namespace stdio {
 
-int abs(int a) {
-  if (a > 0) {
-    return a;
-  } else {
-    return -a;
-  }
-}
-
-int strlen(const char* string) {
-  size_t len = 0;
-  while (string[len])
-    len++;
-  return len;
-}
-
-void swap(char* data, size_t first, size_t second) {
-  char temp = data[first];
-  data[first] = data[second];
-  data[second] = temp;
-}
-
-void reverse(char* data, size_t start, size_t end) {
-  for(size_t i = start; i < end / 2; ++i) {
-    swap(data, i, end - 1 - i);
-  }
-}
-
-bool print(const char* data, size_t length) {
-  const unsigned char* bytes = (const unsigned char*) data;
-  for (size_t i = 0; i < length; i++)
-    if (putchar(bytes[i]) == -1)
-      return false;
-  return true;
-}
-
-char convert_to_char(uint8_t number, bool is_uppercase) {
-  if (number < 10) {
-    return '0' + number;
-  } else if (is_uppercase) {
-    return 'A' + (number % 10);
-  } else {
-    return 'a' + (number % 10);
-  }
-}
-
-char* convert_to_string(uint64_t number, uint8_t base, bool is_negative, bool is_uppercase) {
-  if (number == 0) {
-    return "0";
-  } else {
-    static char converted[65];
-    size_t i;
-    for (i = 0; i < 64; ++i) {
-      if (number > 0) {
-        converted[i] = convert_to_char(number % base, is_uppercase);
-        number /= base;
-      } else {
-        break;
+  int print(const char* data) {
+    int len = string::strlen(data);
+    if (len < 0) {
+      return len;
+    }
+    for (int i = 0; i < len; i++) {
+      if (putchar(data[i]) != data[i]) {
+        return -1;
       }
     }
-
-    if (is_negative) {
-      converted[i] = '-';
-      ++i;
-    }
-
-    reverse(converted, 0, i);
-    converted[i] = '\0';
-    return converted;
+    return len;
   }
-}
 
-int print_string(char* string, size_t maxrem) {
-  size_t len = strlen(string);
-  if (maxrem < len) {
-    // TODO: Set errno to EOVERFLOW.
-    return -1;
-  }
-  if (!print(string, len))
-    return -1;
-  return len;
-}
-
-int printf(const char* format, ...) {
-  va_list parameters;
-  va_start(parameters, format);
-
-  int written = 0;
-  int len;
-  char* string;
-
-  while (*format != '\0') {
-    size_t maxrem = INT_MAX - written;
-
-    if (format[0] != '%' || format[1] == '%') {
-      if (format[0] == '%') {
-  format++;
-      }
-      size_t amount = 1;
-      while (format[amount] && format[amount] != '%') {
-  amount++;
-      }
-      if (maxrem < amount) {
-  // TODO: Set errno to EOVERFLOW.
-  return -1;
-      }
-      if (!print(format, amount)) {
-  return -1;
-      }
-      format += amount;
-      written += amount;
-      continue;
-    }
-
-    ++format;
-    if (*format == 'c') {
-      ++format;
-      char c = (char) va_arg(parameters, int /* char promotes to int */);
-      if (!maxrem) {
-  // TODO: Set errno to EOVERFLOW.
-  return -1;
-      }
-      if (!print(&c, sizeof(c)))
-  return -1;
-      ++written;
-      continue;
-    } else if (*format == 's') {
-      ++format;
-      string = va_arg(parameters, char*);
-    } else if (*format == 'd' || *format == 'i') {
-      ++format;
-      int arg = va_arg(parameters, int);
-      string = convert_to_string(abs(arg), 10, arg < 0, true);
-    } else if (*format == 'X' || *format == 'x') {
-      ++format;
-      uint64_t arg = va_arg(parameters, uint64_t);
-      string = convert_to_string(arg, 16, false, *(format - 1) == 'X');
-    } else if (*format == 'o') {
-      ++format;
-      uint64_t arg = va_arg(parameters, uint64_t);
-      string = convert_to_string(arg, 8, false, true);
+  char convert_to_char(uint8_t number, bool is_uppercase) {
+    if (number < 10) {
+      return '0' + number;
+    } else if (is_uppercase) {
+      return 'A' + (number % 10);
     } else {
-      string = (char*) format - 1;
-      format += strlen(format);
+      return 'a' + (number % 10);
     }
-
-    len = print_string(string, maxrem);
-    if (len == -1) {
-      return -1;
-    }
-    written += len;
   }
 
-  va_end(parameters);
-  return written;
-}
+  int print_number(uint64_t number, uint8_t base, bool negative, bool uppercase) {
+    if (number == 0) {
+      return putchar('0') == '0' ? 1 : -1;
+    } else {
+      int i = 0;
+      char converted[100];
+      while(number) {
+        converted[i] = convert_to_char(number % base, uppercase);
+        number /= base;
+        ++i;
+      }
 
+      int ret = 0;
+      if (negative) {
+        if (putchar('-') != '-') {
+          return -1;
+        } else {
+          ++ret;
+        }
+      }
+
+      --i;
+      for (; i >= 0; --i) {
+        if (putchar(converted[i]) != converted[i]) {
+          return -1;
+        }
+        ++ret;
+      }
+
+      return ret;
+    }
+  }
+
+  int printf(const char* format, ...) {
+    va_list parameters;
+    va_start(parameters, format);
+
+    int len = 0;
+    int format_len = string::strlen(format);
+    for (int i = 0; i < format_len; ++i) {
+      if (format[i] == '%') {
+        if (++i == format_len) {
+          return -1;
+        }
+        int arg_len;
+        if (format[i] == 'c') {
+          char c = va_arg(parameters, int);
+          arg_len = putchar(c) == c ? 1 : -1;
+        } else if (format[i] == 's') {
+          char* string = va_arg(parameters, char*);
+          arg_len = print(string);
+        } else if (format[i] == 'd' || format[i] == 'i') {
+          int arg = va_arg(parameters, int);
+          arg_len = print_number(stdlib::abs(arg), 10, arg < 0, true);
+        } else if (format[i] == 'X' || format[i] == 'x') {
+          uint64_t arg = va_arg(parameters, uint64_t);
+          arg_len = print_number(arg, 16, false, format[i] == 'X');
+        } else if (format[i] == 'o') {
+          uint64_t arg = va_arg(parameters, uint64_t);
+          arg_len = print_number(arg, 8, false, true);
+        } else if (format[i] == 'p') {
+          uint64_t arg = reinterpret_cast<uint64_t>(va_arg(parameters, void*));
+          arg_len = print_number(arg, 16, false, true);
+        } else {
+          return -1;
+        }
+        if (arg_len < 0) {
+          return arg_len;
+        }
+        len += arg_len;
+      } else { 
+        if (putchar(format[i]) != format[i]) {
+          return -1;
+        } else {
+          len++;
+        }
+      }
+    }
+    va_end(parameters);
+    return len;
+  }
+
+}
