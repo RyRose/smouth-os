@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "libc/stdio/printf.h"
+#include "kernel/util/status.h"
 
 namespace { 
 
@@ -16,11 +16,10 @@ namespace {
   // Given a GDT entry and the save target, converts the gdt entry into
   // the correct format.
   // See this link for more details: http://wiki.osdev.org/GDT_Tutorial
-  void encodeGdtEntry(uint8_t *target, GdtEntry source) {
+  util::Status encodeGdtEntry(uint8_t *target, GdtEntry source) {
     // Check the limit to make sure that it can be encoded
     if ((source.limit > 65536) && ((source.limit & 0xFFF) != 0xFFF)) {
-      // TODO: Replace with kernel error.
-      stdio::printf("GdtEntry limit is bad.");
+      return util::Status(util::ErrorCode::INVALID_ARGUMENT, "GdtEntry limit is bad.");
     }
     if (source.limit > 65536) {
       // Adjust granularity if required
@@ -45,6 +44,8 @@ namespace {
  
     // And... Type
     target[5] = source.type;
+
+    return util::Status();
   }
 
 }

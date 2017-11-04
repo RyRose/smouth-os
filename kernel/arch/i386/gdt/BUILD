@@ -7,7 +7,7 @@ cc_library(
     "gdt_flush.S"
   ],
   deps = [
-    "//libc/stdio"
+    "//kernel/util:status"
   ],
   hdrs = [
     "//kernel/arch:gdt.h"
