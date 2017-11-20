@@ -9,11 +9,7 @@ cc_binary (
     "//kernel/arch:gdt",
     "//kernel/arch:tty",
     "//kernel/arch:memory_detection",
-    "//kernel/arch/i386:linker.ld",
     ":crt"
-  ],
-  linkopts = [
-    "-T kernel/arch/i386/linker.ld"
   ],
   visibility = ["//visibility:public"],
 )

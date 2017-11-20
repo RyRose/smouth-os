@@ -8,9 +8,5 @@ arch_library(name = "gdt")
 
 arch_library(name = "memory_detection")
 
-cc_library(
-  name = "boot",
-  deps = select({
-    "//tools:i386" : ["//kernel/arch/i386/boot"],
-  }),
-)
+arch_library(name = "boot")
+

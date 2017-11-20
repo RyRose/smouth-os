@@ -5,10 +5,14 @@ cc_library(
   srcs = [
     "boot.S",
     "crti.S",
-    "crtn.S"
+    "crtn.S",
   ],
   deps = [
     ":multiboot",
+    "linker.ld"
+  ],
+  linkopts = [
+    "-T $(location linker.ld)"
   ],
   alwayslink = 1,
 )
@@ -21,6 +25,5 @@ cc_library(
   hdrs = [
     "meminfo.h",
     "multiboot.h"
-  ],
-  alwayslink = 1,
+  ]
 )
