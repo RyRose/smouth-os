@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ROOT="$(dirname $(realpath $0))"
+
 case $1 in
     i386)
       export TARGET=i686-elf;
@@ -9,9 +11,9 @@ case $1 in
         exit 1;
 esac
 
-if [ ! -d "tools/compilers/$TARGET" ]; then
-  ./tools/install.sh $TARGET || exit $?;
+if [ ! -d "$ROOT/tools/compilers/$TARGET" ]; then
+  $ROOT/tools/install.sh $TARGET || exit $?;
 fi
 
-bazel build :iso --spawn_strategy=standalone --crosstool_top=//tools:toolchain --cpu=$1 --host_cpu=$1 --strip=never --verbose_failures || exit $?
-qemu-system-$1 -cdrom bazel-genfiles/os.iso -monitor stdio -s
+bazel build //:iso --spawn_strategy=standalone --crosstool_top=//tools:toolchain --cpu=$1 --host_cpu=$1 --strip=never --verbose_failures || exit $?
+qemu-system-$1 -cdrom $ROOT/bazel-genfiles/os.iso -monitor stdio -s
