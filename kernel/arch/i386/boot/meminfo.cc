@@ -6,31 +6,39 @@
 
 namespace boot {
 
-  int mmap_entries_count;
-  multiboot_mmap_entry mmap_entries[100];
+  MmapManager mmap_manager;
 
-  void add_mmap_entries(multiboot_info* multiboot_ptr) {
-    uint32_t mmap_length = multiboot_ptr ->mmap_length;
-    auto* entries = reinterpret_cast<multiboot_mmap_entry*>(multiboot_ptr->mmap_addr);
-    uint32_t i;
-    for(i = 0; sizeof(multiboot_mmap_entry) * i < mmap_length; i++) {
-      mmap_entries[i] = entries[i];
-    }
-    mmap_entries_count = i;
+  MmapManager* GetMmapManager() {
+    return &mmap_manager;
   }
 
-  int GetMmapEntries(multiboot_mmap_entry* entries, int count) {
+  int MmapManager::CopyFrom(multiboot_mmap_entry* entries, int count) {
     int i;
-    for(i = 0; i < count && i < mmap_entries_count; i++) {
-      entries[i] = mmap_entries[i];
+    for(i = this->count; i < MAX_MMAP_ENTRIES && i < count; i++) {
+      this->entries[i] = entries[i];
+    }
+    this->count += i;
+    return this->count - 2 * i;
+  }
+
+  int MmapManager::CopyTo(multiboot_mmap_entry* entries, int capacity) {
+    int i;
+    for(i = 0; i < count && i < capacity; i++) {
+      entries[i] = this->entries[i];
     }
     return i;
   }
+
 }
 
-boot::multiboot_info* multiboot_ptr;
+namespace {
 
 extern "C"
-void copy_multiboot(void) {
-  boot::add_mmap_entries(multiboot_ptr);
+void copy_multiboot(boot::multiboot_info* multiboot_ptr) {
+  auto* mmap_manager = boot::GetMmapManager();
+  auto* mmap_address = reinterpret_cast<boot::multiboot_mmap_entry*>(multiboot_ptr->mmap_addr);
+  auto mmap_entry_count = multiboot_ptr->mmap_length / sizeof(boot::multiboot_mmap_entry);
+  mmap_manager->CopyFrom(mmap_address, mmap_entry_count);
+}
+
 }

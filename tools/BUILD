@@ -9,6 +9,13 @@ config_setting(
   },
 )
 
+config_setting(
+  name = "local",
+  values = {
+    "cpu": "k8",
+  },
+)
+
 cc_toolchain_suite(
     name = "toolchain",
     toolchains = {

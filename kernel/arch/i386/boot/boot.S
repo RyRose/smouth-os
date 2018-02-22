@@ -20,16 +20,15 @@
 	stack_top:
 
 	# The kernel entry point.
-  .extern multiboot_ptr
 	.section .text
 	.global _start
 	.type _start, @function
 	_start:
 	movl $stack_top, %esp
 
-  movl %ebx, multiboot_ptr
+  pushl %ebx
 
-	# Call the global constructors.
+	# Call the global constructors. Must not modify existing stack.
 	call _init
 
   call copy_multiboot

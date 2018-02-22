@@ -16,13 +16,14 @@ cc_binary (
 
 cc_library (
   name = "crt",
-  srcs = [
+  srcs = select({
+    "//tools:local" : [],
+    "//conditions:default" : [
     "crtbegin.o",
-    "crtend.o"
-  ],
-  data = [
+    "crtend.o",
     ":crt_files",
-  ],
+    ]
+  }),
 )
 
 genrule (
