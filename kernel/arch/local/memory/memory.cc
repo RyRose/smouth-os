@@ -1,6 +1,6 @@
-#include "kernel/arch/memory_detection.h"
+#include "kernel/arch/memory.h"
 
-namespace memory_detection {
+namespace arch {
 
   int DetectMemory(MemoryRegion* regions, int len) {
     return 0;
@@ -14,4 +14,4 @@ namespace memory_detection {
     return nullptr;
   }
 
-} // namespace memory_detection
+} // namespace arch

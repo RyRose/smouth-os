@@ -1,15 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-  name = "memory_detection",
+  name = "memory",
   srcs = [
-    "memory_detection.cc"
+    "memory.cc"
+  ],
+  hdrs = [
+    "//kernel/arch:memory.h",
   ],
   deps = [
     "//libc/stdio",
     "//kernel/arch/i386/boot:multiboot"
   ],
-  hdrs = [
-    "//kernel/arch:memory_detection.h",
-  ]
 )

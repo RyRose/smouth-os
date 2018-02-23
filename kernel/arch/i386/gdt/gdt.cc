@@ -48,7 +48,7 @@ namespace {
     return util::Status();
   }
 
-}
+} // namespace
 
 extern "C"
 void gdtFlush();
@@ -56,11 +56,13 @@ void gdtFlush();
 uint64_t gdt_ptr;
 uint8_t gdt[3 * sizeof(uint64_t)];
 
+namespace arch {
+
 // Installs the global descriptor table into memory.
 // See this link for more details:
 // http://www.jamesmolloy.co.uk/tutorial_html/4.-The%20GDT%20and%20IDT.html
 uint64_t installGdt() {
-  gdt_ptr = ((uint32_t) &gdt);
+  gdt_ptr = reinterpret_cast<uint32_t>(&gdt);
   gdt_ptr <<= 16;
   gdt_ptr |= ((3 * sizeof(uint64_t)) - 1) & 0xFFFF;
   encodeGdtEntry(gdt, {.base=0, .limit=0, .type=0});
@@ -69,3 +71,5 @@ uint64_t installGdt() {
   gdtFlush();
   return gdt_ptr;
 }
+
+} // namespace arch

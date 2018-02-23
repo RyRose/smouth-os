@@ -1,6 +1,6 @@
 #include "libc/stdlib/arithmetic.h"
 
-namespace stdlib {
+namespace libc {
 
 int abs(int n) {
   if (n >= 0) {
@@ -10,4 +10,4 @@ int abs(int n) {
   }
 }
 
-}
+} // namespace libc

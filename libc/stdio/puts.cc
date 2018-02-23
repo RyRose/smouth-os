@@ -2,10 +2,11 @@
 
 #include "libc/stdio/printf.h"
 
-namespace stdio {
+namespace libc {
 
 int puts(const char* string) {
   return printf("%s\n", string);
 }
 
-}
+} // namespace libc
+

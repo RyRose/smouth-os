@@ -3,10 +3,10 @@
 
 #include <stddef.h>
 
-namespace string {
+namespace libc {
 
 size_t strlen(const char*);
 
-}
+} // namespace libc
 
 #endif

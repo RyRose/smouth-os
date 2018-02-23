@@ -2,11 +2,14 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
   name = "boot",
-  srcs = [
+  srcs = select({
+    "//tools:local" : [],
+    "//conditions:default" : [
     "boot.S",
     "crti.S",
     "crtn.S",
-  ],
+    ]
+  }),
   deps = [
     ":multiboot",
     "linker.ld"

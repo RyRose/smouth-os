@@ -8,10 +8,10 @@
 #include "libc/stdlib/arithmetic.h"
 #include "libc/string/str.h"
 
-namespace stdio {
+namespace libc {
 
   int print(const char* data) {
-    int len = string::strlen(data);
+    int len = strlen(data);
     if (len < 0) {
       return len;
     }
@@ -71,7 +71,7 @@ namespace stdio {
     va_start(parameters, format);
 
     int len = 0;
-    int format_len = string::strlen(format);
+    int format_len = strlen(format);
     for (int i = 0; i < format_len; ++i) {
       if (format[i] == '%') {
         if (++i == format_len) {
@@ -86,7 +86,7 @@ namespace stdio {
           arg_len = print(string);
         } else if (format[i] == 'd' || format[i] == 'i') {
           int arg = va_arg(parameters, int);
-          arg_len = print_number(stdlib::abs(arg), 10, arg < 0, true);
+          arg_len = print_number(abs(arg), 10, arg < 0, true);
         } else if (format[i] == 'X' || format[i] == 'x') {
           uint64_t arg = va_arg(parameters, uint64_t);
           arg_len = print_number(arg, 16, false, format[i] == 'X');
@@ -115,4 +115,4 @@ namespace stdio {
     return len;
   }
 
-}
+} // namespace libc

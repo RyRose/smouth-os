@@ -1,6 +1,6 @@
 #include "libc/string/mem.h"
 
-namespace string {
+namespace libc {
 
 void* memmove(void* dstptr, const void* srcptr, size_t size) {
   unsigned char* dst = (unsigned char*) dstptr;
@@ -15,4 +15,5 @@ void* memmove(void* dstptr, const void* srcptr, size_t size) {
   return dstptr;
 }
 
-}
+} // namespace libc
+

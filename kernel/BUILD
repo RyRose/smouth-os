@@ -1,14 +1,20 @@
+
 cc_binary (
   name = "kernel",
-  srcs = [
-    "kernel/kernel.cc"
-  ],
+  srcs = select({
+    "//tools:local" : [
+      "kernel/kernelstub.cc"
+    ],
+    "//conditions:default" : [
+      "kernel/kernel.cc"
+    ]
+  }),
   deps = [
     "//libc/stdio",
     "//kernel/arch:boot",
     "//kernel/arch:gdt",
     "//kernel/arch:tty",
-    "//kernel/arch:memory_detection",
+    "//kernel/arch:memory",
     ":crt"
   ],
   visibility = ["//visibility:public"],

@@ -1,6 +1,6 @@
 #include "libc/string/str.h"
 
-namespace string {
+namespace libc {
 
 size_t strlen(const char* str) {
   size_t len = 0;
@@ -9,4 +9,5 @@ size_t strlen(const char* str) {
   return len;
 }
 
-}
+} // namespace libc
+

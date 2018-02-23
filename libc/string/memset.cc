@@ -1,6 +1,6 @@
 #include "libc/string/mem.h"
 
-namespace string {
+namespace libc {
 
 void* memset(void* bufptr, int value, size_t size) {
   unsigned char* buf = (unsigned char*) bufptr;
@@ -9,4 +9,5 @@ void* memset(void* bufptr, int value, size_t size) {
   return bufptr;
 }
 
-}
+} // namespace libc
+

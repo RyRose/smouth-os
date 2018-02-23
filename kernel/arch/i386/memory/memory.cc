@@ -1,4 +1,4 @@
-#include "kernel/arch/memory_detection.h"
+#include "kernel/arch/memory.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -9,7 +9,7 @@
 extern uint32_t kernel_start;
 extern uint32_t kernel_end;
 
-namespace memory_detection {
+namespace arch {
 
   int DetectMemory(MemoryRegion* regions, int len) {
     if (len < 0) {
@@ -39,4 +39,4 @@ namespace memory_detection {
     return &kernel_end;
   }
 
-} // namespace memory_detection
+} // namespace arch

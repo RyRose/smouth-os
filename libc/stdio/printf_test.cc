@@ -4,42 +4,42 @@
 
 TEST(Printf, CharSpaced) {
   testing::internal::CaptureStdout();
-  stdio::printf("%c %c %c %c %c", 'a', 'b', 'c', 'd', 'e');
+  libc::printf("%c %c %c %c %c", 'a', 'b', 'c', 'd', 'e');
   std::string output = testing::internal::GetCapturedStdout();
   ASSERT_STREQ("a b c d e", output.c_str());
 }
 
 TEST(Printf, CharNumbered){
   testing::internal::CaptureStdout();
-  stdio::printf("%c 1 %c 2 %c 3 %c 4 %c", 'a', 'b', 'c', 'd', 'e');
+  libc::printf("%c 1 %c 2 %c 3 %c 4 %c", 'a', 'b', 'c', 'd', 'e');
   std::string output = testing::internal::GetCapturedStdout();
   ASSERT_STREQ("a 1 b 2 c 3 d 4 e", output.c_str());
 }
 
 TEST(Printf, Strings) {
   testing::internal::CaptureStdout();
-  stdio::printf("%s test %s", "abc", "def");
+  libc::printf("%s test %s", "abc", "def");
   std::string output = testing::internal::GetCapturedStdout();
   ASSERT_STREQ("abc test def", output.c_str());
 }
 
 TEST(Printf, Ints) {
   testing::internal::CaptureStdout();
-  stdio::printf("%d test %i", 123214, -12421);
+  libc::printf("%d test %i", 123214, -12421);
   std::string output = testing::internal::GetCapturedStdout();
   ASSERT_STREQ("123214 test -12421", output.c_str());
 }
 
 TEST(Printf, HexInts) {
   testing::internal::CaptureStdout();
-  stdio::printf("%X test %x", 0xABDC1243, 0xAECDB123);
+  libc::printf("%X test %x", 0xABDC1243, 0xAECDB123);
   std::string output = testing::internal::GetCapturedStdout();
   ASSERT_STREQ("ABDC1243 test aecdb123", output.c_str());
 }
 
 TEST(Printf, HexIntsBig) {
   testing::internal::CaptureStdout();
-  stdio::printf("%X test %x", 0xABDC124356789012, 0xAECDB123);
+  libc::printf("%X test %x", 0xABDC124356789012, 0xAECDB123);
   std::string output = testing::internal::GetCapturedStdout();
   ASSERT_STREQ("ABDC124356789012 test aecdb123", output.c_str());
 }

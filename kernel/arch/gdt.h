@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+namespace arch {
+
 uint64_t installGdt();
+
+} // namespace arch
 
 #endif

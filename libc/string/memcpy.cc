@@ -1,6 +1,6 @@
 #include "libc/string/mem.h"
 
-namespace string {
+namespace libc {
 
 void* memcpy(void* dstptr, const void* srcptr, size_t size) {
   unsigned char* dst = (unsigned char*) dstptr;
@@ -10,4 +10,5 @@ void* memcpy(void* dstptr, const void* srcptr, size_t size) {
   return dstptr;
 }
 
-}
+} // namespace libc
+

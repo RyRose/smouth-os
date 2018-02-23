@@ -1,9 +1,9 @@
-#ifndef KERNEL_ARCH_MEMORY_DETECTION_H
-#define KERNEL_ARCH_MEMORY_DETECTION_H
+#ifndef KERNEL_ARCH_MEMORY_H
+#define KERNEL_ARCH_MEMORY_H
 
 #include <stdint.h>
 
-namespace memory_detection {
+namespace arch {
 
 enum MemoryRegionType {
   AVAILABLE = 1,
@@ -28,6 +28,6 @@ void* GetKernelStart();
 // Returns a pointer to where the kernel image ends.
 void* GetKernelEnd();
 
-} // namespace memory_detection
+} // namespace arch
 
 #endif

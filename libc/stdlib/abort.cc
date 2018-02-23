@@ -1,6 +1,6 @@
 #include "libc/stdlib/abort.h"
 
-namespace stdlib {
+namespace libc {
 
 __attribute__((__noreturn__))
 void abort(void) {
@@ -9,4 +9,4 @@ void abort(void) {
   __builtin_unreachable();
 }
 
-}
+} // namespace libc

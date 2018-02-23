@@ -1,6 +1,6 @@
 #include "libc/string/mem.h"
 
-namespace string {
+namespace libc {
 
 int memcmp(const void* aptr, const void* bptr, size_t size) {
   const unsigned char* a = (const unsigned char*) aptr;
@@ -14,4 +14,4 @@ int memcmp(const void* aptr, const void* bptr, size_t size) {
   return 0;
 }
 
-}
+} // namespace libc
