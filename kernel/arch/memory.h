@@ -5,7 +5,7 @@
 
 namespace arch {
 
-enum MemoryRegionType {
+enum class MemoryRegionType {
   AVAILABLE = 1,
   RESERVED = 2,
   ACPI_RECLAIMABLE = 3,
