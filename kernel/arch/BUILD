@@ -10,3 +10,4 @@ arch_library(name = "memory")
 
 arch_library(name = "boot")
 
+arch_library(name = "io_port")
