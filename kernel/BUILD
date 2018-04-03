@@ -16,7 +16,15 @@ cc_binary (
     "//kernel/arch:tty",
     "//kernel/arch:memory",
     ":crt"
-  ],
+  ] +
+  select({
+    "//tools:i386" : ["//kernel/arch/i386:linker.ld"],
+    "//conditions:default" : []
+  }),
+  linkopts = select({
+    "//tools:i386" : ["-T $(location //kernel/arch/i386:linker.ld)"],
+    "//conditions:default" : []
+   }),
   visibility = ["//visibility:public"],
 )
 

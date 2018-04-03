@@ -1,7 +1,10 @@
 package(default_visibility = ["//visibility:public"])
 
+exports_files(["linker.ld"])
+
 cc_library(
   name = "boot",
+  alwayslink = 1,
   srcs = select({
     "//tools:local" : [],
     "//conditions:default" : [
@@ -11,13 +14,8 @@ cc_library(
     ]
   }),
   deps = [
-    ":multiboot",
-    "linker.ld"
-  ],
-  linkopts = [
-    "-T $(location linker.ld)"
-  ],
-  alwayslink = 1,
+    ":multiboot"
+  ]
 )
 
 cc_library(
