@@ -16,10 +16,30 @@ config_setting(
   },
 )
 
+filegroup(
+      name = "empty",
+      srcs = [],
+)
+
+cc_toolchain(
+    name = "cc-compiler-local",
+    all_files = ":empty",
+    compiler_files = ":empty",
+    cpu = "local",
+    dwp_files = ":empty",
+    dynamic_runtime_libs = [":empty"],
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    static_runtime_libs = [":empty"],
+    strip_files = ":empty",
+    supports_param_files = 1,
+)
+
 cc_toolchain_suite(
     name = "toolchain",
     toolchains = {
         "i386|g++" : ":cc-compiler-i386",
+        "local|compiler" : ":cc-compiler-local",
     },
 )
 
