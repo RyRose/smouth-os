@@ -6,7 +6,7 @@ def arch_library(name, visibility=None):
     hdrs = [name + ".h"],
     deps = select({
       "//tools:i386" : ["//kernel/arch/i386/" + name],
-      "//conditions:default" : ["//kernel/arch/local/" + name]
+      "//conditions:default" : []
     }),
     visibility = visibility
   )

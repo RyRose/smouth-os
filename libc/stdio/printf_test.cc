@@ -2,6 +2,12 @@
 
 #include "gtest/gtest.h"
 
+namespace arch {
+  void terminal_write(const char* data, size_t size) {
+    std::printf("%.*s", static_cast<int>(size), data);
+  }
+}
+
 TEST(Printf, CharSpaced) {
   testing::internal::CaptureStdout();
   libc::printf("%c %c %c %c %c", 'a', 'b', 'c', 'd', 'e');
