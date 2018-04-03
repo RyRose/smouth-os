@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["configs/grub.cfg"])
-
 config_setting(
   name = "i386",
   values = {
