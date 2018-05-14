@@ -2,7 +2,7 @@
 cc_binary (
   name = "kernel",
   srcs = select({
-    "//tools:local" : [
+    "//tools/toolchain:local" : [
       "kernel/kernelstub.cc"
     ],
     "//conditions:default" : [
@@ -18,11 +18,11 @@ cc_binary (
     ":crt"
   ] +
   select({
-    "//tools:i386" : ["//kernel/arch/i386:linker.ld"],
+    "//tools/toolchain:i386" : ["//kernel/arch/i386:linker.ld"],
     "//conditions:default" : []
   }),
   linkopts = select({
-    "//tools:i386" : ["-T $(location //kernel/arch/i386:linker.ld)"],
+    "//tools/toolchain:i386" : ["-T $(location //kernel/arch/i386:linker.ld)"],
     "//conditions:default" : []
    }),
   visibility = ["//visibility:public"],
@@ -31,7 +31,7 @@ cc_binary (
 cc_library (
   name = "crt",
   srcs = select({
-    "//tools:local" : [],
+    "//tools/toolchain:local" : [],
     "//conditions:default" : [
     "crtbegin.o",
     "crtend.o",

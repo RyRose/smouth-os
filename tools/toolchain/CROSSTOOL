@@ -23,21 +23,19 @@ toolchain {
   target_system_name: "i386"
   toolchain_identifier: "i686-elf"
 
-  tool_path { name: "ar"        path: "compilers/i686-elf/bin/i686-elf-ar" }
-  tool_path { name: "as"        path: "compilers/i686-elf/bin/i686-elf-as" }
-  tool_path { name: "compat-ld" path: "compilers/i686-elf/bin/i686-elf-ld" }
-  tool_path { name: "cpp"       path: "compilers/i686-elf/bin/i686-elf-cpp" }
-  tool_path { name: "dwp"       path: "compilers/i686-elf/bin/i686-elf-dwp" }
-  tool_path { name: "gcc"       path: "compilers/i686-elf/bin/i686-elf-gcc" }
-  tool_path { name: "g++"       path: "compilers/i686-elf/bin/i686-elf-g++" }
-  tool_path { name: "gcov"      path: "compilers/i686-elf/bin/i686-elf-gcov" }
-  tool_path { name: "ld"        path: "compilers/i686-elf/bin/i686-elf-ld" }
-  tool_path { name: "nm"        path: "compilers/i686-elf/bin/i686-elf-nm" }
-  tool_path { name: "objcopy"   path: "compilers/i686-elf/bin/i686-elf-objcopy" }
-  tool_path { name: "objdump"   path: "compilers/i686-elf/bin/i686-elf-objdump" }
-#  objcopy_embed_flag: "-I"
-#  objcopy_embed_flag: "binary"
-  tool_path { name: "strip"     path: "compilers/bin/i686-elf-strip" }
+  tool_path { name: "ar"        path: "i686-elf/ar" }
+  tool_path { name: "as"        path: "i686-elf/as" }
+  tool_path { name: "compat-ld" path: "i686-elf/ld" }
+  tool_path { name: "cpp"       path: "i686-elf/cpp" }
+  tool_path { name: "dwp"       path: "i686-elf/dwp" }
+  tool_path { name: "gcc"       path: "i686-elf/gcc" }
+  tool_path { name: "g++"       path: "i686-elf/g++" }
+  tool_path { name: "gcov"      path: "i686-elf/gcov" }
+  tool_path { name: "ld"        path: "i686-elf/ld" }
+  tool_path { name: "nm"        path: "i686-elf/nm" }
+  tool_path { name: "objcopy"   path: "i686-elf/objcopy" }
+  tool_path { name: "objdump"   path: "i686-elf/objdump" }
+  tool_path { name: "strip"     path: "i686-elf/strip" }
 
   # Make C++ compilation deterministic. Use linkstamping instead of these
   # compiler symbols.
@@ -76,9 +74,9 @@ toolchain {
   compiler_flag: "-MD"
 
   compiler_flag: "-isystem"
-  compiler_flag: "tools/compilers/i686-elf/lib/gcc/i686-elf/7.2.0/include"
-#  compiler_flag: "-isystem"
-#  compiler_flag: "tools/compilers/lib/gcc/i686-elf/7.2.0/include-fixed"
+  compiler_flag: "external/toolchain-i686-elf/toolchain/lib/gcc/i686-elf/7.2.0/include"
+  compiler_flag: "-isystem"
+  compiler_flag: "external/toolchain-i686-elf/toolchain/lib/gcc/i686-elf/7.2.0/include-fixed"
 
 
   # All warnings are enabled. Maybe enable -Werror as well?

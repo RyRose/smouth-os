@@ -1,0 +1,5 @@
+#!/bin/sh
+
+binary=$(basename $0);
+
+exec "external/toolchain-i686-elf/toolchain/bin/i686-elf-$binary" "$@"

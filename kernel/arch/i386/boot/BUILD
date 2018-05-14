@@ -6,7 +6,7 @@ cc_library(
   name = "boot",
   alwayslink = 1,
   srcs = select({
-    "//tools:local" : [],
+    "//tools/toolchain:local" : [],
     "//conditions:default" : [
     "boot.S",
     "crti.S",

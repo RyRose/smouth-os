@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
   name = "gdt",
   srcs = select({
-    "//tools:local" : [],
+    "//tools/toolchain:local" : [],
     "//conditions:default" : [
     "gdt.cc",
     "gdt_flush.S"
