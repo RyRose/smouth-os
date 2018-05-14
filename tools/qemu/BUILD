@@ -7,7 +7,7 @@ py_binary(
     "//kernel"
   ],
   args = [
-    "--arch=$(TARGET_CPU)",
+    "--cpu=$(TARGET_CPU)",
     "--kernel=$(location //kernel)"
   ]
 )
