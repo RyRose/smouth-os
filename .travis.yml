@@ -36,4 +36,5 @@ script:
       --host_jvm_args=-Xms500m \
       build \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
-      //...
+      //... \
+      --cpu=i386
