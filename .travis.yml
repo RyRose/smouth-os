@@ -1,6 +1,5 @@
 # trusty beta image has jdk8, gcc4.8.4
 dist: trusty
-sudo: required
 # Not technically required but suppresses 'Ruby' in Job status message.
 language: java
 
@@ -11,8 +10,8 @@ env:
   - V=0.10.0
 
 before_install:
+  - sudo apt-get install realpath
   - |
-    sysctl kernel.unprivileged_userns_clone=1
     OS=linux
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
@@ -31,4 +30,12 @@ script:
       test \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //...
-
+  - |
+    bazel build
+      --output_base=$HOME/.cache/bazel \
+      --batch \
+      --host_jvm_args=-Xmx500m \
+      --host_jvm_args=-Xms500m \
+      build \
+      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
+      //...
