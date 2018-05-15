@@ -28,3 +28,6 @@ script:
       test \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
+
+notifications:
+  email: false
