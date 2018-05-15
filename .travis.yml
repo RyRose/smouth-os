@@ -7,7 +7,7 @@ os:
   - linux
 
 env:
-  - V=0.10.0
+  - V=0.13.0
 
 before_install:
   - |
