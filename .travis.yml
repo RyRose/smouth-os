@@ -30,6 +30,15 @@ script:
       test \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
+  - |
+    bazel \
+      --batch \
+      --host_jvm_args=-Xmx500m \
+      --host_jvm_args=-Xms500m \
+      build \
+      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
+      //kernel/... //libc/... \
+      --cpu=i386
 
 notifications:
   email: false
