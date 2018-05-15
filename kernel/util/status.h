@@ -11,18 +11,15 @@ enum ErrorCode {
 
 class Status {
   public:
-    Status() : code(ErrorCode::OK), message("") {};
-    Status(ErrorCode code, const char* message) : code(code), message(message) {};
-    Status(const Status& other)
-      : code(other.code),
-        message(other.message) {}
+    Status() : Status(ErrorCode::OK, "") {};
+    Status(ErrorCode code, const char* message) : code_(code), message_(message) {};
 
     ErrorCode GetCode();
     const char* GetMessage();
     bool Ok();
   private:
-    ErrorCode code;
-    const char* message;
+    ErrorCode code_;
+    const char* message_;
 };
 
 }

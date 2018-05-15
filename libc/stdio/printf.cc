@@ -10,6 +10,8 @@
 
 namespace libc {
 
+namespace {
+
   int print(const char* data) {
     int len = strlen(data);
     if (len < 0) {
@@ -65,6 +67,7 @@ namespace libc {
       return ret;
     }
   }
+} // namespace
 
   int printf(const char* format, ...) {
     va_list parameters;

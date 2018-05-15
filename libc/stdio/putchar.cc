@@ -5,7 +5,7 @@
 namespace libc {
 
 int putchar(int ic) {
-  char c = (char) ic;
+  char c = static_cast<char>(ic);
   arch::terminal_write(&c, sizeof(c));
   return ic;
 }

@@ -14,17 +14,17 @@ namespace boot {
 
   int MmapManager::CopyFrom(multiboot_mmap_entry* entries, int count) {
     int i;
-    for(i = this->count; i < MAX_MMAP_ENTRIES && i < count; i++) {
-      this->entries[i] = entries[i];
+    for(i = count_; i < MAX_MMAP_ENTRIES && i < count; i++) {
+      entries_[i] = entries[i];
     }
-    this->count += i;
-    return this->count - 2 * i;
+    count_ += i;
+    return count_ - 2 * i;
   }
 
-  int MmapManager::CopyTo(multiboot_mmap_entry* entries, int capacity) {
+  int MmapManager::CopyTo(multiboot_mmap_entry* entries, int capacity) const {
     int i;
-    for(i = 0; i < count && i < capacity; i++) {
-      entries[i] = this->entries[i];
+    for(i = 0; i < count_ && i < capacity; i++) {
+      entries[i] = entries_[i];
     }
     return i;
   }

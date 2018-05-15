@@ -9,18 +9,24 @@
 
 namespace {
 
-static size_t terminal_row;
-static size_t terminal_column;
-static uint8_t terminal_color;
-static uint16_t* terminal_buffer;
+size_t terminal_row;
+size_t terminal_column;
+uint8_t terminal_color;
+uint16_t* terminal_buffer;
+
+const size_t VGA_WIDTH = 80;
+const size_t VGA_HEIGHT = 25;
+uint16_t* VGA_MEMORY = reinterpret_cast<uint16_t*>(0xB8000);
+
+void terminal_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
+  const size_t index = y * VGA_WIDTH + x;
+  terminal_buffer[index] = arch::vga_entry(c, color);
+}
 
 }
 
 namespace arch {
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
-static uint16_t* VGA_MEMORY = (uint16_t*) 0xB8000;
 
 void terminal_initialize(void) {
   terminal_row = 0;
@@ -33,15 +39,6 @@ void terminal_initialize(void) {
       terminal_buffer[index] = vga_entry(' ', terminal_color);
     }
   }
-}
-
-void terminal_setcolor(uint8_t color) {
-  terminal_color = color;
-}
-
-void terminal_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
-  const size_t index = y * VGA_WIDTH + x;
-  terminal_buffer[index] = vga_entry(c, color);
 }
 
 void terminal_putchar(char c) {

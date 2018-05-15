@@ -65,9 +65,9 @@ uint64_t installGdt() {
   gdt_ptr = reinterpret_cast<uint32_t>(&gdt);
   gdt_ptr <<= 16;
   gdt_ptr |= ((3 * sizeof(uint64_t)) - 1) & 0xFFFF;
-  encodeGdtEntry(gdt, {.base=0, .limit=0, .type=0});
-  encodeGdtEntry(gdt + sizeof(uint64_t), {.base=0, .limit=0xFFFFFFFF, .type=0x9A});
-  encodeGdtEntry(gdt + 2 * sizeof(uint64_t), {.base=0, .limit=0xFFFFFFFF, .type=0x92});
+  encodeGdtEntry(gdt, {/*base=*/0, /*limit=*/0, /*type=*/0});
+  encodeGdtEntry(gdt + sizeof(uint64_t), {/*base=*/0, /*limit=*/0xFFFFFFFF, /*type=*/0x9A});
+  encodeGdtEntry(gdt + 2 * sizeof(uint64_t), {/*base=*/0, /*limit=*/0xFFFFFFFF, /*type=*/0x92});
   gdtFlush();
   return gdt_ptr;
 }

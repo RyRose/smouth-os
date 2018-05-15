@@ -3,15 +3,15 @@
 namespace util {
 
   ErrorCode Status::GetCode() {
-    return code;
+    return code_;
   }
 
   const char* Status::GetMessage() {
-    return message;
+    return message_;
   }
 
   bool Status::Ok() {
-    return code == ErrorCode::OK;
+    return code_ == ErrorCode::OK;
   }
   
 }

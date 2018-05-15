@@ -19,16 +19,16 @@ class MmapManager {
 
     // Copies all mmap entries to `entries` until filled.
     // Returns the number of entries copied.
-    int CopyTo(multiboot_mmap_entry* entries, int capacity);
+    int CopyTo(multiboot_mmap_entry* entries, int capacity) const;
 
     // Returns a constant pointer to the mmap entries.
-    const multiboot_mmap_entry* GetEntries() {
-      return entries;
+    const multiboot_mmap_entry* GetEntries() const {
+      return entries_;
     }
 
     // Returns the number of mmap entries.
-    int GetCount() {
-      return count;
+    int GetCount() const {
+      return count_;
     }
 
     MmapManager() = default;
@@ -38,10 +38,10 @@ class MmapManager {
   private:
 
     // The number of Mmap entries
-    int count;
+    int count_;
 
     // The Mmap entries provided by being a multiboot kernel
-    multiboot_mmap_entry entries[MAX_MMAP_ENTRIES];
+    multiboot_mmap_entry entries_[MAX_MMAP_ENTRIES];
 };
 
   MmapManager* GetMmapManager();

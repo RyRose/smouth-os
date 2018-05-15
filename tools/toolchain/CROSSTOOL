@@ -60,16 +60,11 @@ toolchain {
   compiler_flag: "-fno-rtti"
   linker_flag: "-fno-rtti"
 
-  compiler_flag: "-std=gnu++14"
-  linker_flag: "-std=gnu++14"
+  compiler_flag: "-std=gnu++17"
+  linker_flag: "-std=gnu++17"
   compiler_flag: "-lk"
   compiler_flag: "-lgcc"
   linker_flag: "-lgcc"
-
-  compiler_flag: "-O2"
-  linker_flag: "-O2"
-  compiler_flag: "-g"
-  linker_flag: "-g"
 
   compiler_flag: "-MD"
 
@@ -79,13 +74,60 @@ toolchain {
   compiler_flag: "external/toolchain-i686-elf/toolchain/lib/gcc/i686-elf/7.2.0/include-fixed"
 
 
-  # All warnings are enabled. Maybe enable -Werror as well?
+  compilation_mode_flags {
+    mode: FASTBUILD
+    compiler_flag: "-Werror"
+    compiler_flag: "-g"
+    linker_flag: "-g"
+  }
+
+  compilation_mode_flags {
+    mode: OPT
+
+    # No debug symbols.
+    # Maybe we should enable https://gcc.gnu.org/wiki/DebugFission for opt or
+    # even generally? However, that can't happen here, as it requires special
+    # handling in Bazel.
+    compiler_flag: "-g0"
+
+    # Conservative choice for -O
+    # -O3 can increase binary size and even slow down the resulting binaries.
+    # Profile first and / or use FDO if you need better performance than this.
+    compiler_flag: "-O2"
+
+    # Disable assertions
+    compiler_flag: "-DNDEBUG"
+
+    # Removal of unused code and data at link time (can this increase binary size in some cases?).
+    compiler_flag: "-ffunction-sections"
+    compiler_flag: "-fdata-sections"
+    linker_flag: "-Wl,--gc-sections"
+  }
+
+
   compiler_flag: "-Wall"
+  compiler_flag: "-Wcast-align"
+  compiler_flag: "-Wduplicated-branches"
+  compiler_flag: "-Wduplicated-cond"
+  compiler_flag: "-Werror"
   compiler_flag: "-Wextra"
-#  # Enable a few more warnings that aren't part of -Wall.
-#  compiler_flag: "-Wunused-but-set-parameter"
-#  # But disable some that are problematic.
-#  compiler_flag: "-Wno-free-nonheap-object" # has false positives
+  compiler_flag: "-Wformat-nonliteral"
+  compiler_flag: "-Wformat=2"
+  compiler_flag: "-Winvalid-pch"
+  compiler_flag: "-Wlogical-op"
+  compiler_flag: "-Wmissing-declarations"
+  compiler_flag: "-Wmissing-format-attribute"
+  compiler_flag: "-Wno-free-nonheap-object" # has false positives
+  compiler_flag: "-Wodr"
+  compiler_flag: "-Wold-style-cast"
+  compiler_flag: "-Wpedantic"
+  compiler_flag: "-Wredundant-decls"
+  compiler_flag: "-Wrestrict"
+  compiler_flag: "-Wshadow"
+  compiler_flag: "-Wswitch-default"
+  compiler_flag: "-Wswitch-enum"
+  compiler_flag: "-Wunused-but-set-parameter"
+  compiler_flag: "-Wuseless-cast"
 }
 
 # local toolchain copied from https://github.com/bazelbuild/bazel/blob/master/tools/cpp/CROSSTOOL
