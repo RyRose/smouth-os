@@ -6,12 +6,12 @@ cc_library(
   name = "boot",
   alwayslink = 1,
   srcs = select({
-    "//tools/toolchain:local" : [],
-    "//conditions:default" : [
+    "//tools/toolchain:i386" : [
     "boot.S",
     "crti.S",
     "crtn.S",
-    ]
+    ],
+    "//conditions:default" : [],
   }),
   deps = [
     ":multiboot"

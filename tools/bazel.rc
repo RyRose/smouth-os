@@ -19,6 +19,8 @@ build \
 
 common:ci --color=no
 common:ci -c opt
+common:ci --noshow_progress
+common:ci --noshow_loading_progress
 build:ci --verbose_failures
 build:ci --sandbox_debug
 build:ci --spawn_strategy=standalone
