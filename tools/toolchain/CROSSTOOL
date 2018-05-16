@@ -253,8 +253,6 @@ toolchain {
 
   compiler_flag: "-Wall"
   compiler_flag: "-Wcast-align"
-  compiler_flag: "-Wduplicated-branches"
-  compiler_flag: "-Wduplicated-cond"
   compiler_flag: "-Wextra"
   compiler_flag: "-Wformat-nonliteral"
   compiler_flag: "-Wformat=2"
