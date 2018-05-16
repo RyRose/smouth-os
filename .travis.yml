@@ -10,7 +10,7 @@ cache:
 
 os:
   - linux
-  - osx
+#  - osx
 
 env:
   - V=0.13.0
@@ -25,7 +25,7 @@ before_install:
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
-#  - sha256sum --check tools/checksums/bazel
+  - sha256sum --check tools/checksums/bazel
   - |
     chmod +x install.sh
     ./install.sh --user
