@@ -2,18 +2,28 @@
 dist: trusty
 # Not technically required but suppresses 'Ruby' in Job status message.
 language: java
+# xcode8 has jdk8
+osx_image: xcode8.3
+
+cache:
+	directories:
+		- $HOME/.bazel_repository_cache
+		- $HOME/.cache/bazel
 
 os:
   - linux
+  - osx
 
 env:
   - V=0.13.0
 
 before_install:
-  - sudo apt-get install realpath
-  - sudo apt-get install texinfo
   - |
-    OS=linux
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      OS=darwin
+    else
+      OS=linux
+    fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
   - sha256sum --check tools/checksums/bazel
@@ -26,21 +36,14 @@ before_install:
 script:
   - |
     bazel \
+      --output_base=$HOME/.cache/bazel \
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
       test \
+      -c opt \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
-  - |
-    bazel \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      build \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
-      //kernel/... //libc/... \
-      --cpu=i386
 
 notifications:
   email: false

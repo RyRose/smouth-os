@@ -104,12 +104,10 @@ toolchain {
     linker_flag: "-Wl,--gc-sections"
   }
 
-
   compiler_flag: "-Wall"
   compiler_flag: "-Wcast-align"
   compiler_flag: "-Wduplicated-branches"
   compiler_flag: "-Wduplicated-cond"
-  compiler_flag: "-Werror"
   compiler_flag: "-Wextra"
   compiler_flag: "-Wformat-nonliteral"
   compiler_flag: "-Wformat=2"
@@ -128,6 +126,7 @@ toolchain {
   compiler_flag: "-Wswitch-enum"
   compiler_flag: "-Wunused-but-set-parameter"
   compiler_flag: "-Wuseless-cast"
+
 }
 
 # local toolchain copied from https://github.com/bazelbuild/bazel/blob/master/tools/cpp/CROSSTOOL
@@ -154,7 +153,8 @@ toolchain {
   tool_path { name: "cpp" path: "/usr/bin/cpp" }
   tool_path { name: "dwp" path: "/usr/bin/dwp" }
   tool_path { name: "gcc" path: "/usr/bin/gcc" }
-  cxx_flag: "-std=c++0x"
+  compiler_flag: "-std=gnu++17"
+  linker_flag: "-std=gnu++17"
   linker_flag: "-lstdc++"
   linker_flag: "-B/usr/bin/"
 
@@ -203,13 +203,6 @@ toolchain {
   # on Ubuntu 14.04.
   # compiler_flag: "-fcolor-diagnostics"
 
-  # All warnings are enabled. Maybe enable -Werror as well?
-  compiler_flag: "-Wall"
-  # Enable a few more warnings that aren't part of -Wall.
-  compiler_flag: "-Wunused-but-set-parameter"
-  # But disable some that are problematic.
-  compiler_flag: "-Wno-free-nonheap-object" # has false positives
-
   # Keep stack frames for debugging, even in opt mode.
   compiler_flag: "-fno-omit-frame-pointer"
 
@@ -249,5 +242,28 @@ toolchain {
     linker_flag: "-Wl,--gc-sections"
   }
   linking_mode_flags { mode: DYNAMIC }
+
+  compiler_flag: "-Wall"
+  compiler_flag: "-Wcast-align"
+  compiler_flag: "-Wduplicated-branches"
+  compiler_flag: "-Wduplicated-cond"
+  compiler_flag: "-Wextra"
+  compiler_flag: "-Wformat-nonliteral"
+  compiler_flag: "-Wformat=2"
+  compiler_flag: "-Winvalid-pch"
+  compiler_flag: "-Wlogical-op"
+  compiler_flag: "-Wmissing-declarations"
+  compiler_flag: "-Wmissing-format-attribute"
+  compiler_flag: "-Wno-free-nonheap-object" # has false positives
+  compiler_flag: "-Wodr"
+  compiler_flag: "-Wold-style-cast"
+  compiler_flag: "-Wpedantic"
+  compiler_flag: "-Wredundant-decls"
+  compiler_flag: "-Wrestrict"
+  compiler_flag: "-Wshadow"
+  compiler_flag: "-Wswitch-default"
+  compiler_flag: "-Wswitch-enum"
+  compiler_flag: "-Wunused-but-set-parameter"
+  compiler_flag: "-Wuseless-cast"
 }
 
