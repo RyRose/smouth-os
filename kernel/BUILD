@@ -31,12 +31,12 @@ cc_binary (
 cc_library (
   name = "crt",
   srcs = select({
-    "//tools/toolchain:local" : [],
-    "//conditions:default" : [
+    "//tools/toolchain:i386" : [
     "crtbegin.o",
     "crtend.o",
     ":crt_files",
-    ]
+    ],
+    "//conditions:default" : [],
   }),
 )
 
