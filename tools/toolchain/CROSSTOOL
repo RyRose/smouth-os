@@ -76,6 +76,7 @@ toolchain {
 
   compilation_mode_flags {
     mode: FASTBUILD
+
     compiler_flag: "-Werror"
     compiler_flag: "-g"
     linker_flag: "-g"
@@ -106,8 +107,6 @@ toolchain {
 
   compiler_flag: "-Wall"
   compiler_flag: "-Wcast-align"
-  compiler_flag: "-Wduplicated-branches"
-  compiler_flag: "-Wduplicated-cond"
   compiler_flag: "-Wextra"
   compiler_flag: "-Wformat-nonliteral"
   compiler_flag: "-Wformat=2"
@@ -153,8 +152,6 @@ toolchain {
   tool_path { name: "cpp" path: "/usr/bin/cpp" }
   tool_path { name: "dwp" path: "/usr/bin/dwp" }
   tool_path { name: "gcc" path: "/usr/bin/gcc" }
-  compiler_flag: "-std=gnu++17"
-  linker_flag: "-std=gnu++17"
   linker_flag: "-lstdc++"
   linker_flag: "-B/usr/bin/"
 
@@ -215,6 +212,16 @@ toolchain {
   # linker_flag: "-Wl,--detect-odr-violations"
 
   compilation_mode_flags {
+    mode: FASTBUILD
+    compiler_flag: "-std=gnu++17"
+    linker_flag: "-std=gnu++17"
+    compiler_flag: "-Wodr"
+    compiler_flag: "-Wduplicated-branches"
+    compiler_flag: "-Wduplicated-cond"
+    compiler_flag: "-Wrestrict"
+  }
+
+  compilation_mode_flags {
     mode: DBG
     # Enable debug symbols.
     compiler_flag: "-g"
@@ -222,6 +229,7 @@ toolchain {
   compilation_mode_flags {
     mode: OPT
 
+    cxx_flag: "-std=c++0x"
     # No debug symbols.
     # Maybe we should enable https://gcc.gnu.org/wiki/DebugFission for opt or
     # even generally? However, that can't happen here, as it requires special
@@ -255,11 +263,9 @@ toolchain {
   compiler_flag: "-Wmissing-declarations"
   compiler_flag: "-Wmissing-format-attribute"
   compiler_flag: "-Wno-free-nonheap-object" # has false positives
-  compiler_flag: "-Wodr"
   compiler_flag: "-Wold-style-cast"
   compiler_flag: "-Wpedantic"
   compiler_flag: "-Wredundant-decls"
-  compiler_flag: "-Wrestrict"
   compiler_flag: "-Wshadow"
   compiler_flag: "-Wswitch-default"
   compiler_flag: "-Wswitch-enum"

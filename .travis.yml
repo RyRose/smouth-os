@@ -21,6 +21,7 @@ before_install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin
+      brew install sha2
     else
       OS=linux
     fi
@@ -41,7 +42,7 @@ script:
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
       test \
-      -c opt \
+      --config ci \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
 
