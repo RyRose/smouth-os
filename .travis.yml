@@ -1,9 +1,4 @@
-# trusty beta image has jdk8, gcc4.8.4
 dist: trusty
-# Not technically required but suppresses 'Ruby' in Job status message.
-language: java
-# xcode8 has jdk8
-osx_image: xcode8.3
 
 cache:
   directories:
@@ -21,7 +16,7 @@ before_install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin
-      brew install sha2
+      function sha256sum() { shasum -a 256 "$@" ; }
     else
       OS=linux
     fi
