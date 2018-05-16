@@ -6,9 +6,9 @@ language: java
 osx_image: xcode8.3
 
 cache:
-	directories:
-		- $HOME/.bazel_repository_cache
-		- $HOME/.cache/bazel
+  directories:
+    - $HOME/.bazel_repository_cache
+    - $HOME/.cache/bazel
 
 os:
   - linux
