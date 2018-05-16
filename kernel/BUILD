@@ -2,11 +2,11 @@
 cc_binary (
   name = "kernel",
   srcs = select({
-    "//tools/toolchain:local" : [
-      "kernel/kernelstub.cc"
+    "//tools/toolchain:i386" : [
+      "kernel/kernel.cc"
     ],
     "//conditions:default" : [
-      "kernel/kernel.cc"
+      "kernel/kernelstub.cc"
     ]
   }),
   deps = [
@@ -40,11 +40,28 @@ cc_library (
   }),
 )
 
+GENERATE_CRT_FILES_CMD="""
+for out in $(OUTS); do
+  outname=$$(basename $$out);
+  f=$$($(CC) $(CC_FLAGS) -print-file-name=$$outname);
+  cp $$f $$out;
+done;
+"""
+
+TOUCH_CRT_FILES_CMD="""
+for out in $(OUTS); do
+  touch $$out;
+done;
+"""
+
 genrule (
   name = "crt_files",
   outs = [
     "crtbegin.o",
     "crtend.o"
   ],
-  cmd = "for out in $(OUTS); do outname=$$(basename $$out); f=$$($(CC) $(CC_FLAGS) -print-file-name=$$outname); cp $$f $$out; done;"
+  cmd = select({
+      "//tools/toolchain:i386" : GENERATE_CRT_FILES_CMD,
+      "//conditions:default" : TOUCH_CRT_FILES_CMD
+  }),
 )
