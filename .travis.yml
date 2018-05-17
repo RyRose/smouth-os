@@ -46,7 +46,7 @@ script:
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
   - |
-    bazel \
+    travis_wait 40 bazel \
       --output_base=$HOME/.cache/bazel/output \
       --batch \
       --host_jvm_args=-Xmx500m \
