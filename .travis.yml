@@ -1,6 +1,5 @@
 dist: trusty
 language: cpp
-osx_image: xcode8.3
 
 
 cache:
@@ -10,17 +9,11 @@ cache:
 
 os:
   - linux
-#  - osx
 
 env:
   - V=0.13.0
 
 before_install:
-  - sudo apt-get install realpath
-  - sudo apt-get install texinfo
-  - sudo apt-get install libgmp-dev
-  - sudo apt-get install libmpfr-dev
-  - sudo apt-get install libmpc-dev
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin
@@ -48,17 +41,6 @@ script:
       --config ci \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
-  - |
-    travis_wait 40 bazel \
-      --output_base=$HOME/.cache/bazel/output \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      build \
-      --config ci \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
-      //kernel \
-      --cpu=i386
 
 notifications:
   email: false
