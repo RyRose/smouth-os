@@ -16,6 +16,8 @@ env:
   - V=0.13.0
 
 before_install:
+  - sudo apt-get install realpath
+  - sudo apt-get install texinfo
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin
