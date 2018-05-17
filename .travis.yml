@@ -18,6 +18,9 @@ env:
 before_install:
   - sudo apt-get install realpath
   - sudo apt-get install texinfo
+  - sudo apt-get install libgmp-dev
+  - sudo apt-get install libmpfr-dev
+  - sudo apt-get install libmpc-dev
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin

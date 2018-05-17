@@ -55,7 +55,7 @@ def _build_gcc(ctx, prefix):
                            sha256 = ctx.attr.gcc_sha256,
                            stripPrefix = ctx.attr.gcc_strip_prefix)
   _execute(ctx, "mkdir build-gcc")
-  _execute(ctx, "cd gcc && contrib/download_prerequisites")
+  _execute(ctx, "cd gcc && contrib/download_prerequisites", fail_on_error=False, timeout=120)
   _execute(ctx, """
            cd build-gcc && \
            ../gcc/configure \
