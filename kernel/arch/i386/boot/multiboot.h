@@ -170,7 +170,11 @@ struct multiboot_info
 
   /* Memory Mapping buffer */
   multiboot_uint32_t mmap_length;
+#ifdef __STDC_HOSTED__
+  void* mmap_addr;
+#else
   multiboot_uint32_t mmap_addr;
+#endif
 
   /* Drive Info buffer */
   multiboot_uint32_t drives_length;

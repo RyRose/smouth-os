@@ -12,4 +12,7 @@ cc_library(
   deps = [
     "//libc/string",
   ],
+  tags = [
+    "manual"
+  ]
 )

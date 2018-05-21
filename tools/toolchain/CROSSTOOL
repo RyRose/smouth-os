@@ -78,6 +78,10 @@ toolchain {
   compiler_flag: "-isystem"
   compiler_flag: "external/toolchain-i686-elf/toolchain/lib/gcc/i686-elf/7.2.0/include-fixed"
 
+  # TODO(RyRose): Remove flag when lock/mutex primitives can enforce local
+  # static guards.
+  compiler_flag: "-fno-threadsafe-statics"
+
 
   compilation_mode_flags {
     mode: FASTBUILD
@@ -110,6 +114,7 @@ toolchain {
     linker_flag: "-Wl,--gc-sections"
   }
 
+  # Warnings
   compiler_flag: "-Wall"
   compiler_flag: "-Wcast-align"
   compiler_flag: "-Wextra"

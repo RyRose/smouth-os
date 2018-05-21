@@ -31,7 +31,10 @@
 	# Call the global constructors. Must not modify existing stack.
 	call _init
 
-  call copy_multiboot
+  # Pre-main for arch-specific setup. In addition, this function must be called
+  # with the initial value of the EBX register pushed onto the stack. This value
+  # is a pointer to the multiboot information structure.
+  call pre_kernel_main
 
 	# Transfer control to the main kernel.
 	call kernel_main

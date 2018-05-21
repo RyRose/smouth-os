@@ -1,8 +1,9 @@
-        .extern gdt_ptr
         .global gdtFlush
         .type gdtFlush, @function
 gdtFlush:
-        lgdt (gdt_ptr)
+        pushl %ebp
+        movl %esp, %ebp
+        lgdt 8(%ebp)
         ljmp $0x08, $flush2     # Far jumps to set CS register to 0x08
 
 flush2:
@@ -12,4 +13,6 @@ flush2:
         mov %ax, %fs
         mov %ax, %gs
         mov %ax, %ss
+        movl %ebp, %esp
+        popl %ebp
         ret

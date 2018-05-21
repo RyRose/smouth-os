@@ -1,6 +1,5 @@
 #include "libc/stdio/printf.h"
 
-#include "kernel/arch/gdt.h"
 #include "kernel/arch/tty.h"
 #include "kernel/arch/memory.h"
 
@@ -17,8 +16,6 @@ void kernel_main(void) {
     libc::printf("address: %X, length: %X, ", regions[i].address, regions[i].length);
     libc::printf("type: %s\n", words[static_cast<int>(regions[i].type) - 1]);
   }
-  uint64_t gdt_ptr = arch::installGdt();
-  libc::printf("Enabled gdt. gdt_ptr: 0x%X, &gdt_ptr: 0x%p.\n", gdt_ptr, &gdt_ptr);
   libc::printf("Kernel start: 0x%p, end: 0x%p.\n", arch::GetKernelStart(), arch::GetKernelEnd());
 }
 

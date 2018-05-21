@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "kernel/arch/i386/boot/meminfo.h"
+#include "kernel/arch/i386/boot/mmap_manager.h"
 #include "kernel/arch/i386/boot/multiboot.h"
 
 extern uint32_t kernel_start;
@@ -16,9 +16,9 @@ namespace arch {
       return -1;
     }
 
-    auto* mmap_manager = boot::GetMmapManager();
-    int count = mmap_manager->GetCount();
-    auto* mmap_entries = mmap_manager->GetEntries();
+    auto& mmap_manager = boot::MmapManager::GetInstance();
+    int count = mmap_manager.GetCount();
+    auto* mmap_entries = mmap_manager.GetEntries();
 
     MemoryRegion region;
     int i;

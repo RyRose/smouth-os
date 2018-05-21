@@ -10,6 +10,7 @@ cc_library(
   ],
   deps = [
     "//libc/stdio",
-    "//kernel/arch/i386/boot:multiboot"
+    "//kernel/arch/i386/boot:multiboot",
+    "//kernel/arch/i386/boot:mmap_manager"
   ],
 )
