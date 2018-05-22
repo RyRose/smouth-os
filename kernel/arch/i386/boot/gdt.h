@@ -6,16 +6,21 @@
 
 namespace boot {
 
-// A segment selector for the global descriptor table.
+// An entry in the global descriptor table.
 class GdtEntry {
   public:
-    GdtEntry(uint32_t base, uint32_t limit, uint8_t type)
-      : base_(base), limit_(limit), type_(type) {}
-
     // Returns the gdt entry encoded as an 8 byte entry to be inserted into the
     // Global Descriptor Table.
-    uint64_t Get();
+    virtual uint64_t Get() = 0;
+};
 
+// A segment selector for the global descriptor table.
+class SegmentSelector {
+  public:
+    SegmentSelector(uint32_t base, uint32_t limit, uint8_t type)
+      : base_(base), limit_(limit), type_(type) {}
+
+    uint64_t Get();
   private:
 
     // The base memory address of the selector

@@ -4,7 +4,7 @@
 
 namespace boot {
 
-uint64_t GdtEntry::Get() {
+uint64_t SegmentSelector::Get() {
   uint8_t target[8];
 
   if (limit_ > 65536) {

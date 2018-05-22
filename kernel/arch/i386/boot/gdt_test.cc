@@ -5,17 +5,17 @@
 namespace boot {
 
 TEST(Gdt, TestNullSelector) {
-  GdtEntry entry(0, 0, 0);
+  SegmentSelector entry(0, 0, 0);
   EXPECT_EQ(0, entry.Get());
 }
 
 TEST(Gdt, TestCodeSelector) {
-  GdtEntry entry(0, 0xFFFFFFFF, 0x9A);
+  SegmentSelector entry(0, 0xFFFFFFFF, 0x9A);
   EXPECT_EQ(0x00CF9A000000FFFF, entry.Get());
 }
 
 TEST(Gdt, TestDataSelector) {
-  GdtEntry entry(0, 0xFFFFFFFF, 0x92);
+  SegmentSelector entry(0, 0xFFFFFFFF, 0x92);
   EXPECT_EQ(0x00CF92000000FFFF, entry.Get());
 }
 

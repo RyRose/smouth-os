@@ -14,9 +14,9 @@ namespace {
 namespace boot {
 
 void installGdt() {
-  GdtEntry null_selector(0, 0, 0);
-  GdtEntry code_segment_selector(0, 0xFFFFFFFF, 0x9A);
-  GdtEntry data_segment_selector(0, 0xFFFFFFFF, 0X92);
+  SegmentSelector null_selector(0, 0, 0);
+  SegmentSelector code_segment_selector(0, 0xFFFFFFFF, 0x9A);
+  SegmentSelector data_segment_selector(0, 0xFFFFFFFF, 0X92);
   gdt[0] = null_selector.Get();
   gdt[1] = code_segment_selector.Get();
   gdt[2] = data_segment_selector.Get();

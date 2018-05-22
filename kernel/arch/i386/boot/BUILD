@@ -58,6 +58,9 @@ cc_library(
   hdrs = [
     "gdt.h"
   ],
+  deps = [
+    "//kernel/cxx:abi"
+  ]
 )
 
 cc_test(
