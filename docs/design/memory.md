@@ -19,3 +19,9 @@ The global descriptor table looks like the following:
 | 0    | 0xFFFFFFFF | 0x92 |
 
 The first entry is all zeros (AKA the *null selector*) because the first entry in the GDT is unused by the processor. The second entry corresponds to the code segment selector and the third corresponds to the data selector. The latter two segment selectors allow access across the whol accessible physical address space. This is pretty common when one wants to use paging and virtual address spaces for memory protections instead of segment registers.
+
+In addition, this corresponds to the Basic Flat Model described in section 3.2.1
+of the Intel x86 System Programming Guide. This means that there is no hardware
+protection by default behind accessing memory that is inaccessible for reasons
+that it doesn't exist (less that 4GB of RAM) or an invalid type of memory as
+specified by the system memory map returned by calling `INT 0x15, AX=0xE820`.
