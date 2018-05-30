@@ -1,13 +1,13 @@
 package(default_visibility = ["//libc:__subpackages__"])
 
 cc_library(
-  name = "stdio",
-  deps = [
-    ":printf",
-    ":putchar",
-    ":puts"
-  ],
-  visibility = ["//visibility:public"],
+    name = "stdio",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":printf",
+        ":putchar",
+        ":puts",
+    ],
 )
 
 cc_library(
@@ -21,8 +21,8 @@ cc_library(
     deps = [
         ":putchar",
         "//libc/stdlib:arithmetic",
-        "//libc/string:str"
-    ]
+        "//libc/string:str",
+    ],
 )
 
 cc_library(
@@ -34,7 +34,7 @@ cc_library(
         "putchar.h",
     ],
     deps = [
-      "//kernel/arch:tty"
+        "//kernel/arch:tty",
     ],
 )
 
@@ -55,11 +55,11 @@ cc_test(
     name = "printf_test",
     size = "small",
     srcs = [
+        "printf.cc",
         "printf_test.cc",
-        "printf.cc"
     ],
     deps = [
-      "@com_google_googletest//:gtest",
-      ":printf",
-    ]
+        ":printf",
+        "@com_google_googletest//:gtest",
+    ],
 )

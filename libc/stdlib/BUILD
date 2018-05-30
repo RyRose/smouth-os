@@ -1,12 +1,12 @@
 package(default_visibility = ["//libc:__subpackages__"])
 
 cc_library(
-  name = "stdlib",
-  deps = [
-    ":abort",
-    ":arithmetic",
-  ],
-  visibility = ["//visibility:public"],
+    name = "stdlib",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":abort",
+        ":arithmetic",
+    ],
 )
 
 cc_library(
@@ -26,5 +26,5 @@ cc_library(
     ],
     hdrs = [
         "arithmetic.h",
-    ]
+    ],
 )

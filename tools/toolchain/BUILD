@@ -1,26 +1,29 @@
-package(default_visibility = ['//visibility:public'])
+package(default_visibility = ["//visibility:public"])
 
-exports_files(["toolchain.BUILD", "toolchain.bzl"])
+exports_files([
+    "toolchain.BUILD",
+    "toolchain.bzl",
+])
 
 config_setting(
-  name = "i386",
-  values = {
-    "cpu": "i386",
-  },
+    name = "i386",
+    values = {
+        "cpu": "i386",
+    },
 )
 
 config_setting(
-  name = "local",
-  values = {
-    "cpu": "k8",
-  },
+    name = "local",
+    values = {
+        "cpu": "k8",
+    },
 )
 
 cc_toolchain_suite(
-  name = "toolchain",
-  toolchains = {
-    "i386|g++" : "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
-    "darwin|compiler" : "@bazel_tools//tools/cpp:cc-compiler-darwin",
-    "local|compiler" : "@bazel_tools//tools/cpp:cc-compiler-local",
-  },
+    name = "toolchain",
+    toolchains = {
+        "i386|g++": "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
+        "darwin|compiler": "@bazel_tools//tools/cpp:cc-compiler-darwin",
+        "local|compiler": "@bazel_tools//tools/cpp:cc-compiler-local",
+    },
 )

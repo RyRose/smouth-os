@@ -1,12 +1,12 @@
 package(default_visibility = ["//libc:__subpackages__"])
 
 cc_library(
-  name = "string",
-  deps = [
-    ":mem",
-    ":str"
-  ],
-  visibility = ["//visibility:public"],
+    name = "string",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mem",
+        ":str",
+    ],
 )
 
 cc_library(
@@ -22,5 +22,5 @@ cc_library(
     srcs = glob(["str*.cc"]),
     hdrs = [
         "str.h",
-    ]
+    ],
 )

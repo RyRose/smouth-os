@@ -1,16 +1,13 @@
 # Binary dependencies needed for running the bash commands
 DEPS = ["make", "realpath", "gcc", "makeinfo", "sh"]
 
-
 def _check_dependency(ctx, dep):
-  if ctx.which(dep) == None:
-    fail("%s requires %s as a dependency. Please check your PATH." % (ctx.name, dep))
-
+    if ctx.which(dep) == None:
+        fail("%s requires %s as a dependency. Please check your PATH." % (ctx.name, dep))
 
 def _check_dependencies(ctx):
-  for dep in DEPS:
-    _check_dependency(ctx, dep)
-
+    for dep in DEPS:
+        _check_dependency(ctx, dep)
 
 _EXECUTION_FAILURE_MESSAGE = """
 The command `%s` failed.
@@ -19,23 +16,23 @@ stdout: %s.
 stderr: %s.
 """
 
-
-def _execute(ctx, cmd, fail_on_error=True, **kwargs):
-  result = ctx.execute(["sh", "-c", """
+def _execute(ctx, cmd, fail_on_error = True, **kwargs):
+    result = ctx.execute(["sh", "-c", """
                         set -ex;
                         %s""" % cmd], **kwargs)
-  if fail_on_error and result.return_code != 0:
-    fail(_EXECUTION_FAILURE_MESSAGE  % (cmd, result.return_code, result.stdout, result.stderr))
-  return result
-
+    if fail_on_error and result.return_code != 0:
+        fail(_EXECUTION_FAILURE_MESSAGE % (cmd, result.return_code, result.stdout, result.stderr))
+    return result
 
 def _build_binutils(ctx, prefix):
-  ctx.download_and_extract(ctx.attr.binutils_urls,
-                           output = "binutils",
-                           sha256 = ctx.attr.binutils_sha256,
-                           stripPrefix = ctx.attr.binutils_strip_prefix)
-  _execute(ctx, "mkdir build-binutils")
-  _execute(ctx, """
+    ctx.download_and_extract(
+        ctx.attr.binutils_urls,
+        output = "binutils",
+        sha256 = ctx.attr.binutils_sha256,
+        stripPrefix = ctx.attr.binutils_strip_prefix,
+    )
+    _execute(ctx, "mkdir build-binutils")
+    _execute(ctx, """
            cd build-binutils && \
            ../binutils/configure \
            --target=%s \
@@ -43,20 +40,21 @@ def _build_binutils(ctx, prefix):
            --with-sysroot \
            --disable-nls \
            --disable-werror""" % (ctx.attr.target_triplet, prefix))
-  _execute(ctx, "cd build-binutils && make")
-  _execute(ctx, "cd build-binutils && make install")
-  _execute(ctx, "rm -rf build-binutils")
-  _execute(ctx, "rm -rf binutils")
-
+    _execute(ctx, "cd build-binutils && make")
+    _execute(ctx, "cd build-binutils && make install")
+    _execute(ctx, "rm -rf build-binutils")
+    _execute(ctx, "rm -rf binutils")
 
 def _build_gcc(ctx, prefix):
-  ctx.download_and_extract(ctx.attr.gcc_urls,
-                           output = "gcc",
-                           sha256 = ctx.attr.gcc_sha256,
-                           stripPrefix = ctx.attr.gcc_strip_prefix)
-  _execute(ctx, "mkdir build-gcc")
-  _execute(ctx, "cd gcc && contrib/download_prerequisites", fail_on_error=False, timeout=120)
-  _execute(ctx, """
+    ctx.download_and_extract(
+        ctx.attr.gcc_urls,
+        output = "gcc",
+        sha256 = ctx.attr.gcc_sha256,
+        stripPrefix = ctx.attr.gcc_strip_prefix,
+    )
+    _execute(ctx, "mkdir build-gcc")
+    _execute(ctx, "cd gcc && contrib/download_prerequisites", fail_on_error = False, timeout = 120)
+    _execute(ctx, """
            cd build-gcc && \
            ../gcc/configure \
            --target=%s \
@@ -64,35 +62,32 @@ def _build_gcc(ctx, prefix):
            --disable-nls \
            --enable-languages=c,c++ \
            --without-headers""" % (ctx.attr.target_triplet, prefix))
-  _execute(ctx, "cd build-gcc && make all-gcc", timeout=2000)
-  _execute(ctx, "cd build-gcc && make all-target-libgcc")
-  _execute(ctx, "cd build-gcc && make install-gcc")
-  _execute(ctx, "cd build-gcc && make install-target-libgcc")
-  _execute(ctx, "rm -rf gcc")
-  _execute(ctx, "rm -rf build-gcc")
-
+    _execute(ctx, "cd build-gcc && make all-gcc", timeout = 2000)
+    _execute(ctx, "cd build-gcc && make all-target-libgcc")
+    _execute(ctx, "cd build-gcc && make install-gcc")
+    _execute(ctx, "cd build-gcc && make install-target-libgcc")
+    _execute(ctx, "rm -rf gcc")
+    _execute(ctx, "rm -rf build-gcc")
 
 def _toolchain_impl(ctx):
-  _check_dependencies(ctx)
-  _execute(ctx, "mkdir toolchain")
-  prefix = _execute(ctx, "realpath toolchain").stdout.strip()
-  _build_binutils(ctx, prefix)
-  _build_gcc(ctx, prefix)
-  ctx.symlink(Label(ctx.attr.build_file), "BUILD")
-
+    _check_dependencies(ctx)
+    _execute(ctx, "mkdir toolchain")
+    prefix = _execute(ctx, "realpath toolchain").stdout.strip()
+    _build_binutils(ctx, prefix)
+    _build_gcc(ctx, prefix)
+    ctx.symlink(Label(ctx.attr.build_file), "BUILD")
 
 new_toolchain_repository = repository_rule(
     implementation = _toolchain_impl,
     attrs = {
-      "build_file" : attr.string(mandatory = True),
-      "binutils_urls" : attr.string_list(mandatory = True),
-      "binutils_sha256" : attr.string(),
-      "binutils_strip_prefix" : attr.string(),
-      "gcc_urls" : attr.string_list(mandatory = True),
-      "gcc_sha256" : attr.string(),
-      "gcc_strip_prefix" : attr.string(),
-      "target_triplet" : attr.string(mandatory = True)
+        "build_file": attr.string(mandatory = True),
+        "binutils_urls": attr.string_list(mandatory = True),
+        "binutils_sha256": attr.string(),
+        "binutils_strip_prefix": attr.string(),
+        "gcc_urls": attr.string_list(mandatory = True),
+        "gcc_sha256": attr.string(),
+        "gcc_strip_prefix": attr.string(),
+        "target_triplet": attr.string(mandatory = True),
     },
-    local = False
+    local = False,
 )
-
