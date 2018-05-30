@@ -1,10 +1,5 @@
 .vscode/
-*.iso
-sysroot
-isodir
-*.out
 *~
 *#
 bazel-*
 *.swp
-tools/compilers/i686-elf
