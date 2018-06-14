@@ -5,7 +5,7 @@
 
 namespace util {
 
-enum class ErrorCode { OK, INVALID_ARGUMENT, UNIMPLEMENTED, UNKNOWN };
+enum class ErrorCode { OK, INVALID_ARGUMENT, OVERFLOW, UNIMPLEMENTED, UNKNOWN };
 
 // A class to represent if a function either resulted in an error or was ok.
 class Status {

@@ -5,73 +5,68 @@
 
 namespace interrupt {
 
-namespace {
+enum class GateType : uint8_t {
+  EMPTY = 0,
+  TASK = 0x5,
+  INTERRUPT_16BIT = 0x6,
+  INTERRUPT_32BIT = 0xE,
+  TRAP_16BIT = 0x7,
+  TRAP_32BIT = 0xF,
+};
 
-// Combines the different parts of the 5th byte of an IDT gate descriptor to be
-// properly formatted.
-//
-// `gate_type` is the first 3 bits of the type byte that determine the gate type
-// (Interrupt/Task/Trap). `dpl` corresponds to the 2-bit Descriptor Privilege
-// Level (DPL). `bit_type` is true if the size of the gate is 32 bits. False is
-// 16 bits. `present` is true if the segment is present and false otherwise.
-constexpr uint8_t GetDescriptorType(uint8_t gate_type, uint8_t dpl,
-                                    bool bit_type, bool present) {
-  return (0x7 & gate_type) | (bit_type << 3) | ((dpl & 0x3) << 5) |
-         (present << 7);
-}
-
-}  // namespace
-
-// A class representing a descriptor to be stored in the Interrupt Descriptor
-// Table (IDT).
+// A class representing a 32-bit descriptor to be stored in the Interrupt
+// Descriptor Table (IDT). Packed such that it can be directly used as elements
+// in the i386 IDT.
 class GateDescriptor {
  public:
-  GateDescriptor(uint32_t offset, uint16_t segment_selector, uint8_t type)
-      : offset_(offset), segment_selector_(segment_selector), type_(type) {}
+  GateDescriptor()
+      : offset_first_(0),
+        segment_selector_(0),
+        zeroes_(0),
+        gate_type_(GateType::EMPTY),
+        segment_(false),
+        dpl_(0),
+        present_(false),
+        offset_second_(0) {}
 
-  // Returns the gate descriptor properly formatted for insertion to the IDT.
-  uint64_t Get() const;
+  GateDescriptor(uint32_t offset, uint16_t segment_selector, GateType gate_type,
+                 uint8_t dpl, bool present)
+      : offset_first_(offset & 0xFFFF),
+        segment_selector_(segment_selector),
+        zeroes_(0),
+        gate_type_(gate_type),
+        segment_(false),
+        // TODO(RyRose): Add check for overflow.
+        dpl_(dpl),
+        present_(present),
+        offset_second_(offset >> 16) {}
 
  private:
-  // The offset to the interrupt procedure entry point. Basically, a pointer to
-  // the function that handles this interrupt.
-  uint32_t offset_;
-
+  // The first 2 bytes of offset to the interrupt procedure entry point.
+  // Basically, a pointer to the function that handles this interrupt.
+  uint16_t offset_first_ : 16;
   // Index of the segment descriptor in the Global Descriptor Table (GDT) that
   // describes the code segment that `offset_` points to.
-  uint16_t segment_selector_;
+  uint16_t segment_selector_ : 16;
+  // A byte that should always be zero.
+  uint8_t zeroes_ : 8;
+  // Four bits that determine the gate type (Interrupt/Task/Trap) and 16/32
+  // bitness.
+  GateType gate_type_ : 4;
+  // Whether this descriptor points to a code/data segment. Else, it points
+  // to some other system segment. We consider interrupt handlers some other
+  // system segment and thus this bit should always be false.
+  bool segment_ : 1;
+  // Two bits that correspond to the 2-bit Descriptor Privilege Level (DPL)
+  uint8_t dpl_ : 2;
+  // Whether or not the segment is present.
+  bool present_ : 1;
+  // The last 2 bytes of the offset.
+  uint16_t offset_second_ : 16;
+} __attribute__((packed));
 
-  // The 5th byte (zero-indexed of course) in the gate descriptor. Corresponds
-  // to the type of gate (Task/Interrupt/Trap) along with the present bit,
-  // Descriptor Privilege Level (DPL), and gate size bit (16 bit vs 32 bit).
-  uint8_t type_;
-};
-
-// A GateDescriptor that represents an interrupt gate.
-class InterruptGateDescriptor : public GateDescriptor {
- public:
-  InterruptGateDescriptor(uint32_t offset, uint16_t segment_selector,
-                          uint8_t dpl, bool bit_type, bool present)
-      : GateDescriptor(offset, segment_selector,
-                       GetDescriptorType(0x6, dpl, bit_type, present)) {}
-};
-
-// A GateDescriptor that represents a trap gate.
-class TrapGateDescriptor : public GateDescriptor {
- public:
-  TrapGateDescriptor(uint32_t offset, uint16_t segment_selector, uint8_t dpl,
-                     bool bit_type, bool present)
-      : GateDescriptor(offset, segment_selector,
-                       GetDescriptorType(0x7, dpl, bit_type, present)) {}
-};
-
-// A GateDescriptor that represents a task gate.
-class TaskGateDescriptor : public GateDescriptor {
- public:
-  TaskGateDescriptor(uint16_t segment_selector, uint8_t dpl, bool present)
-      : GateDescriptor(0, segment_selector,
-                       GetDescriptorType(0x5, dpl, false, present)) {}
-};
+static_assert(sizeof(GateDescriptor) == 8,
+              "i386 IDT gate descriptors must be 8 bytes!");
 
 }  // namespace interrupt
 

@@ -4,24 +4,25 @@
 
 namespace interrupt {
 
-TEST(Descriptor, TestBaseDescriptor) {
-  GateDescriptor descriptor(0x23456789, 0x1234, 0x78);
-  EXPECT_EQ(0x2345780012346789, descriptor.Get());
+TEST(Descriptor, TestDefaultGateDescriptor) {
+  GateDescriptor descriptor;
+  EXPECT_EQ(0, *reinterpret_cast<uint64_t *>(&descriptor));
 }
 
 TEST(Descriptor, TestInterruptGateDescriptor) {
-  InterruptGateDescriptor descriptor(0x12345678, 0x1234, 0, true, true);
-  EXPECT_EQ(0x12348E0012345678, descriptor.Get());
+  GateDescriptor descriptor(0x12345678, 0x1234, GateType::INTERRUPT_32BIT, 0,
+                            true);
+  EXPECT_EQ(0x12348E0012345678, *reinterpret_cast<uint64_t *>(&descriptor));
 }
 
 TEST(Descriptor, TestTrapGateDescriptor) {
-  TrapGateDescriptor descriptor(0x12345678, 0x1234, 0, true, true);
-  EXPECT_EQ(0x12348F0012345678, descriptor.Get());
+  GateDescriptor descriptor(0x12345678, 0x1234, GateType::TRAP_32BIT, 0, true);
+  EXPECT_EQ(0x12348F0012345678, *reinterpret_cast<uint64_t *>(&descriptor));
 }
 
 TEST(Descriptor, TestTaskGateDescriptor) {
-  TaskGateDescriptor descriptor(0x1234, 0, true);
-  EXPECT_EQ(0x850012340000, descriptor.Get());
+  GateDescriptor descriptor(0, 0x1234, GateType::TASK, 0, true);
+  EXPECT_EQ(0x850012340000, *reinterpret_cast<uint64_t *>(&descriptor));
 }
 
 }  // namespace interrupt
