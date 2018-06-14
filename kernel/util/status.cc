@@ -2,16 +2,8 @@
 
 namespace util {
 
-  ErrorCode Status::GetCode() {
-    return code_;
-  }
+ErrorCode Status::GetCode() const { return code_; }
 
-  const char* Status::GetMessage() {
-    return message_;
-  }
+bool Status::ok() const { return code_ == ErrorCode::OK; }
 
-  bool Status::Ok() {
-    return code_ == ErrorCode::OK;
-  }
-  
-}
+}  // namespace util
