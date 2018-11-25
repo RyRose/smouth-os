@@ -31,10 +31,11 @@ class InterruptDescriptorTable {
 
   // Used for testing.
   friend class Table_TestAddress_Test;
+  friend class Table_TestInitiallyZeroed_Test;
 };
 
 // THE interrupt descriptor table.
-InterruptDescriptorTable IDT;
+static InterruptDescriptorTable IDT;
 
 }  // namespace interrupt
 

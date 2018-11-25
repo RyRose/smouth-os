@@ -5,7 +5,7 @@
 
 namespace interrupt {
 
-enum class GateType : uint8_t {
+enum GateType {
   EMPTY = 0,
   TASK = 0x5,
   INTERRUPT_16BIT = 0x6,

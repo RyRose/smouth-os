@@ -11,6 +11,13 @@ TEST(Table, TestAddress) {
             idt.IDTR() & 0xFFFFFFFF);
 }
 
+TEST(Table, TestInitiallyZeroed) {
+  InterruptDescriptorTable idt;
+  for (int i = 0; i < MAX_ENTRIES; i++) {
+    EXPECT_EQ(0, reinterpret_cast<uint64_t *>(idt.table_)[i]);
+  }
+}
+
 TEST(Table, TestZerothRegistered) {
   InterruptDescriptorTable idt;
   EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());

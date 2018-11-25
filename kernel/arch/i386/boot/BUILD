@@ -15,6 +15,9 @@ cc_library(
     deps = [
         ":gdt_installer",
         ":mmap_manager",
+        "//kernel/arch/i386/instructions",
+        "//kernel/arch/i386/interrupt:descriptor",
+        "//kernel/arch/i386/interrupt:table",
     ],
     alwayslink = True,
 )
