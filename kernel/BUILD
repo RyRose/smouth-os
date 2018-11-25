@@ -1,29 +1,24 @@
 cc_binary(
     name = "kernel",
-    srcs = select({
-        "//tools/toolchain:i386": [
-            "kernel/kernel.cc",
-        ],
-        "//conditions:default": [
-            "kernel/kernelstub.cc",
-        ],
-    }),
+    srcs = [
+        "kernel.cc",
+    ],
     linkopts = select({
         "//tools/toolchain:i386": ["-T $(location //kernel/arch/i386:linker.ld)"],
-        "//conditions:default": [],
     }),
+    tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = select({
         "//tools/toolchain:i386": [
             "//kernel/arch/i386:linker.ld",
-            "//libc/stdio",
-            "//kernel/arch:boot",
-            "//kernel/arch:tty",
-            "//kernel/arch:memory",
-            ":crt",
         ],
-        "//conditions:default": [],
-    }),
+    }) + [
+        "//libc/stdio",
+        "//kernel/arch:boot",
+        "//kernel/arch:tty",
+        "//kernel/arch:memory",
+        ":crt",
+    ],
 )
 
 cc_library(
