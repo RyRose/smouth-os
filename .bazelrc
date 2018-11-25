@@ -3,8 +3,8 @@ test \
   --crosstool_top=//tools/toolchain \
   --verbose_failures \
   --test_output=errors \
-  --test_verbose_timeout_warnings 
-     
+  --test_verbose_timeout_warnings
+
 run \
   --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
   --crosstool_top=//tools/toolchain \
