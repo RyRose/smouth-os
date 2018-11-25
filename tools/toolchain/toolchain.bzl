@@ -1,5 +1,11 @@
 # Binary dependencies needed for running the bash commands
-DEPS = ["make", "realpath", "gcc", "makeinfo", "sh"]
+DEPS = [
+    "make",
+    "realpath",
+    "gcc",
+    "makeinfo",
+    "sh",
+]
 
 def _check_dependency(ctx, dep):
     if ctx.which(dep) == None:
@@ -17,6 +23,7 @@ stderr: %s.
 """
 
 def _execute(ctx, cmd, fail_on_error = True, **kwargs):
+    print("executing ", cmd)
     result = ctx.execute(["sh", "-c", """
                         set -ex;
                         %s""" % cmd], **kwargs)
@@ -25,6 +32,7 @@ def _execute(ctx, cmd, fail_on_error = True, **kwargs):
     return result
 
 def _build_binutils(ctx, prefix):
+    print("downloading binutils...")
     ctx.download_and_extract(
         ctx.attr.binutils_urls,
         output = "binutils",
@@ -32,6 +40,7 @@ def _build_binutils(ctx, prefix):
         stripPrefix = ctx.attr.binutils_strip_prefix,
     )
     _execute(ctx, "mkdir build-binutils")
+    print("configuring and making binutils...")
     _execute(ctx, """
            cd build-binutils && \
            ../binutils/configure \
@@ -46,6 +55,7 @@ def _build_binutils(ctx, prefix):
     _execute(ctx, "rm -rf binutils")
 
 def _build_gcc(ctx, prefix):
+    print("downloading gcc...")
     ctx.download_and_extract(
         ctx.attr.gcc_urls,
         output = "gcc",
@@ -53,7 +63,8 @@ def _build_gcc(ctx, prefix):
         stripPrefix = ctx.attr.gcc_strip_prefix,
     )
     _execute(ctx, "mkdir build-gcc")
-    _execute(ctx, "cd gcc && contrib/download_prerequisites", fail_on_error = False, timeout = 120)
+    _execute(ctx, "cd gcc && contrib/download_prerequisites", timeout = 120, fail_on_error = False)
+    print("configuring and making gcc...")
     _execute(ctx, """
            cd build-gcc && \
            ../gcc/configure \
@@ -70,15 +81,18 @@ def _build_gcc(ctx, prefix):
     _execute(ctx, "rm -rf build-gcc")
 
 def _toolchain_impl(ctx):
+    print("checking dependencies...")
     _check_dependencies(ctx)
+    print("making toolchain directory...")
     _execute(ctx, "mkdir toolchain")
     prefix = _execute(ctx, "realpath toolchain").stdout.strip()
+    print("building binutils...")
     _build_binutils(ctx, prefix)
+    print("building gcc...")
     _build_gcc(ctx, prefix)
     ctx.symlink(Label(ctx.attr.build_file), "BUILD")
 
 new_toolchain_repository = repository_rule(
-    implementation = _toolchain_impl,
     attrs = {
         "build_file": attr.string(mandatory = True),
         "binutils_urls": attr.string_list(mandatory = True),
@@ -90,4 +104,5 @@ new_toolchain_repository = repository_rule(
         "target_triplet": attr.string(mandatory = True),
     },
     local = False,
+    implementation = _toolchain_impl,
 )

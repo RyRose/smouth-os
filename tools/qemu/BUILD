@@ -10,4 +10,5 @@ py_binary(
     data = [
         "//kernel",
     ],
+    tags = ["manual"],
 )
