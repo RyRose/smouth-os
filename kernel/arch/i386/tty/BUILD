@@ -1,4 +1,4 @@
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 cc_library(
     name = "tty",
@@ -12,6 +12,7 @@ cc_library(
     tags = [
         "manual",
     ],
+    visibility = ["//kernel/arch:__pkg__"],
     deps = [
         "//libc/string",
     ],

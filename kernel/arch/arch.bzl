@@ -1,5 +1,4 @@
 def arch_library(name, visibility = None):
-    native.exports_files([name + ".h"])
     native.cc_library(
         name = name,
         hdrs = [name + ".h"],

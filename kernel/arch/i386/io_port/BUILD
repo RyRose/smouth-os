@@ -1,4 +1,4 @@
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 cc_library(
     name = "io_port",
@@ -8,4 +8,5 @@ cc_library(
     hdrs = [
         "//kernel/arch:io_port.h",
     ],
+    visibility = ["//kernel/arch:__pkg__"],
 )

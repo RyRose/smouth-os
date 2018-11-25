@@ -1,4 +1,4 @@
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 cc_library(
     name = "memory",
@@ -8,6 +8,7 @@ cc_library(
     hdrs = [
         "//kernel/arch:memory.h",
     ],
+    visibility = ["//kernel/arch:__pkg__"],
     deps = [
         "//kernel/arch/i386/boot:mmap_manager",
         "//kernel/arch/i386/boot:multiboot",
