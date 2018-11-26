@@ -6,6 +6,8 @@ cc_library(
         "boot.S",
         "crti.S",
         "crtn.S",
+        "dummy_handler.cc",
+        "dummy_isr.S",
         "pre_kernel_main.cc",
     ],
     tags = [
@@ -15,9 +17,11 @@ cc_library(
     deps = [
         ":gdt_installer",
         ":mmap_manager",
+        "//kernel/arch:tty",
         "//kernel/arch/i386/instructions",
         "//kernel/arch/i386/interrupt:descriptor",
         "//kernel/arch/i386/interrupt:table",
+        "//libc/stdio",
     ],
     alwayslink = True,
 )

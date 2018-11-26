@@ -8,7 +8,7 @@ namespace interrupt {
 TEST(Table, TestAddress) {
   InterruptDescriptorTable idt;
   EXPECT_EQ(reinterpret_cast<uint64_t>(idt.table_) & 0xFFFFFFFF,
-            idt.IDTR() & 0xFFFFFFFF);
+            (idt.IDTR() >> 16) & 0xFFFFFFFF);
 }
 
 TEST(Table, TestInitiallyZeroed) {
@@ -21,7 +21,7 @@ TEST(Table, TestInitiallyZeroed) {
 TEST(Table, TestZerothRegistered) {
   InterruptDescriptorTable idt;
   EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_EQ(1 * 8 - 1, idt.IDTR() >> 32);
+  EXPECT_EQ(1 * 8 - 1, idt.IDTR() & 0xFFFF);
 }
 
 TEST(Table, TestSequentiallyRegistered) {
@@ -29,13 +29,13 @@ TEST(Table, TestSequentiallyRegistered) {
   EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
   EXPECT_TRUE(idt.Register(GateDescriptor(), 1).ok());
   EXPECT_TRUE(idt.Register(GateDescriptor(), 2).ok());
-  EXPECT_EQ(3 * 8 - 1, idt.IDTR() >> 32);
+  EXPECT_EQ(3 * 8 - 1, idt.IDTR() & 0xFFFF);
 }
 
 TEST(Table, TestLaterRegistered) {
   InterruptDescriptorTable idt;
   EXPECT_TRUE(idt.Register(GateDescriptor(), 3).ok());
-  EXPECT_EQ(4 * 8 - 1, idt.IDTR() >> 32);
+  EXPECT_EQ(4 * 8 - 1, idt.IDTR() & 0xFFFF);
 }
 
 TEST(Table, TestZerothRepeatedlyRegistered) {
@@ -44,7 +44,7 @@ TEST(Table, TestZerothRepeatedlyRegistered) {
   EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
   EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
   EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_EQ(1 * 8 - 1, idt.IDTR() >> 32);
+  EXPECT_EQ(1 * 8 - 1, idt.IDTR() & 0xFFFF);
 }
 
 TEST(Table, TestLaterRepeatedlyRegistered) {
@@ -53,7 +53,7 @@ TEST(Table, TestLaterRepeatedlyRegistered) {
   EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
   EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
   EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
-  EXPECT_EQ(9 * 8 - 1, idt.IDTR() >> 32);
+  EXPECT_EQ(9 * 8 - 1, idt.IDTR() & 0xFFFF);
 }
 
 TEST(Table, TestOverflow) {

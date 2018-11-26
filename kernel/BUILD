@@ -15,7 +15,6 @@ cc_binary(
     }) + [
         "//libc/stdio",
         "//kernel/arch:boot",
-        "//kernel/arch:tty",
         "//kernel/arch:memory",
         ":crt",
     ],
