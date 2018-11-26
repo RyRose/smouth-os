@@ -15,9 +15,9 @@ cc_library(
     ],
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
-        ":gdt_installer",
         ":mmap_manager",
         "//kernel/arch:tty",
+        "//kernel/arch/i386/gdt:gdt_installer",
         "//kernel/arch/i386/instructions",
         "//kernel/arch/i386/interrupt:descriptor",
         "//kernel/arch/i386/interrupt:table",
@@ -55,47 +55,5 @@ cc_library(
     name = "multiboot",
     hdrs = [
         "multiboot.h",
-    ],
-)
-
-cc_library(
-    name = "gdt",
-    srcs = [
-        "gdt.cc",
-    ],
-    hdrs = [
-        "gdt.h",
-    ],
-    deps = [
-        "//kernel/cxx:abi",
-    ],
-)
-
-cc_test(
-    name = "gdt_test",
-    size = "small",
-    srcs = [
-        "gdt_test.cc",
-    ],
-    deps = [
-        ":gdt",
-        "@com_google_googletest//:gtest",
-    ],
-)
-
-cc_library(
-    name = "gdt_installer",
-    srcs = [
-        "gdt_flush.S",
-        "gdt_installer.cc",
-    ],
-    hdrs = [
-        "gdt_installer.h",
-    ],
-    tags = [
-        "manual",
-    ],
-    deps = [
-        ":gdt",
     ],
 )
