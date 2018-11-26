@@ -5,7 +5,7 @@
 namespace gdt {
 
 TEST(Gdt, TestNullDescriptor) {
-  Descriptor d;
+  Descriptor d = Descriptor();
   EXPECT_EQ(0, *reinterpret_cast<uint64_t *>(&d));
 }
 

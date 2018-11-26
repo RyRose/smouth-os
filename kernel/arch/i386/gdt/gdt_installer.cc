@@ -11,7 +11,7 @@ extern "C" void gdtFlush(uint64_t gdt_ptr);
 namespace gdt {
 
 void InstallGDT() {
-  Descriptor null_descriptor;
+  Descriptor null_descriptor = Descriptor();
   Descriptor code_descriptor(
       /*base=*/0, /*limit=*/0xFFFFFFFF, /*segment_type=*/0xA,
       /*descriptor_type=*/true, /*dpl=*/0, /*present=*/true,
