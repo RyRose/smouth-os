@@ -1,3 +1,5 @@
+load("//kernel:templates.bzl", "kernel_library")
+
 cc_binary(
     name = "kernel",
     srcs = [
@@ -20,7 +22,7 @@ cc_binary(
     ],
 )
 
-cc_library(
+kernel_library(
     name = "crt",
     srcs = [
         "crtbegin.o",

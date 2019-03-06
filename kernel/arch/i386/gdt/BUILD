@@ -1,15 +1,14 @@
+load("//kernel:templates.bzl", "kernel_library")
+
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-cc_library(
+kernel_library(
     name = "gdt",
     srcs = [
         "gdt.cc",
     ],
     hdrs = [
         "gdt.h",
-    ],
-    deps = [
-        "//kernel/cxx:abi",
     ],
 )
 
@@ -25,7 +24,7 @@ cc_test(
     ],
 )
 
-cc_library(
+kernel_library(
     name = "gdt_installer",
     srcs = [
         "gdt_flush.S",
@@ -39,6 +38,5 @@ cc_library(
     ],
     deps = [
         ":gdt",
-        "//kernel/cxx:abi",
     ],
 )

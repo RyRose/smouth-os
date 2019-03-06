@@ -1,6 +1,8 @@
+load("//kernel:templates.bzl", "kernel_library")
+
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-cc_library(
+kernel_library(
     name = "boot",
     srcs = [
         "boot.S",
@@ -26,7 +28,7 @@ cc_library(
     alwayslink = True,
 )
 
-cc_library(
+kernel_library(
     name = "mmap_manager",
     srcs = [
         "mmap_manager.cc",
@@ -51,7 +53,7 @@ cc_test(
     ],
 )
 
-cc_library(
+kernel_library(
     name = "multiboot",
     hdrs = [
         "multiboot.h",

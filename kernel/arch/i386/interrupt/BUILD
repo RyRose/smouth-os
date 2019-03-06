@@ -1,6 +1,7 @@
+load("//kernel:templates.bzl", "kernel_library")
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-cc_library(
+kernel_library(
     name = "descriptor",
     hdrs = [
         "descriptor.h",
@@ -19,7 +20,7 @@ cc_test(
     ],
 )
 
-cc_library(
+kernel_library(
     name = "table",
     srcs = [
         "table.cc",

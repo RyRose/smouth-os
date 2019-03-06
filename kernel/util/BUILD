@@ -1,6 +1,7 @@
+load("//kernel:templates.bzl", "kernel_library")
 package(default_visibility = ["//kernel:__subpackages__"])
 
-cc_library(
+kernel_library(
     name = "status",
     srcs = [
         "status.cc",
@@ -25,7 +26,7 @@ cc_test(
     ],
 )
 
-cc_library(
+kernel_library(
     name = "panic",
     srcs = [
         "panic.cc",
@@ -38,7 +39,7 @@ cc_library(
     ],
 )
 
-cc_library(
+kernel_library(
     name = "either",
     hdrs = [
         "either.h",

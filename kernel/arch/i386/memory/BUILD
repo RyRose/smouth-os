@@ -1,6 +1,8 @@
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-cc_library(
+load("//kernel:templates.bzl", "kernel_library")
+
+kernel_library(
     name = "memory",
     srcs = [
         "memory.cc",

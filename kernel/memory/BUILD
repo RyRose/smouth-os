@@ -1,4 +1,5 @@
-cc_library(
+load("//kernel:templates.bzl", "kernel_library")
+kernel_library(
     name = "memory",
     srcs = [
         "memory.cc",
