@@ -22,7 +22,7 @@ cc_binary(
     ],
 )
 
-kernel_library(
+cc_library(
     name = "crt",
     srcs = [
         "crtbegin.o",

@@ -1,9 +1,6 @@
-#ifndef LIBC_ABI_H
-#define LIBC_ABI_H
+#ifndef KERNEL_CXX_ABI_H
+#define KERNEL_CXX_ABI_H
 
-extern "C"
-void __cxa_pure_virtual() {
-  while (true) {}
-}
+extern "C" void __cxa_pure_virtual();
 
-#endif //  LIBC_ABI_H
+#endif  //  KERNEL_CXX_ABI_H

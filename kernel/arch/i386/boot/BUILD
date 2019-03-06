@@ -36,6 +36,7 @@ kernel_library(
     hdrs = [
         "mmap_manager.h",
     ],
+    new = False,
     deps = [
         ":multiboot",
     ],
@@ -58,4 +59,5 @@ kernel_library(
     hdrs = [
         "multiboot.h",
     ],
+    new = False,
 )

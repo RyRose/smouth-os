@@ -1,4 +1,7 @@
+package(default_visibility = ["//kernel:__subpackages__"])
+
 load("//kernel:templates.bzl", "kernel_library")
+
 kernel_library(
     name = "memory",
     srcs = [
@@ -7,6 +10,7 @@ kernel_library(
     hdrs = [
         "memory.h",
     ],
+    new = False,
     deps = [
         "//kernel/arch:memory",
         "//libc/string",

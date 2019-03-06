@@ -1,12 +1,18 @@
-_BASE_KERNEL_DEPENDENCIES = [
-    "//kernel/cxx:abi",
-]
+_ABI_DEP = "//kernel/cxx:abi"
 
-def kernel_library(**kwargs):
+_NEW_DEP = "//kernel/cxx:new"
+
+def kernel_library(abi = True, new = True, **kwargs):
+    deps = []
+    if abi:
+        deps += [_ABI_DEP]
+    if new:
+        deps += [_NEW_DEP]
+
     if "deps" in kwargs:
-        kwargs["deps"] += _BASE_KERNEL_DEPENDENCIES
+        kwargs["deps"] += deps
     else:
-        kwargs["deps"] = _BASE_KERNEL_DEPENDENCIES
+        kwargs["deps"] = deps
     native.cc_library(
         **kwargs
     )

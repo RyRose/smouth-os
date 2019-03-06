@@ -10,6 +10,7 @@ kernel_library(
     hdrs = [
         "//kernel/arch:memory.h",
     ],
+    new = False,
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
         "//kernel/arch/i386/boot:mmap_manager",
