@@ -5,9 +5,15 @@ _NEW_DEP = "//kernel/cxx:new"
 def kernel_library(abi = True, new = True, **kwargs):
     deps = []
     if abi:
-        deps += [_ABI_DEP]
+        deps += select({
+            "//tools/toolchain:local": [],
+            "//conditions:default": [_ABI_DEP],
+        })
     if new:
-        deps += [_NEW_DEP]
+        deps += select({
+            "//tools/toolchain:local": [],
+            "//conditions:default": [_NEW_DEP],
+        })
 
     if "deps" in kwargs:
         kwargs["deps"] += deps
