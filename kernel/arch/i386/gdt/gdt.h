@@ -73,6 +73,7 @@ namespace gdt {
 // G => granularity_
 //   G determines the scaling of the limit field as described above.
 //
+
 class Descriptor {
  public:
   Descriptor()
@@ -81,6 +82,7 @@ class Descriptor {
         segment_type_(0),
         descriptor_type_(false),
         dpl_(0),
+        db_(0),
         present_(false),
         limit1_(0),
         available_(false),
