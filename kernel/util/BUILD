@@ -1,4 +1,5 @@
 load("//kernel:templates.bzl", "kernel_library")
+
 package(default_visibility = ["//kernel:__subpackages__"])
 
 kernel_library(
@@ -22,7 +23,7 @@ cc_test(
     ],
     deps = [
         ":status",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -54,6 +55,6 @@ cc_test(
     ],
     deps = [
         ":either",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

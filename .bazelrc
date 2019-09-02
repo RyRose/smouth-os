@@ -1,29 +1,35 @@
-test \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
+common \
   --crosstool_top=//tools/toolchain \
   --verbose_failures \
+  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+
+test \
   --test_output=errors \
   --test_verbose_timeout_warnings
 
-run \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
-  --crosstool_top=//tools/toolchain \
-  --strip=never \
-  --verbose_failures
+run --strip=never
 
-build \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
-  --crosstool_top=//tools/toolchain \
-  --strip=never \
-  --verbose_failures
+build --strip=never
 
-common:ci --color=no
-common:ci -c opt
-common:ci --noshow_progress
-common:ci --noshow_loading_progress
-build:ci --verbose_failures
-build:ci --sandbox_debug
-build:ci --spawn_strategy=standalone
-build:ci --genrule_strategy=standalone
-test:ci --test_strategy=standalone
-test:ci --test_output=errors
+# Options for cross-compiling SmouthOS on the i386 architecture.
+
+common:i386 \
+  --cpu=i386 \
+  --compiler=g++
+
+# Continuous Integration (ci) options for running SmouthOS on Jenkins.
+
+common:ci \
+  --color=no \
+  --noshow_loading_progress \
+  --noshow_progress \
+  -c opt
+
+build:ci \
+  --genrule_strategy=standalone \
+  --sandbox_debug \
+  --spawn_strategy=standalone
+
+test:ci \
+  --test_output=errors \
+  --test_strategy=standalone

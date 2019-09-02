@@ -25,6 +25,6 @@ cc_test(
     ],
     deps = [
         ":memory",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

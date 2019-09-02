@@ -50,7 +50,7 @@ cc_test(
     ],
     deps = [
         ":mmap_manager",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 

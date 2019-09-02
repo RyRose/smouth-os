@@ -60,6 +60,6 @@ cc_test(
     ],
     deps = [
         ":printf",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

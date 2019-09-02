@@ -20,7 +20,7 @@ cc_test(
     ],
     deps = [
         ":gdt",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 

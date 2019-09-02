@@ -1,3 +1,5 @@
+load(":toolchain_config.bzl", "toolchain_config")
+
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
@@ -116,21 +118,21 @@ filegroup(
     ],
 )
 
-filegroup(
-    name = "empty",
-    srcs = [],
+filegroup(name = "empty")
+
+toolchain_config(
+    name = "toolchain_config",
 )
 
 cc_toolchain(
     name = "cc-compiler-i686-elf",
     all_files = ":i686-elf-all_files",
     compiler_files = ":i686-elf-compiler_files",
-    cpu = "i686-elf",
     dwp_files = ":empty",
-    dynamic_runtime_libs = [":empty"],
     linker_files = ":i686-elf-linker_files",
     objcopy_files = ":i686-elf-objcopy",
-    static_runtime_libs = [":empty"],
     strip_files = ":i686-elf-strip",
-    supports_param_files = True,
+    supports_param_files = 0,
+    toolchain_config = ":toolchain_config",
+    toolchain_identifier = "i686-elf",
 )

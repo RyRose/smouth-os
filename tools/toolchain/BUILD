@@ -24,6 +24,7 @@ cc_toolchain_suite(
     toolchains = {
         "i386|g++": "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
         "darwin|compiler": "@bazel_tools//tools/cpp:cc-compiler-darwin",
+        "k8": "@bazel_tools//tools/cpp:cc-compiler-k8",
         "local|compiler": "@bazel_tools//tools/cpp:cc-compiler-local",
     },
 )

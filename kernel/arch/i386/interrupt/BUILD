@@ -1,4 +1,5 @@
 load("//kernel:templates.bzl", "kernel_library")
+
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 kernel_library(
@@ -16,7 +17,7 @@ cc_test(
     ],
     deps = [
         ":descriptor",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -43,6 +44,6 @@ cc_test(
     deps = [
         ":descriptor",
         ":table",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

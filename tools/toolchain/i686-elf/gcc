@@ -2,4 +2,5 @@
 
 binary=$(basename $0);
 
+set -euo pipefail
 exec "external/toolchain-i686-elf/toolchain/bin/i686-elf-$binary" "$@"
