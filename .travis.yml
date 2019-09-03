@@ -26,7 +26,10 @@ before_install:
       OS=linux
       LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
       export LD_LIBRARY_PATH
-      sudo apt-get install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libstdc++6 gcc-4.9 g++-4.9 gcc-7
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+      sudo apt-get update -y
+      sudo apt-get install -y software-properties-common libstdc++6 gcc-7 g++-7
+
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
