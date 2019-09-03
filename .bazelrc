@@ -20,6 +20,8 @@ common:i386 \
 # Continuous Integration (ci) options for running SmouthOS on Jenkins.
 
 common:ci \
+  --noshow_progress \
+  --noshow_loading_progress \
   --color=no \
   -c opt
 
