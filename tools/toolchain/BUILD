@@ -22,9 +22,11 @@ config_setting(
 cc_toolchain_suite(
     name = "toolchain",
     toolchains = {
-        "i386|g++": "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
         "darwin|compiler": "@bazel_tools//tools/cpp:cc-compiler-darwin",
-        "k8": "@bazel_tools//tools/cpp:cc-compiler-k8",
+        "i386|g++": "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
+        "k8": "@bazel_tools//tools/cpp:cc-compiler-local",
+        "k8|g++": "@bazel_tools//tools/cpp:cc-compiler-local",
         "local|compiler": "@bazel_tools//tools/cpp:cc-compiler-local",
     },
 )
+

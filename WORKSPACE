@@ -14,6 +14,11 @@ http_archive(
     url = "https://github.com/google/googletest/archive/master.zip",
 )
 
+local_repository(
+    name = "toolchain_i686_elf_cached",
+    path = ".external/toolchain-i686-elf",
+)
+
 new_toolchain_repository(
     name = "toolchain-i686-elf",
     binutils_sha256 = "0d9d2bbf71e17903f26a676e7fba7c200e581c84b8f2f43e72d875d0e638771c",

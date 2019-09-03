@@ -10,10 +10,10 @@ DEPS = [
 def _check_dependencies(ctx):
     nondeps = []
     for dep in DEPS:
-      if ctx.which(dep) == None:
-        nondeps.append(dep)
+        if ctx.which(dep) == None:
+            nondeps.append(dep)
     if nondeps:
-      fail("%s requires %s as dependencies. Please check your PATH." % (ctx.name, nondeps))
+        fail("%s requires %s as dependencies. Please check your PATH." % (ctx.name, nondeps))
 
 _EXECUTION_FAILURE_MESSAGE = """
 The command `%s` failed.
@@ -24,9 +24,7 @@ stderr: %s.
 
 def _execute(ctx, cmd, fail_on_error = True, **kwargs):
     print("executing ", cmd)
-    result = ctx.execute(["sh", "-c", """
-                        set -ex;
-                        %s""" % cmd], **kwargs)
+    result = ctx.execute(["sh", "-c", "set -ex; %s" % cmd], **kwargs)
     if fail_on_error and result.return_code != 0:
         fail(_EXECUTION_FAILURE_MESSAGE % (cmd, result.return_code, result.stdout, result.stderr))
     return result
@@ -41,14 +39,16 @@ def _build_binutils(ctx, prefix):
     )
     _execute(ctx, "mkdir build-binutils")
     print("configuring and making binutils...")
-    _execute(ctx, """
-           cd build-binutils && \
-           ../binutils/configure \
-           --target=%s \
-           --prefix=%s \
-           --with-sysroot \
-           --disable-nls \
-           --disable-werror""" % (ctx.attr.target_triplet, prefix))
+    _execute(
+        ctx,
+        "cd build-binutils && " +
+        "../binutils/configure " +
+        "--target=%s " % ctx.attr.target_triplet +
+        "--prefix=%s " % prefix +
+        "--with-sysroot " +
+        "--disable-nls " +
+        "--disable-werror",
+    )
     _execute(ctx, "cd build-binutils && make")
     _execute(ctx, "cd build-binutils && make install")
     _execute(ctx, "rm -rf build-binutils")
@@ -65,14 +65,16 @@ def _build_gcc(ctx, prefix):
     _execute(ctx, "mkdir build-gcc")
     _execute(ctx, "cd gcc && contrib/download_prerequisites", timeout = 120, fail_on_error = False)
     print("configuring and making gcc...")
-    _execute(ctx, """
-           cd build-gcc && \
-           ../gcc/configure \
-           --target=%s \
-           --prefix=%s \
-           --disable-nls \
-           --enable-languages=c,c++ \
-           --without-headers""" % (ctx.attr.target_triplet, prefix))
+    _execute(
+        ctx,
+        "cd build-gcc && " +
+        "../gcc/configure " +
+        "--target=%s " % ctx.attr.target_triplet +
+        "--prefix=%s " % prefix +
+        "--disable-nls " +
+        "--enable-languages=c,c++ " +
+        "--without-headers",
+    )
     _execute(ctx, "cd build-gcc && make all-gcc", timeout = 2000)
     _execute(ctx, "cd build-gcc && make all-target-libgcc")
     _execute(ctx, "cd build-gcc && make install-gcc")

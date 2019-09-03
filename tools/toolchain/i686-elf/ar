@@ -1,6 +1,14 @@
 #!/bin/sh
 
-binary=$(basename $0);
+BINARY=$(basename $0);
+
+if [ -z "$TOOLCHAIN_REPOSITORY" ]; then
+  TOOLCHAIN_REPOSITORY="toolchain-i686-elf";
+fi;
+
+if [ -z "$TARGET_TRIPLET" ]; then
+  TARGET_TRIPLET="i686-elf"
+fi;
 
 set -euo pipefail
-exec "external/toolchain-i686-elf/toolchain/bin/i686-elf-$binary" "$@"
+exec "external/${TOOLCHAIN_REPOSITORY}/toolchain/bin/${TARGET_TRIPLET}-${BINARY}" "$@"
