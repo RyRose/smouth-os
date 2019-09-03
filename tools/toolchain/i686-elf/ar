@@ -10,5 +10,5 @@ if [ -z "$TARGET_TRIPLET" ]; then
   TARGET_TRIPLET="i686-elf"
 fi;
 
-set -euo pipefail
+set -eu
 exec "external/${TOOLCHAIN_REPOSITORY}/toolchain/bin/${TARGET_TRIPLET}-${BINARY}" "$@"

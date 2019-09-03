@@ -24,7 +24,6 @@ before_install:
       function sha256sum() { shasum -a 256 --portable "$@" ; }
     else
       OS=linux
-      sudo apt-get install -y build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
