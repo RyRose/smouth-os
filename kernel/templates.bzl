@@ -22,7 +22,7 @@ def kernel_binary(name, **kwargs):
         # For the definition of CC and CC_FLAGS make variables.
         toolchains = [
             "@bazel_tools//tools/cpp:current_cc_toolchain",
-            "@bazel_tools//tools/cpp:cc_flags"
+            "@bazel_tools//tools/cpp:cc_flags",
         ],
         cmd = (
             "for out in $(OUTS); do " +

@@ -1,7 +1,7 @@
 # Binary dependencies needed for running the bash commands
 DEPS = [
     "make",
-    "realpath",
+    "readlink",
     "gcc",
     "makeinfo",
     "sh",
@@ -85,7 +85,7 @@ def _toolchain_impl(ctx):
     _check_dependencies(ctx)
     print("making toolchain directory...")
     _execute(ctx, "mkdir toolchain")
-    prefix = _execute(ctx, "realpath toolchain").stdout.strip()
+    prefix = _execute(ctx, "readlink -f toolchain").stdout.strip()
     print("building binutils...")
     _build_binutils(ctx, prefix)
     print("building gcc...")
