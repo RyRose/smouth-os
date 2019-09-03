@@ -7,13 +7,13 @@ DEPS = [
     "sh",
 ]
 
-def _check_dependency(ctx, dep):
-    if ctx.which(dep) == None:
-        fail("%s requires %s as a dependency. Please check your PATH." % (ctx.name, dep))
-
 def _check_dependencies(ctx):
+    nondeps = []
     for dep in DEPS:
-        _check_dependency(ctx, dep)
+      if ctx.which(dep) == None:
+        nondeps.append(dep)
+    if nondeps:
+      fail("%s requires %s as dependencies. Please check your PATH." % (ctx.name, nondeps))
 
 _EXECUTION_FAILURE_MESSAGE = """
 The command `%s` failed.
