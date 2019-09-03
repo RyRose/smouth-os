@@ -16,8 +16,13 @@ def kernel_binary(name, **kwargs):
         name = crt_files,
         visibility = ["//visibility:private"],
         outs = [
-            "%s/crtbegin.o" % name,
-            "%s/crtend.o" % name,
+            "crtfiles/%s/crtbegin.o" % name,
+            "crtfiles/%s/crtend.o" % name,
+        ],
+        # For the definition of CC and CC_FLAGS make variables.
+        toolchains = [
+            "@bazel_tools//tools/cpp:current_cc_toolchain",
+            "@bazel_tools//tools/cpp:cc_flags"
         ],
         cmd = (
             "for out in $(OUTS); do " +
@@ -47,7 +52,7 @@ def kernel_binary(name, **kwargs):
         ":%s" % crt_library,
         "//kernel/arch:boot",
     ])
-    deps = list(depset(deps))  # de-dupe dependencies
+    deps = depset(deps).to_list()  # de-dupe dependencies
     deps += select({
         "//tools/toolchain:i386": [
             "//kernel/arch/i386:linker.ld",
@@ -64,7 +69,7 @@ def kernel_binary(name, **kwargs):
 
     tags = kwargs.pop("tags", [])
     tags.append("manual")  # Add `manual` so it's ignored with ... expansion.
-    tags = list(depset(tags))  # de-dupe tags
+    tags = depset(tags).to_list()  # de-dupe tags
 
     native.cc_binary(
         name = name,
