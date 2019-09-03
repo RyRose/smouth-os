@@ -21,7 +21,6 @@ common:i386 \
 
 common:ci \
   --color=no \
-  --noshow_loading_progress \
   --noshow_progress \
   -c opt
 
