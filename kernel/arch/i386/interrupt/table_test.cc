@@ -1,5 +1,5 @@
-#include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/interrupt/descriptor.h"
+#include "kernel/arch/i386/interrupt/table.h"
 
 #include "gtest/gtest.h"
 
@@ -61,7 +61,7 @@ TEST(Table, TestOverflow) {
   EXPECT_FALSE(idt.Register(GateDescriptor(), MAX_ENTRIES).ok());
 }
 
-}  // namespace interrupt
+} // namespace interrupt
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

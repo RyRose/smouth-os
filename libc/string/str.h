@@ -5,7 +5,7 @@
 
 namespace libc {
 
-size_t strlen(const char*);
+size_t strlen(const char *);
 
 } // namespace libc
 

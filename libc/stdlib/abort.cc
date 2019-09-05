@@ -2,10 +2,10 @@
 
 namespace libc {
 
-__attribute__((__noreturn__))
-void abort(void) {
+__attribute__((__noreturn__)) void abort(void) {
   // TODO: Add proper kernel panic.
-  while (true) { }
+  while (true) {
+  }
   __builtin_unreachable();
 }
 

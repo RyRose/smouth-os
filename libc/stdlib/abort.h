@@ -3,10 +3,8 @@
 
 namespace libc {
 
-__attribute__((__noreturn__))
-void abort(void);
+__attribute__((__noreturn__)) void abort(void);
 
 } // namespace libc
 
 #endif
-

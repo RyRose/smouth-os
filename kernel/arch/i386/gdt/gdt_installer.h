@@ -10,6 +10,6 @@ namespace gdt {
 // http://www.jamesmolloy.co.uk/tutorial_html/4.-The%20GDT%20and%20IDT.html
 void InstallGDT();
 
-}  // namespace gdt
+} // namespace gdt
 
-#endif  // KERNEL_ARCH_I386_GDT_GDT_INSTALLER_H
+#endif // KERNEL_ARCH_I386_GDT_GDT_INSTALLER_H

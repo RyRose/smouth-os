@@ -6,7 +6,7 @@ namespace memory {
 
 int Allocator::AddMemory(arch::MemoryRegion region) {
   if (count >= MAX_MEMORY_REGIONS) {
-    return -1;  // TODO: Return a better error code.
+    return -1; // TODO: Return a better error code.
   }
 
   regions[count] = region;
@@ -16,16 +16,17 @@ int Allocator::AddMemory(arch::MemoryRegion region) {
 
 // TODO: Check for overflow of `regions`.
 int Allocator::Reserve(uint64_t address, uint64_t bytes) {
-  if (bytes == 0) return 0;
+  if (bytes == 0)
+    return 0;
 
   int containing_region_index = FindContainingRegion(address);
   if (containing_region_index < 0 || containing_region_index >= count) {
-    return -1;  // TODO: Better error for not finding a region.
+    return -1; // TODO: Better error for not finding a region.
   }
 
   arch::MemoryRegion region = regions[containing_region_index];
   if ((region.address + region.length) - address < bytes) {
-    return -1;  // TODO: Better error for too large to reserve.
+    return -1; // TODO: Better error for too large to reserve.
   }
 
   AllocateRegion(containing_region_index, address - region.address,
@@ -37,7 +38,7 @@ int Allocator::Reserve(uint64_t address, uint64_t bytes) {
 }
 
 // TODO: Check for overflow of `regions`.
-void* Allocator::Allocate(uint64_t bytes) {
+void *Allocator::Allocate(uint64_t bytes) {
   if (bytes == 0) {
     return nullptr;
   }
@@ -51,7 +52,7 @@ void* Allocator::Allocate(uint64_t bytes) {
 
 // TODO: Check for overflow of `regions`.
 // TODO: Check if bytes > region.length
-void* Allocator::AllocateRegion(int index, uint64_t bytes,
+void *Allocator::AllocateRegion(int index, uint64_t bytes,
                                 arch::MemoryRegionType type) {
   arch::MemoryRegion region = regions[index];
   if (region.length == bytes) {
@@ -68,7 +69,7 @@ void* Allocator::AllocateRegion(int index, uint64_t bytes,
     regions[index + 1].length -= bytes;
     ++count;
   }
-  return reinterpret_cast<void*>(region.address);
+  return reinterpret_cast<void *>(region.address);
 }
 
 int Allocator::FindContainingRegion(uint64_t address) const {
@@ -94,6 +95,6 @@ int Allocator::FindFreeRegion(uint64_t bytes) const {
   return -1;
 }
 
-Allocator* GetAllocator() { return &ALLOCATOR; }
+Allocator *GetAllocator() { return &ALLOCATOR; }
 
-}  // namespace memory
+} // namespace memory

@@ -75,38 +75,22 @@ namespace gdt {
 //
 
 class Descriptor {
- public:
+public:
   Descriptor()
-      : limit0_(0),
-        base0_(0),
-        segment_type_(0),
-        descriptor_type_(false),
-        dpl_(0),
-        db_(0),
-        present_(false),
-        limit1_(0),
-        available_(false),
-        bit64_(false),
-        granularity_(false),
-        base1_(0) {}
+      : limit0_(0), base0_(0), segment_type_(0), descriptor_type_(false),
+        dpl_(0), db_(0), present_(false), limit1_(0), available_(false),
+        bit64_(false), granularity_(false), base1_(0) {}
 
   Descriptor(uint32_t base, uint32_t limit, uint8_t segment_type,
              bool descriptor_type, uint8_t dpl, bool db, bool present,
              bool granularity)
-      : limit0_(limit & 0xFFFF),
-        base0_(base & 0xFFFFFF),
-        segment_type_(segment_type),
-        descriptor_type_(descriptor_type),
-        dpl_(dpl),
-        present_(present),
-        limit1_((limit >> 16) & 0xF),
-        available_(false),
-        bit64_(false),
-        db_(db),
-        granularity_(granularity),
+      : limit0_(limit & 0xFFFF), base0_(base & 0xFFFFFF),
+        segment_type_(segment_type), descriptor_type_(descriptor_type),
+        dpl_(dpl), present_(present), limit1_((limit >> 16) & 0xF),
+        available_(false), bit64_(false), db_(db), granularity_(granularity),
         base1_(base >> 24) {}
 
- private:
+private:
   uint16_t limit0_ : 16;
   uint32_t base0_ : 24;
   uint8_t segment_type_ : 4;
@@ -126,6 +110,6 @@ static_assert(sizeof(Descriptor) == 8, "GDT descriptors must be eight bytes!");
 // THE global descriptor table.
 extern Descriptor GDT[];
 
-}  // namespace gdt
+} // namespace gdt
 
-#endif  // KERNEL_ARCH_I386_GDT_GDT_H
+#endif // KERNEL_ARCH_I386_GDT_GDT_H

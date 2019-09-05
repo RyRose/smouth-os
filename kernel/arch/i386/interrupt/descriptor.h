@@ -18,30 +18,20 @@ enum GateType {
 // Descriptor Table (IDT). Packed such that it can be directly used as elements
 // in the i386 IDT.
 class GateDescriptor {
- public:
+public:
   GateDescriptor()
-      : offset_first_(0),
-        segment_selector_(0),
-        zeroes_(0),
-        gate_type_(GateType::EMPTY),
-        segment_(false),
-        dpl_(0),
-        present_(false),
+      : offset_first_(0), segment_selector_(0), zeroes_(0),
+        gate_type_(GateType::EMPTY), segment_(false), dpl_(0), present_(false),
         offset_second_(0) {}
 
   GateDescriptor(uint32_t offset, uint16_t segment_selector, GateType gate_type,
                  uint8_t dpl, bool present)
-      : offset_first_(offset & 0xFFFF),
-        segment_selector_(segment_selector),
-        zeroes_(0),
-        gate_type_(gate_type),
-        segment_(false),
+      : offset_first_(offset & 0xFFFF), segment_selector_(segment_selector),
+        zeroes_(0), gate_type_(gate_type), segment_(false),
         // TODO(RyRose): Add check for overflow.
-        dpl_(dpl),
-        present_(present),
-        offset_second_(offset >> 16) {}
+        dpl_(dpl), present_(present), offset_second_(offset >> 16) {}
 
- private:
+private:
   // The first 2 bytes of offset to the interrupt procedure entry point.
   // Basically, a pointer to the function that handles this interrupt.
   uint16_t offset_first_ : 16;
@@ -68,6 +58,6 @@ class GateDescriptor {
 static_assert(sizeof(GateDescriptor) == 8,
               "i386 IDT gate descriptors must be 8 bytes!");
 
-}  // namespace interrupt
+} // namespace interrupt
 
-#endif  //   KERNEL_ARCH_I386_INTERRUPT_DESCRIPTOR_H
+#endif //   KERNEL_ARCH_I386_INTERRUPT_DESCRIPTOR_H

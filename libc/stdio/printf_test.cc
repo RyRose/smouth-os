@@ -3,10 +3,10 @@
 #include "gtest/gtest.h"
 
 namespace arch {
-  void terminal_write(const char* data, size_t size) {
-    std::printf("%.*s", static_cast<int>(size), data);
-  }
+void terminal_write(const char *data, size_t size) {
+  std::printf("%.*s", static_cast<int>(size), data);
 }
+} // namespace arch
 
 TEST(Printf, CharSpaced) {
   testing::internal::CaptureStdout();
@@ -15,7 +15,7 @@ TEST(Printf, CharSpaced) {
   ASSERT_STREQ("a b c d e", output.c_str());
 }
 
-TEST(Printf, CharNumbered){
+TEST(Printf, CharNumbered) {
   testing::internal::CaptureStdout();
   libc::printf("%c 1 %c 2 %c 3 %c 4 %c", 'a', 'b', 'c', 'd', 'e');
   std::string output = testing::internal::GetCapturedStdout();
@@ -51,6 +51,6 @@ TEST(Printf, HexIntsBig) {
 }
 
 int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

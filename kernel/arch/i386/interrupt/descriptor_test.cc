@@ -25,7 +25,7 @@ TEST(Descriptor, TestTaskGateDescriptor) {
   EXPECT_EQ(0x850012340000, *reinterpret_cast<uint64_t *>(&descriptor));
 }
 
-}  // namespace interrupt
+} // namespace interrupt
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

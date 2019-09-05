@@ -3,11 +3,11 @@
 
 namespace util {
 
-__attribute__((noreturn)) void panic(const char* message) {
+__attribute__((noreturn)) void panic(const char *message) {
   libc::printf("The kernel has panicked!\n");
   libc::printf("Message: %s\n", message);
   while (true) {
   }
   __builtin_unreachable();
 }
-}  //  namespace util
+} //  namespace util

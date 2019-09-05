@@ -7,10 +7,10 @@ namespace {
 
 extern "C" void kernel_main(void) {
   libc::printf("Hello, World!\n");
-  auto* allocator = memory::GetAllocator();
+  auto *allocator = memory::GetAllocator();
   arch::MemoryRegion regions[100];
   int count = arch::DetectMemory(regions, 100);
-  const char* words[] = {"AVAILABLE", "RESERVED", "ACPI_RECLAIMABLE", "NVS",
+  const char *words[] = {"AVAILABLE", "RESERVED", "ACPI_RECLAIMABLE", "NVS",
                          "BADRAM"};
   for (int i = 0; i < count; i++) {
     libc::printf("address: %X, length: %X, ", regions[i].address,
@@ -20,7 +20,7 @@ extern "C" void kernel_main(void) {
   }
   libc::printf("Kernel start: 0x%p, end: 0x%p.\n", arch::GetKernelStart(),
                arch::GetKernelEnd());
-  char* a = new char[0x9FC000];
+  char *a = new char[0x9FC000];
   a[0] = 'm';
   a[1] = 'e';
   a[2] = 'm';
@@ -29,4 +29,4 @@ extern "C" void kernel_main(void) {
   delete a;
 }
 
-}  // namespace
+} // namespace

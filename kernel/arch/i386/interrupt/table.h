@@ -10,7 +10,7 @@ constexpr uint16_t MAX_ENTRIES = 256;
 
 // The InterruptDescriptorTable represents the i386 IDT.
 class InterruptDescriptorTable {
- public:
+public:
   InterruptDescriptorTable() = default;
 
   // Registers the interrupt gate descriptor in the next free
@@ -20,7 +20,7 @@ class InterruptDescriptorTable {
   // Returns a 48-bit value to be stored in the IDTR.
   uint64_t IDTR() const;
 
- private:
+private:
   // The interrupt desciptor table. Aligned on an 8-byte boundary as recommended
   // by the Intel x86 Systems Programming Guide for better cache locality.
   GateDescriptor table_[MAX_ENTRIES] __attribute__((aligned(8)));
@@ -37,6 +37,6 @@ class InterruptDescriptorTable {
 // THE interrupt descriptor table.
 static InterruptDescriptorTable IDT;
 
-}  // namespace interrupt
+} // namespace interrupt
 
 #endif

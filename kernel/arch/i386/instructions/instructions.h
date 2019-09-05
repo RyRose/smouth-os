@@ -19,11 +19,8 @@ inline void LoadIDT(uint64_t idtr_value) {
 // INT calls the INT instruction on the provided interrupt vector. This triggers
 // a software interrupt. Should be templated since the instruction expects an
 // imm8.
-template <int N>
-inline void INT() {
-  __asm__ volatile("INT %0" ::"N"(N));
-}
+template <int N> inline void INT() { __asm__ volatile("INT %0" ::"N"(N)); }
 
-}  // namespace instructions
+} // namespace instructions
 
-#endif  // KERNEL_ARCH_I386_INSTRUCTIONS_INSTRUCTIONS_H
+#endif // KERNEL_ARCH_I386_INSTRUCTIONS_INSTRUCTIONS_H

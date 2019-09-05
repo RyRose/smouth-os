@@ -13,9 +13,9 @@ extern "C" {
 
 void handleDummyInterrupt();
 
-void pre_kernel_main(boot::multiboot_info* multiboot_ptr) {
+void pre_kernel_main(boot::multiboot_info *multiboot_ptr) {
   arch::terminal_initialize();
-  auto& mmap_manager = boot::MmapManager::GetInstance();
+  auto &mmap_manager = boot::MmapManager::GetInstance();
   mmap_manager.Init(*multiboot_ptr);
   gdt::InstallGDT();
   interrupt::GateDescriptor d(reinterpret_cast<uint32_t>(handleDummyInterrupt),
@@ -27,4 +27,4 @@ void pre_kernel_main(boot::multiboot_info* multiboot_ptr) {
 }
 }
 
-}  // namespace
+} // namespace

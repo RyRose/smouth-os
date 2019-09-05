@@ -12,7 +12,7 @@ const int MAX_MEMORY_REGIONS = 100;
 // memory regions.
 // TODO: Make a better memory allocator.
 class Allocator {
- public:
+public:
   // Makes a region of memory known to the allocator.
   // Returns an error code.
   // TODO: Specify error codes.
@@ -20,7 +20,7 @@ class Allocator {
 
   // Attempts to find a spot to allocate `bytes` amount of memory.
   // Returns the starting address to a `bytes` array or nullptr if not possible.
-  void* Allocate(uint64_t bytes);
+  void *Allocate(uint64_t bytes);
 
   // Attempts to reserve the specified block of memory.
   // Returns an error code.
@@ -31,10 +31,10 @@ class Allocator {
   int GetRegionCount() const { return count; }
 
   Allocator() = default;
-  Allocator& operator=(const Allocator&) = delete;
-  Allocator(const Allocator& that) = delete;
+  Allocator &operator=(const Allocator &) = delete;
+  Allocator(const Allocator &that) = delete;
 
- private:
+private:
   // An array of all the regions of memory.
   arch::MemoryRegion regions[MAX_MEMORY_REGIONS];
 
@@ -43,7 +43,7 @@ class Allocator {
 
   // Attempts to set first `bytes` to `type`.
   // Returns the address allocated.
-  void* AllocateRegion(int index, uint64_t bytes, arch::MemoryRegionType type);
+  void *AllocateRegion(int index, uint64_t bytes, arch::MemoryRegionType type);
 
   // Attempts to find any region containing `address`.
   // Returns the index in the `regions` array or an error code.
@@ -57,12 +57,12 @@ class Allocator {
 };
 
 // Returns singleton allocator.
-Allocator* GetAllocator();
+Allocator *GetAllocator();
 
-}  // namespace memory
+} // namespace memory
 
 namespace {
 memory::Allocator ALLOCATOR;
-}  // namespace
+} // namespace
 
-#endif  // _KERNEL_MEMORY_MEMORY_H
+#endif // _KERNEL_MEMORY_MEMORY_H

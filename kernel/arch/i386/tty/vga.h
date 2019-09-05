@@ -32,6 +32,6 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
   return static_cast<uint16_t>(uc) | static_cast<uint16_t>(color) << 8;
 }
 
-}
+} // namespace arch
 
 #endif

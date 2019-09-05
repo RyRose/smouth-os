@@ -32,7 +32,7 @@ TEST(StatusOr, TestValue) {
   EXPECT_EQ(0, status_or.value());
 }
 
-}  // namespace util
+} // namespace util
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -24,4 +24,4 @@ uint64_t InterruptDescriptorTable::IDTR() const {
          (reinterpret_cast<uint64_t>(table_) << 16);
 }
 
-}  // namespace interrupt
+} // namespace interrupt

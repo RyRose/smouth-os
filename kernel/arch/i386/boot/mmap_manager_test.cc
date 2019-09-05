@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 #include <array>
 
@@ -8,12 +8,11 @@
 
 namespace boot {
 
-bool operator==(const multiboot_mmap_entry& lhs,
-    const multiboot_mmap_entry& rhs) {
-  return lhs.size == rhs.size && lhs.addr == rhs.addr && lhs.len == rhs.len
-    && lhs.type == rhs.type;
+bool operator==(const multiboot_mmap_entry &lhs,
+                const multiboot_mmap_entry &rhs) {
+  return lhs.size == rhs.size && lhs.addr == rhs.addr && lhs.len == rhs.len &&
+         lhs.type == rhs.type;
 }
-
 
 TEST(MmapManager, TestConstruction) {
   MmapManager manager = MmapManager::GetInstance();
@@ -31,7 +30,7 @@ TEST(MmapManager, TestInit) {
 
 TEST(MmapManager, TestExceedMax) {
   MmapManager manager = MmapManager::GetInstance();
-	multiboot_mmap_entry entries[101];
+  multiboot_mmap_entry entries[101];
   multiboot_info multiboot_ptr;
   multiboot_ptr.mmap_addr = entries;
   multiboot_ptr.mmap_length = 101 * sizeof(multiboot_mmap_entry);
@@ -40,7 +39,7 @@ TEST(MmapManager, TestExceedMax) {
 
 TEST(MmapManager, TestCopiesCorrectly) {
   MmapManager manager = MmapManager::GetInstance();
-	multiboot_mmap_entry entries[3];
+  multiboot_mmap_entry entries[3];
   entries[0] = {1, 1, 1, 1};
   entries[1] = {2, 2, 2, 2};
   entries[2] = {3, 3, 3, 3};
@@ -58,6 +57,6 @@ TEST(MmapManager, TestCopiesCorrectly) {
 } // namespace boot
 
 int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

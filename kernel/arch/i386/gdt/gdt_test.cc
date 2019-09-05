@@ -25,7 +25,7 @@ TEST(Gdt, TestDataDescriptor) {
   EXPECT_EQ(0xCF92000000FFFF, b);
 }
 
-}  // namespace gdt
+} // namespace gdt
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

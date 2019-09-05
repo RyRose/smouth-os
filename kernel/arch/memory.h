@@ -20,13 +20,13 @@ struct MemoryRegion {
 };
 
 // Places into the buffer a list of `len` entries.
-int DetectMemory(MemoryRegion* regions, int len);
+int DetectMemory(MemoryRegion *regions, int len);
 
 // Returns a pointer to where the kernel image starts.
-void* GetKernelStart();
+void *GetKernelStart();
 
 // Returns a pointer to where the kernel image ends.
-void* GetKernelEnd();
+void *GetKernelEnd();
 
 } // namespace arch
 

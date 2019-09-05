@@ -8,4 +8,3 @@ int abs(int n);
 } // namespace libc
 
 #endif
-

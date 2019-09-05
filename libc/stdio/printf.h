@@ -3,7 +3,7 @@
 
 namespace libc {
 
-int printf(const char*, ...);
+int printf(const char *, ...);
 
 } // namespace libc
 

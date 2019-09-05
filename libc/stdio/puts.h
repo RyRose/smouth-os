@@ -3,7 +3,7 @@
 
 namespace libc {
 
-int puts(const char*);
+int puts(const char *);
 
 } // namespace libc
 

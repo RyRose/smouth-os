@@ -6,7 +6,7 @@
 
 namespace {
 extern "C" void gdtFlush(uint64_t gdt_ptr);
-}  // namespace
+} // namespace
 
 namespace gdt {
 
@@ -29,4 +29,4 @@ void InstallGDT() {
   gdtFlush(gdt_ptr);
 }
 
-}  // namespace gdt
+} // namespace gdt

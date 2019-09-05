@@ -4,4 +4,4 @@ namespace gdt {
 
 Descriptor GDT[10];
 
-}  // namespace gdt
+} // namespace gdt
