@@ -155,6 +155,7 @@ def _impl(ctx):
                 flag_groups = [
                     flag_group(
                         flags = [
+                            "-g",
                             "-MD",
                             "-lk",
                             # TODO(RyRose): Remove flag when lock/mutex primitives can enforce local static guards.

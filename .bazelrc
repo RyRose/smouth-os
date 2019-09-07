@@ -1,6 +1,4 @@
-common \
-  --crosstool_top=//tools/toolchain \
-  --verbose_failures
+common --verbose_failures
 
 test \
   --test_output=errors \
@@ -13,6 +11,7 @@ build --strip=never
 # Options for cross-compiling SmouthOS on the i386 architecture.
 
 common:i386 \
+  --crosstool_top=//tools/toolchain \
   --cpu=i386 \
   --compiler=g++
 

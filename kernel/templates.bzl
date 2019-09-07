@@ -91,11 +91,13 @@ def kernel_library(abi = True, new = True, **kwargs):
     if abi:
         deps += select({
             "//tools/toolchain:local": [],
+            "//tools/toolchain:darwin": [],
             "//conditions:default": ["//kernel/cxx:abi"],
         })
     if new:
         deps += select({
             "//tools/toolchain:local": [],
+            "//tools/toolchain:darwin": [],
             "//conditions:default": ["//kernel/cxx:new"],
         })
     native.cc_library(

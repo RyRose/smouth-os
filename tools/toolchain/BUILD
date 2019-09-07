@@ -19,11 +19,19 @@ config_setting(
     },
 )
 
+config_setting(
+    name = "darwin",
+    values = {
+        "cpu": "darwin",
+    },
+)
+
 cc_toolchain_suite(
     name = "toolchain",
     toolchains = {
         "darwin|compiler": "@bazel_tools//tools/cpp:cc-compiler-darwin",
         "darwin|g++": "@bazel_tools//tools/cpp:cc-compiler-darwin",
+        "darwin": "@bazel_tools//tools/cpp:cc-compiler-darwin",
         "i386|g++": "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
         "k8": "@bazel_tools//tools/cpp:cc-compiler-local",
         "k8|g++": "@bazel_tools//tools/cpp:cc-compiler-local",
