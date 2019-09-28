@@ -6,8 +6,6 @@ kernel_library(
     name = "boot",
     srcs = [
         "boot.S",
-        "dummy_handler.cc",
-        "dummy_isr.S",
         "pre_kernel_main.cc",
     ],
     tags = [
@@ -21,6 +19,22 @@ kernel_library(
         "//kernel/arch/i386/instructions",
         "//kernel/arch/i386/interrupt:descriptor",
         "//kernel/arch/i386/interrupt:table",
+        "//libc/stdio",
+        ":dummy_isr",
+    ],
+)
+
+kernel_library(
+    name = "dummy_isr",
+    tags = ["manual"],
+    srcs = [
+        "dummy_isr.cc",
+    ],
+    hdrs = [
+        "dummy_isr.h",
+    ],
+    deps = [
+        "//kernel/arch/i386/interrupt:macros",
         "//libc/stdio",
     ],
 )

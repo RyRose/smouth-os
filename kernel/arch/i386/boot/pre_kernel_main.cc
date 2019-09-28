@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "kernel/arch/i386/boot/dummy_isr.h"
 #include "kernel/arch/i386/boot/mmap_manager.h"
 #include "kernel/arch/i386/boot/multiboot.h"
 #include "kernel/arch/i386/gdt/gdt_installer.h"
@@ -9,22 +10,19 @@
 
 namespace {
 
-extern "C" {
-
-void handleDummyInterrupt();
-
-void pre_kernel_main(boot::multiboot_info *multiboot_ptr) {
+extern "C" void pre_kernel_main(boot::multiboot_info *multiboot_ptr) {
   arch::terminal_initialize();
   auto &mmap_manager = boot::MmapManager::GetInstance();
   mmap_manager.Init(*multiboot_ptr);
   gdt::InstallGDT();
-  interrupt::GateDescriptor d(reinterpret_cast<uint32_t>(handleDummyInterrupt),
-                              0x8, interrupt::INTERRUPT_32BIT, 0, true);
+  interrupt::GateDescriptor d(
+      /*offset=*/reinterpret_cast<uint32_t>(dummy_isr::handleDummyInterrupt),
+      /*segment_selector=*/0x8, /*gate_type=*/interrupt::INTERRUPT_32BIT,
+      /*dpl=*/0, /*present=*/true);
   interrupt::IDT.Register(d, 0x80);
   uint64_t idtr = interrupt::IDT.IDTR();
   instructions::LoadIDT(idtr);
   instructions::INT<0x80>();
-}
 }
 
 } // namespace
