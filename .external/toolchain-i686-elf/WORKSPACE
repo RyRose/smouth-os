@@ -1,2 +1,0 @@
-# Cached WORKSPACE file for new_toolchain_repository rule toolchain-i686-elf.
-workspace(name = "toolchain_i686_elf_cached")

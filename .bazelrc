@@ -12,19 +12,10 @@ build \
   --strip=never
 
 # Options for cross-compiling SmouthOS on the i386 architecture.
-
 common:i386 \
   --crosstool_top=//tools/toolchain \
   --cpu=i386 \
   --compiler=g++
-
-# Use cached version of i686-elf toolchain for Linux
-
-common:i686-elf-cached \
-  --action_env="TOOLCHAIN_REPOSITORY=toolchain_i686_elf_cached" \
-  --define=i686-elf-cached=true \
-  --features=-toolchain_i686_elf_nocached \
-  --features=toolchain_i686_elf_cached
 
 # Continuous Integration (ci) options for running SmouthOS on Jenkins.
 

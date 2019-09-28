@@ -81,8 +81,8 @@ def _impl(ctx):
             ),
         ],
     )
-    toolchain_nocached_feature = feature(
-        name = "toolchain_i686_elf_nocached",
+    toolchain_feature = feature(
+        name = "toolchain_i686_elf",
         enabled = True,
         flag_sets = [
             flag_set(
@@ -103,34 +103,6 @@ def _impl(ctx):
                             "external/toolchain-i686-elf/toolchain/lib/gcc/i686-elf/7.2.0/include",
                             "-isystem",
                             "external/toolchain-i686-elf/toolchain/lib/gcc/i686-elf/7.2.0/include-fixed",
-                        ],
-                    ),
-                ],
-            ),
-        ],
-    )
-    toolchain_cached_feature = feature(
-        name = "toolchain_i686_elf_cached",
-        enabled = False,
-        flag_sets = [
-            flag_set(
-                actions = [
-                    ACTION_NAMES.assemble,
-                    ACTION_NAMES.c_compile,
-                    ACTION_NAMES.cc_flags_make_variable,
-                    ACTION_NAMES.cpp_compile,
-                    ACTION_NAMES.cpp_header_parsing,
-                    ACTION_NAMES.cpp_module_codegen,
-                    ACTION_NAMES.cpp_module_compile,
-                    ACTION_NAMES.linkstamp_compile,
-                ],
-                flag_groups = [
-                    flag_group(
-                        flags = [
-                            "-isystem",
-                            "external/toolchain_i686_elf_cached/toolchain/lib/gcc/i686-elf/7.2.0/include",
-                            "-isystem",
-                            "external/toolchain_i686_elf_cached/toolchain/lib/gcc/i686-elf/7.2.0/include-fixed",
                         ],
                     ),
                 ],
@@ -200,9 +172,8 @@ def _impl(ctx):
         tool_paths = tool_paths,
         features = [
             toolchain_all_flags_feature,
-            toolchain_cached_feature,
             toolchain_compiler_flags_feature,
-            toolchain_nocached_feature,
+            toolchain_feature,
         ],
     )
 

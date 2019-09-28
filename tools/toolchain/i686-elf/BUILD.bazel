@@ -2,17 +2,11 @@ load(":toolchain_config.bzl", "toolchain_config")
 
 package(default_visibility = ["//visibility:public"])
 
-config_setting(
-    name = "cached",
-    values = {"define": "i686-elf-cached=true"},
-)
-
 filegroup(
     name = "i686-elf-gcc",
     srcs = [
         "gcc",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:gcc"],
         "//conditions:default": ["@toolchain-i686-elf//:gcc"],
     }),
 )
@@ -22,7 +16,6 @@ filegroup(
     srcs = [
         "g++",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:g++"],
         "//conditions:default": ["@toolchain-i686-elf//:g++"],
     }),
 )
@@ -32,7 +25,6 @@ filegroup(
     srcs = [
         "ar",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:ar"],
         "//conditions:default": ["@toolchain-i686-elf//:ar"],
     }),
 )
@@ -42,7 +34,6 @@ filegroup(
     srcs = [
         "ld",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:ld"],
         "//conditions:default": ["@toolchain-i686-elf//:ld"],
     }),
 )
@@ -52,7 +43,6 @@ filegroup(
     srcs = [
         "nm",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:nm"],
         "//conditions:default": ["@toolchain-i686-elf//:nm"],
     }),
 )
@@ -62,7 +52,6 @@ filegroup(
     srcs = [
         "objcopy",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:objcopy"],
         "//conditions:default": ["@toolchain-i686-elf//:objcopy"],
     }),
 )
@@ -72,7 +61,6 @@ filegroup(
     srcs = [
         "objdump",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:objdump"],
         "//conditions:default": ["@toolchain-i686-elf//:objdump"],
     }),
 )
@@ -82,7 +70,6 @@ filegroup(
     srcs = [
         "strip",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:strip"],
         "//conditions:default": ["@toolchain-i686-elf//:strip"],
     }),
 )
@@ -92,7 +79,6 @@ filegroup(
     srcs = [
         "as",
     ] + select({
-        ":cached": ["@toolchain_i686_elf_cached//:as"],
         "//conditions:default": ["@toolchain-i686-elf//:as"],
     }),
 )
@@ -100,7 +86,6 @@ filegroup(
 filegroup(
     name = "i686-elf-compiler_pieces",
     srcs = select({
-        ":cached": ["@toolchain_i686_elf_cached//:compiler_pieces"],
         "//conditions:default": ["@toolchain-i686-elf//:compiler_pieces"],
     }),
 )
