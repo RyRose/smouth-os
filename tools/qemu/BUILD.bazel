@@ -6,9 +6,46 @@ py_binary(
     args = [
         "--cpu=$(TARGET_CPU)",
         "--kernel=$(location //kernel)",
+        "--output=monitor",
     ],
     data = [
         "//kernel",
+    ],
+    tags = ["manual"],
+)
+
+py_binary(
+    name = "serial",
+    main = "qemu.py",
+    srcs = [
+        "qemu.py",
+    ],
+    args = [
+        "--cpu=$(TARGET_CPU)",
+        "--kernel=$(location //kernel)",
+        "--output=serial",
+    ],
+    data = [
+        "//kernel",
+    ],
+    tags = ["manual"],
+)
+
+py_binary(
+    name = "gdb",
+    main = "qemu.py",
+    srcs = [
+        "qemu.py",
+    ],
+    args = [
+        "--cpu=$(TARGET_CPU)",
+        "--kernel=$(location //kernel)",
+        "--output=gdb",
+        "--workspace_file=$(location //:workspace_name)",
+    ],
+    data = [
+        "//kernel",
+        "//:workspace_name",
     ],
     tags = ["manual"],
 )

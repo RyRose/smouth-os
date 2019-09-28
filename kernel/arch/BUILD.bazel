@@ -1,5 +1,5 @@
 load("//kernel:templates.bzl", "kernel_library")
-load("//kernel/arch:arch.bzl", "arch_library")
+load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -7,6 +7,25 @@ arch_library(name = "tty")
 
 arch_library(name = "memory")
 
-arch_library(name = "boot")
-
 arch_library(name = "io_port")
+
+arch_library(name = "boot", hdrs = [])
+
+arch_file(name = "crti")
+
+arch_file(name = "crtn")
+
+arch_file(name = "linker.ld")
+
+kernel_library(
+    name = "serial",
+    srcs = [
+        "serial.cc",
+    ],
+    hdrs = [
+        "serial.h",
+    ],
+    deps = [
+        ":io_port",
+    ],
+)

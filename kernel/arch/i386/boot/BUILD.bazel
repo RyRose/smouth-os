@@ -6,8 +6,6 @@ kernel_library(
     name = "boot",
     srcs = [
         "boot.S",
-        "crti.S",
-        "crtn.S",
         "dummy_handler.cc",
         "dummy_isr.S",
         "pre_kernel_main.cc",
@@ -25,7 +23,6 @@ kernel_library(
         "//kernel/arch/i386/interrupt:table",
         "//libc/stdio",
     ],
-    alwayslink = True,
 )
 
 kernel_library(

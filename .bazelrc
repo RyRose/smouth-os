@@ -1,12 +1,15 @@
-common --verbose_failures
-
 test \
   --test_output=errors \
+  --verbose_failures \
   --test_verbose_timeout_warnings
 
-run --strip=never
+run \
+  --verbose_failures \
+  --strip=never
 
-build --strip=never
+build \
+  --verbose_failures \
+  --strip=never
 
 # Options for cross-compiling SmouthOS on the i386 architecture.
 

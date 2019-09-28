@@ -8,7 +8,7 @@ namespace arch {
 // A class that represents an IO port to be read and/or written to.
 class IoPort {
 public:
-  IoPort(uint16_t port_number) : port_number_(port_number) {}
+  explicit IoPort(uint16_t port_number) : port_number_(port_number) {}
 
   // Writes a byte to the IO port.
   void outb(uint8_t output);
@@ -27,6 +27,9 @@ public:
 
   // Reads a long (4 bytes) from the IO port.
   uint32_t inl();
+
+  // The raw port number.
+  uint16_t value() { return port_number_; }
 
 private:
   // Integer that specifies the IO port.

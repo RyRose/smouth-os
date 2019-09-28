@@ -24,7 +24,7 @@ void IoPort::outl(uint32_t output) {
 
 uint8_t IoPort::inb() {
   uint8_t ret;
-  asm volatile("inb %1, %0" : "=r"(ret) : "Nd"(port_number_));
+  asm volatile("inb %1, %0" : "=a"(ret) : "Nd"(port_number_));
   return ret;
 }
 
@@ -36,7 +36,7 @@ uint16_t IoPort::inw() {
 
 uint32_t IoPort::inl() {
   uint32_t ret;
-  asm volatile("inl %1, %0" : "=r"(ret) : "Nd"(port_number_));
+  asm volatile("inl %1, %0" : "=a"(ret) : "Nd"(port_number_));
   return ret;
 }
 

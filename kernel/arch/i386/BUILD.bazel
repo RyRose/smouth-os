@@ -1,3 +1,37 @@
-load("//kernel:templates.bzl", "kernel_library")
+package(
+    default_visibility = ["//kernel/arch:__pkg__"],
+)
 
 exports_files(["linker.ld"])
+
+genrule(
+    name = "crti",
+    srcs = [
+        "crti.S",
+    ],
+    outs = [
+        "crti.o",
+    ],
+    cmd = "$(CC) $(CC_FLAGS) -c $< -o $@",
+    tags = ["manual"],
+    toolchains = [
+        "@bazel_tools//tools/cpp:current_cc_toolchain",
+        "@bazel_tools//tools/cpp:cc_flags",
+    ],
+)
+
+genrule(
+    name = "crtn",
+    srcs = [
+        "crtn.S",
+    ],
+    outs = [
+        "crtn.o",
+    ],
+    tags = ["manual"],
+    cmd = "$(CC) $(CC_FLAGS) -c $< -o $@",
+    toolchains = [
+        "@bazel_tools//tools/cpp:current_cc_toolchain",
+        "@bazel_tools//tools/cpp:cc_flags",
+    ],
+)

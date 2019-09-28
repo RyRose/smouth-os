@@ -8,7 +8,7 @@ kernel_binary(
     ],
     deps = [
         "//kernel/arch:memory",
+        "//kernel/arch:serial",
         "//libc/stdio",
     ],
 )
-

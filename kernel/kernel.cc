@@ -1,12 +1,25 @@
 #include "libc/stdio/printf.h"
 
 #include "kernel/arch/memory.h"
+#include "kernel/arch/serial.h"
 #include "kernel/memory/memory.h"
 
 namespace {
 
 extern "C" void kernel_main(void) {
   libc::printf("Hello, World!\n");
+  arch::COM1.Initialize();
+  libc::printf("Initialized COM1\n");
+  arch::COM1.Write('h');
+  libc::printf("Wrote 'h' to COM1\n");
+  arch::COM1.Write('e');
+  libc::printf("Wrote 'e' to COM1\n");
+  arch::COM1.Write('l');
+  libc::printf("Wrote 'l' to COM1\n");
+  arch::COM1.Write('l');
+  libc::printf("Wrote 'l' to COM1\n");
+  arch::COM1.Write('o');
+  libc::printf("Wrote 'o' to COM1\n");
   auto *allocator = memory::GetAllocator();
   arch::MemoryRegion regions[100];
   int count = arch::DetectMemory(regions, 100);
