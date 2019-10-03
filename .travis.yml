@@ -25,6 +25,8 @@ before_install:
       function sha256sum() { shasum -a 256 "$@" ; }
     else
       OS=linux
+      LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
+      export LD_LIBRARY_PATH
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
