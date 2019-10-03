@@ -9,6 +9,7 @@ cache:
 
 os:
   - linux
+  - osx
 
 env:
   - V=0.29.0
@@ -21,20 +22,13 @@ before_install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin
-      function sha256sum() { shasum -a 256 --portable "$@" ; }
+      function sha256sum() { shasum -a 256 "$@" ; }
     else
       OS=linux
-      LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
-      export LD_LIBRARY_PATH
-      sudo apt-get install -y software-properties-common
-      sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-      sudo apt-get update
-      sudo apt-get install -y libstdc++6 gcc-7 g++-7
-
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
-  - sha256sum --check tools/checksums/bazel
+  - sha256sum --check tools/checksums/bazel-${V}-installer-${OS}-x86_64
   - |
     chmod +x install.sh
     ./install.sh --user
@@ -60,7 +54,7 @@ script:
       --host_jvm_args=-Xms500m \
       build \
       --config ci \
-      --config i386-linux-premade \
+      --config i386-${OS}-premade \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel
 notifications:
