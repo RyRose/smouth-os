@@ -1,12 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 
-genrule(
-    name = "test",
-    srcs = [],
-    outs = ["test.txt"],
-    cmd = "echo 1 > $@",
-)
-
 filegroup(
     name = "gcc",
     srcs = glob(["bin/*-gcc"]),

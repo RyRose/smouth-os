@@ -1,0 +1,4 @@
+#!/bin/bash
+
+set -eu;
+exec "external/${WORKSPACE}/bin/${TARGET}-$(basename $0)" "$@"

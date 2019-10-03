@@ -52,5 +52,16 @@ script:
       --config ci \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel/... //libc/...
+  - |
+    bazel \
+      --output_base=$HOME/.cache/bazel/output \
+      --batch \
+      --host_jvm_args=-Xmx500m \
+      --host_jvm_args=-Xms500m \
+      build \
+      --config ci \
+      --config i386-linux-premade \
+      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
+      //kernel
 notifications:
   email: false

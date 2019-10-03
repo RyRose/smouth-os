@@ -1,9 +1,26 @@
+load("//tools/toolchain:toolchain.bzl", "toolchain")
+
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
     "toolchain.BUILD",
-    "toolchain.bzl",
 ])
+
+config_setting(
+    name = "prebuilt_darwin",
+    values = {
+        "cpu": "darwin",
+        "defines": "prebuilt=True",
+    },
+)
+
+config_setting(
+    name = "prebuilt_local",
+    values = {
+        "cpu": "k8",
+        "defines": "prebuilt=True",
+    },
+)
 
 config_setting(
     name = "i386",
@@ -26,15 +43,47 @@ config_setting(
     },
 )
 
+toolchain(
+    name = "cc-compiler-i686-elf-darwin",
+    compiler = "g++",
+    target = "i686-elf",
+    target_cpu = "i386",
+    workspace = "toolchain-i686-elf-darwin",
+)
+
+cc_toolchain_suite(
+    name = "darwin-premade",
+    toolchains = {
+        "i386|g++": ":cc-compiler-i686-elf-darwin",
+    },
+)
+
+toolchain(
+    name = "cc-compiler-i686-elf-linux",
+    compiler = "g++",
+    target = "i686-elf",
+    target_cpu = "i386",
+    workspace = "toolchain-i686-elf-linux",
+)
+
+cc_toolchain_suite(
+    name = "linux-premade",
+    toolchains = {
+        "i386|g++": ":cc-compiler-i686-elf-linux",
+    },
+)
+
+toolchain(
+    name = "cc-compiler-i686-elf",
+    compiler = "g++",
+    target = "i686-elf",
+    target_cpu = "i386",
+    workspace = "toolchain-i686-elf",
+)
+
 cc_toolchain_suite(
     name = "toolchain",
     toolchains = {
-        "darwin|compiler": "@bazel_tools//tools/cpp:cc-compiler-darwin",
-        "darwin|g++": "@bazel_tools//tools/cpp:cc-compiler-darwin",
-        "darwin": "@bazel_tools//tools/cpp:cc-compiler-darwin",
-        "i386|g++": "//tools/toolchain/i686-elf:cc-compiler-i686-elf",
-        "k8": "@bazel_tools//tools/cpp:cc-compiler-local",
-        "k8|g++": "@bazel_tools//tools/cpp:cc-compiler-local",
-        "local|compiler": "@bazel_tools//tools/cpp:cc-compiler-local",
+        "i386|g++": ":cc-compiler-i686-elf",
     },
 )
