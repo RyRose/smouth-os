@@ -7,22 +7,6 @@ exports_files([
 ])
 
 config_setting(
-    name = "prebuilt_darwin",
-    values = {
-        "cpu": "darwin",
-        "defines": "prebuilt=True",
-    },
-)
-
-config_setting(
-    name = "prebuilt_local",
-    values = {
-        "cpu": "k8",
-        "defines": "prebuilt=True",
-    },
-)
-
-config_setting(
     name = "i386",
     values = {
         "cpu": "i386",
