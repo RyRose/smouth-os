@@ -28,7 +28,7 @@ before_install:
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
-  - sha256sum --check tools/checksums/bazel-${V}-installer-${OS}-x86_64
+  - sha256sum --check "tools/checksums/bazel-${V}-installer-${OS}-x86_64"
   - |
     chmod +x install.sh
     ./install.sh --user
@@ -38,7 +38,7 @@ before_install:
 script:
   - |
     bazel \
-      --output_base=$HOME/.cache/bazel/output \
+      --output_base="$HOME/.cache/bazel/output" \
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
@@ -48,13 +48,13 @@ script:
       //kernel/... //libc/...
   - |
     bazel \
-      --output_base=$HOME/.cache/bazel/output \
+      --output_base="$HOME/.cache/bazel/output" \
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
       build \
       --config ci \
-      --config i386-${OS}-premade \
+      --config "i386-${OS}-premade" \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       //kernel
 notifications:
