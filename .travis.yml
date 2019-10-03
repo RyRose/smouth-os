@@ -8,7 +8,6 @@ cache:
     - $HOME/.cache/bazel/output
 
 os:
-  - linux
   - osx
 
 env:
