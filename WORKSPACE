@@ -32,9 +32,11 @@ toolchain_repository(
     target = "i686-elf",
 )
 
-premade_toolchain_repository(
+http_archive(
     name = "toolchain-i686-elf-linux",
-    path = "//tools/toolchain/premade:i686-elf-linux.zip",
+    urls = ["https://storage.googleapis.com/smouth-os/toolchain-i686-elf-linux.zip"],
+    build_file = "//tools/toolchain:toolchain.BUILD",
+    sha256 = "30106bd24018a911d3bc6f3de58d16f20cc1ea393b04d34c40692c640609b8c6",
 )
 
 premade_toolchain_repository(
