@@ -5,10 +5,10 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 # We parse this by grabbing the last space-separated value in the string.
 genrule(
     name = "workspace_name",
-    cmd = "bazel info workspace 2>&1 | awk '{print $$NF}' &> $@ || true",
+    cmd = "bazel info workspace 2>&1 | grep -o \"/[^']*\" &> $@ || true",
     outs = ["name.txt"],
     tags = ["local"],
-    visibility = ["//tools/qemu:__pkg__"],
+    visibility = ["//visibility:public"],
 )
 
 # gazelle:prefix github.com/RyRose/smouth-os

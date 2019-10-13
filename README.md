@@ -5,7 +5,7 @@
 To execute the kernel with QEMU, the following command will cross-compile the kernel for the i386 platform and run it using QEMU.
 
 ```sh
-bazel run //tools/qemu --config=i386
+bazel run //tools/go/cmd/qemu --config=i386
 ```
 
 ## Goal

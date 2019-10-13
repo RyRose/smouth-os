@@ -1,8 +1,15 @@
-py_binary(
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["qemu.go"],
+    importpath = "github.com/RyRose/smouth-os/tools/go/cmd/qemu",
+    visibility = ["//visibility:private"],
+    deps = ["//tools/go/qemu:go_default_library"],
+)
+
+go_binary(
     name = "qemu",
-    srcs = [
-        "qemu.py",
-    ],
     args = [
         "--cpu=$(TARGET_CPU)",
         "--kernel=$(location //kernel)",
@@ -11,15 +18,15 @@ py_binary(
     data = [
         "//kernel",
     ],
+    embed = [":go_default_library"],
     tags = ["manual"],
+    visibility = ["//visibility:public"],
 )
 
-py_binary(
+go_binary(
     name = "serial",
-    main = "qemu.py",
-    srcs = [
-        "qemu.py",
-    ],
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
     args = [
         "--cpu=$(TARGET_CPU)",
         "--kernel=$(location //kernel)",
@@ -31,12 +38,10 @@ py_binary(
     tags = ["manual"],
 )
 
-py_binary(
+go_binary(
     name = "gdb",
-    main = "qemu.py",
-    srcs = [
-        "qemu.py",
-    ],
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
     args = [
         "--cpu=$(TARGET_CPU)",
         "--kernel=$(location //kernel)",
