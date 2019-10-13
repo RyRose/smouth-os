@@ -8,12 +8,15 @@
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/tty.h"
 
-namespace {
+// We purposefully don't wrap this in a namespace to allow linkage with boot.S
+boot::multiboot_info *MULTIBOOT_INFORMATION_POINTER;
 
-extern "C" void pre_kernel_main(boot::multiboot_info *multiboot_ptr) {
+namespace arch {
+
+void Initialize() {
   arch::terminal_initialize();
   auto &mmap_manager = boot::MmapManager::GetInstance();
-  mmap_manager.Init(*multiboot_ptr);
+  mmap_manager.Init(*MULTIBOOT_INFORMATION_POINTER);
   gdt::InstallGDT();
   interrupt::GateDescriptor d(
       /*offset=*/reinterpret_cast<uint32_t>(dummy_isr::handleDummyInterrupt),
@@ -25,4 +28,4 @@ extern "C" void pre_kernel_main(boot::multiboot_info *multiboot_ptr) {
   instructions::INT<0x80>();
 }
 
-} // namespace
+} // namespace arch

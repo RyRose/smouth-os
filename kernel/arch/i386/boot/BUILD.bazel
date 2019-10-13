@@ -6,7 +6,7 @@ kernel_library(
     name = "boot",
     srcs = [
         "boot.S",
-        "pre_kernel_main.cc",
+        "boot.cc",
     ],
     tags = [
         "manual",

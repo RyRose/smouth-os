@@ -9,7 +9,7 @@ arch_library(name = "memory")
 
 arch_library(name = "io_port")
 
-arch_library(name = "boot", hdrs = [])
+arch_library(name = "boot")
 
 arch_file(name = "crti")
 

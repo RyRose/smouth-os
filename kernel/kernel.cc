@@ -1,5 +1,6 @@
 #include "libc/stdio/printf.h"
 
+#include "kernel/arch/boot.h"
 #include "kernel/arch/memory.h"
 #include "kernel/arch/serial.h"
 #include "kernel/memory/memory.h"
@@ -7,6 +8,7 @@
 namespace {
 
 extern "C" void kernel_main(void) {
+  arch::Initialize();
   libc::printf("Hello, World!\n");
   arch::COM1.Initialize();
   libc::printf("Initialized COM1\n");

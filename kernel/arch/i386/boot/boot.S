@@ -24,17 +24,16 @@
 	.global _start
 	.type _start, @function
 	_start:
+
+  # Set up stack.
 	movl $stack_top, %esp
 
-  pushl %ebx
+  # Save the pointer to the multiboot information to an external variable.
+  .extern MULTIBOOT_INFORMATION_POINTER
+  movl %ebx, MULTIBOOT_INFORMATION_POINTER
 
-	# Call the global constructors. Must not modify existing stack.
+	# Call the global constructors.
 	call _init
-
-  # Pre-main for arch-specific setup. In addition, this function must be called
-  # with the initial value of the EBX register pushed onto the stack. This value
-  # is a pointer to the multiboot information structure.
-  call pre_kernel_main
 
 	# Transfer control to the main kernel.
 	call kernel_main
