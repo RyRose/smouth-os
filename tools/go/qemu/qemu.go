@@ -36,8 +36,11 @@ func (v *VM) Serial(ctx context.Context) error {
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		scanner.Scan()
+		// Handle the first line with SeaBIOS differently since it outputs bytes that mess up the
+		// terminal.
+		log.Print(scanner.Text()[strings.Index(scanner.Text(), "SeaBIOS"):])
 		for scanner.Scan() {
-			log.Printf(strings.TrimSpace(scanner.Text()))
+			log.Print(strings.TrimSpace(scanner.Text()))
 		}
 	}()
 	return cmd.Run()
