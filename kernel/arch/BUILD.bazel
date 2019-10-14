@@ -19,6 +19,7 @@ arch_file(name = "linker.ld")
 
 kernel_library(
     name = "serial",
+    new = False,
     srcs = [
         "serial.cc",
     ],

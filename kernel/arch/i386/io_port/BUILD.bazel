@@ -4,6 +4,7 @@ package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 kernel_library(
     name = "io_port",
+    new = False,
     srcs = [
         "io_port.cc",
     ],

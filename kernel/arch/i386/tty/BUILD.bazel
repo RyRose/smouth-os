@@ -8,7 +8,6 @@ kernel_library(
         "tty.cc",
     ],
     hdrs = [
-        "vga.h",
         "//kernel/arch:tty.h",
     ],
     new = False,

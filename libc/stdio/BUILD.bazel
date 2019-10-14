@@ -35,6 +35,7 @@ cc_library(
     ],
     deps = [
         "//kernel/arch:tty",
+        "//kernel/arch:serial",
     ],
 )
 

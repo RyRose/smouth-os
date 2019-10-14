@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "kernel/arch/boot.h"
 #include "kernel/arch/i386/boot/dummy_isr.h"
 #include "kernel/arch/i386/boot/mmap_manager.h"
 #include "kernel/arch/i386/boot/multiboot.h"
@@ -14,7 +15,7 @@ boot::multiboot_info *MULTIBOOT_INFORMATION_POINTER;
 namespace arch {
 
 void Initialize() {
-  arch::terminal_initialize();
+  TTY.Clear();
   auto &mmap_manager = boot::MmapManager::GetInstance();
   mmap_manager.Init(*MULTIBOOT_INFORMATION_POINTER);
   gdt::InstallGDT();

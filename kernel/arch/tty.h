@@ -2,13 +2,30 @@
 #define KERNEL_ARCH_TTY_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace arch {
 
-void terminal_initialize(void);
-void terminal_putchar(char c);
-void terminal_write(const char *data, size_t size);
-void terminal_writestring(const char *data);
+class Terminal {
+public:
+  Terminal(size_t width, size_t height, uint16_t *buffer)
+      : width_(width), height_(height), buffer_(buffer), row_(0), column_(0) {}
+
+  void Clear();
+  void Put(char c);
+  void Write(const char *data);
+  void Write(const char *data, size_t size);
+
+private:
+  size_t width_;
+  size_t height_;
+  uint16_t *buffer_;
+
+  size_t row_;
+  size_t column_;
+};
+
+extern Terminal TTY;
 
 } // namespace arch
 

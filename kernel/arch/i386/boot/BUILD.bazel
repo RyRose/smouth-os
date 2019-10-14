@@ -8,6 +8,9 @@ kernel_library(
         "boot.S",
         "boot.cc",
     ],
+    hdrs = [
+        "//kernel/arch:boot.h",
+    ],
     tags = [
         "manual",
     ],

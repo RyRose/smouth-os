@@ -9,21 +9,7 @@ namespace {
 
 extern "C" void kernel_main(void) {
   arch::Initialize();
-  libc::printf("Hello, World!\n");
   arch::COM1.Initialize();
-  arch::COM1.Write('\n');
-  libc::printf("Initialized COM1\n");
-  arch::COM1.Write('h');
-  libc::printf("Wrote 'h' to COM1\n");
-  arch::COM1.Write('e');
-  libc::printf("Wrote 'e' to COM1\n");
-  arch::COM1.Write('l');
-  libc::printf("Wrote 'l' to COM1\n");
-  arch::COM1.Write('l');
-  libc::printf("Wrote 'l' to COM1\n");
-  arch::COM1.Write('o');
-  libc::printf("Wrote 'o' to COM1\n");
-  arch::COM1.Write('\n');
   auto *allocator = memory::GetAllocator();
   arch::MemoryRegion regions[100];
   int count = arch::DetectMemory(regions, 100);
