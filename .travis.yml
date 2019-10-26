@@ -22,9 +22,10 @@ before_install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       OS=darwin
-      function sha256sum() { shasum -a 256 "$@" ; }
+      function check_hash() { shasum -a 256 -c "$@" }
     else
       OS=linux
+      function check_hash() { sha256sum --check "$@" }
       LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
       export LD_LIBRARY_PATH
       sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -33,6 +34,7 @@ before_install:
     fi
     URL="https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
     wget -O install.sh "${URL}"
+  - check_hash tools/checksums/bazel-${V}-installer-${OS}-x86_64
   - |
     chmod +x install.sh
     ./install.sh --user
