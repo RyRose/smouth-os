@@ -43,10 +43,10 @@ before_install:
   - |
     case "${OS}" in
       darwin)
-        shasum -a 256 -c tools/checksums/bazel-${V}-installer-${OS}-x86_64
+        shasum -a 256 -c "tools/checksums/bazel-${V}-installer-${OS}-x86_64"
         ;;
       linux)
-        sha256sum --check tools/checksums/bazel-${V}-installer-${OS}-x86_64
+        sha256sum --check "tools/checksums/bazel-${V}-installer-${OS}-x86_64"
         ;;
       *)
         echo "${OS} is not a supported OS."
