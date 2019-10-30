@@ -41,7 +41,6 @@ before_install:
     fi
   - wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
   - |
-    find .
     case "${OS}" in
       darwin)
         shasum -a 256 -c "tools/checksums/bazel-${V}-installer-${OS}-x86_64"
