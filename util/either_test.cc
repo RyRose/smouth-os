@@ -17,4 +17,3 @@ TEST(Either, TestRight) {
 }
 
 }  // namespace util
-

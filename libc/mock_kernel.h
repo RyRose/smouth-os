@@ -14,6 +14,6 @@ class MockKernelPut : public KernelPutInterface {
   MOCK_METHOD(util::Status, Put, (char c), (override));
 };
 
-}
+}  // namespace libc
 
 #endif  // LIBC_MOCK_KERNEL_H

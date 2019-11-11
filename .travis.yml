@@ -68,7 +68,7 @@ script:
       test \
       --config ci \
       --experimental_repository_cache="$HOME/.bazel_repository_cache" \
-      //... -//tools/toolchain/...
+      //cxx/... //kernel/... //libc/... //testing/... //util/...
   - |
     bazel \
       --output_base="$HOME/.cache/bazel/output" \

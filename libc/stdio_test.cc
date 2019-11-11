@@ -13,18 +13,12 @@ using testing::Return;
 
 class StdioTest : public ::testing::Test {
  protected:
+  StdioTest() { libc::kernel_put = &kernel_; }
 
-  StdioTest() {
-    libc::kernel_put = &kernel_;
-  }
-
-  ~StdioTest() override {
-    libc::kernel_put = nullptr;
-  }
+  ~StdioTest() override { libc::kernel_put = nullptr; }
 
   libc::MockKernelPut kernel_;
 };
-
 
 TEST_F(StdioTest, CharSpaced) {
   ON_CALL(kernel_, Put(_)).WillByDefault(Return(util::Status()));
@@ -93,7 +87,7 @@ TEST_F(StdioTest, HexInts) {
 }
 
 TEST_F(StdioTest, HexIntsBig) {
-{
+  {
     InSequence s;
     for (const auto& c : std::string("ABDC124356789012 test aecdb123")) {
       EXPECT_CALL(kernel_, Put(c));

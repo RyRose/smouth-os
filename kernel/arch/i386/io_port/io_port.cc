@@ -42,4 +42,4 @@ uint32_t IoPort::inl() {
 
 uint16_t IoPort::value() { return port_number_; }
 
-}  // namespace i386
+}  // namespace arch_internal

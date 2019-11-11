@@ -29,7 +29,7 @@ char convert_to_char(uint8_t number, bool is_uppercase) {
   return 'a' + (number % 10);
 }
 
-template <size_t N>
+template <int N>
 util::StatusOr<int> print_number(uint64_t number, uint8_t base, bool negative,
                                  bool uppercase) {
   if (number == 0) {
@@ -105,32 +105,41 @@ util::StatusOr<int> printf(const char* format, ...) {
       }
       case 'u': {
         auto arg = va_arg(parameters, unsigned int);
-        ASSIGN_OR_RETURN(arg_len,
-                         print_number<100>(abs(arg), 10, arg < 0, true));
+        ASSIGN_OR_RETURN(
+            arg_len, print_number<100>(/*number=*/arg, /*base=*/10,
+                                       /*negative=*/false, /*uppercase=*/true));
         break;
       }
       case 'd':
       case 'i': {
         auto arg = va_arg(parameters, int);
-        ASSIGN_OR_RETURN(arg_len,
-                         print_number<100>(abs(arg), 10, arg < 0, true));
+        ASSIGN_OR_RETURN(
+            arg_len,
+            print_number<100>(/*number=*/abs(arg), /*base=*/10,
+                              /*negative=*/arg < 0, /*uppercase=*/true));
         break;
       }
       case 'X':
       case 'x': {
         auto arg = va_arg(parameters, uint64_t);
         ASSIGN_OR_RETURN(arg_len,
-                         print_number<100>(arg, 16, false, format[i] == 'X'));
+                         print_number<100>(/*number=*/arg, /*base=*/16,
+                                           /*negative=*/false,
+                                           /*uppercase=*/format[i] == 'X'));
         break;
       }
       case 'o': {
         auto arg = va_arg(parameters, uint64_t);
-        ASSIGN_OR_RETURN(arg_len, print_number<100>(arg, 8, false, true));
+        ASSIGN_OR_RETURN(
+            arg_len, print_number<100>(/*number=*/arg, /*base=*/8,
+                                       /*negative=*/false, /*uppercase=*/true));
         break;
       }
       case 'p': {
         auto arg = reinterpret_cast<uint64_t>(va_arg(parameters, void*));
-        ASSIGN_OR_RETURN(arg_len, print_number<100>(arg, 16, false, true));
+        ASSIGN_OR_RETURN(
+            arg_len, print_number<100>(/*number=*/arg, /*base=*/16,
+                                       /*negative=*/false, /*uppercase=*/true));
         break;
       }
       default:

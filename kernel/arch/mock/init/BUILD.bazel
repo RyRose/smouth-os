@@ -1,6 +1,5 @@
-
 cc_library(
     name = "init",
     srcs = [],
-    visibility=["//kernel:__subpackages__"],
+    visibility = ["//kernel:__subpackages__"],
 )

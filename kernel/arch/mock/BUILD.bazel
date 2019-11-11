@@ -2,4 +2,8 @@ package(
     default_visibility = ["//kernel/arch:__pkg__"],
 )
 
-exports_files(["linker.ld", "crti", "crtn"])
+exports_files([
+    "linker.ld",
+    "crti",
+    "crtn",
+])

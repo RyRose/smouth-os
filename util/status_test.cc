@@ -27,7 +27,7 @@ util::Status checkPositiveWrapped(int a) {
   return {};
 }
 
-}
+}  // namespace
 
 TEST(Status, TestDefaultConstructor) {
   Status status;
