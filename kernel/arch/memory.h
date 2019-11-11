@@ -3,31 +3,15 @@
 
 #include <stdint.h>
 
+#include "util/status.h"
+
 namespace arch {
 
-enum class MemoryRegionType {
-  AVAILABLE = 1,
-  RESERVED = 2,
-  ACPI_RECLAIMABLE = 3,
-  NVS = 4,
-  BADRAM = 5,
+class Allocator {
+ public:
+  virtual util::StatusOr<void*> Allocate(size_t n) = 0;
 };
 
-struct MemoryRegion {
-  uint64_t address;
-  uint64_t length;
-  MemoryRegionType type;
-};
-
-// Places into the buffer a list of `len` entries.
-int DetectMemory(MemoryRegion *regions, int len);
-
-// Returns a pointer to where the kernel image starts.
-void *GetKernelStart();
-
-// Returns a pointer to where the kernel image ends.
-void *GetKernelEnd();
-
-} // namespace arch
+}  // namespace arch
 
 #endif

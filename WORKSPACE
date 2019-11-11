@@ -10,7 +10,7 @@ http_archive(
 )
 
 http_archive(
-    name = "googletest",
+    name = "gtest",
     strip_prefix = "googletest-master",
     url = "https://github.com/google/googletest/archive/master.zip",
 )

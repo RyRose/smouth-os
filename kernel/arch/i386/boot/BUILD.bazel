@@ -3,68 +3,17 @@ load("//kernel:templates.bzl", "kernel_library")
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 kernel_library(
-    name = "boot",
-    srcs = [
-        "boot.S",
-        "boot.cc",
-    ],
-    hdrs = [
-        "//kernel/arch:boot.h",
-    ],
-    tags = [
-        "manual",
-    ],
-    visibility = ["//kernel/arch:__pkg__"],
-    deps = [
-        ":mmap_manager",
-        "//kernel/arch:tty",
-        "//kernel/arch/i386/gdt:gdt_installer",
-        "//kernel/arch/i386/instructions",
-        "//kernel/arch/i386/interrupt:descriptor",
-        "//kernel/arch/i386/interrupt:table",
-        "//libc/stdio",
-        ":dummy_isr",
-    ],
-)
-
-kernel_library(
     name = "dummy_isr",
-    tags = ["manual"],
     srcs = [
         "dummy_isr.cc",
     ],
     hdrs = [
         "dummy_isr.h",
     ],
+    tags = ["manual"],
     deps = [
         "//kernel/arch/i386/interrupt:macros",
-        "//libc/stdio",
-    ],
-)
-
-kernel_library(
-    name = "mmap_manager",
-    srcs = [
-        "mmap_manager.cc",
-    ],
-    hdrs = [
-        "mmap_manager.h",
-    ],
-    new = False,
-    deps = [
-        ":multiboot",
-    ],
-)
-
-cc_test(
-    name = "mmap_manager_test",
-    size = "small",
-    srcs = [
-        "mmap_manager_test.cc",
-    ],
-    deps = [
-        ":mmap_manager",
-        "@googletest//:gtest",
+        "//libc:stdio",
     ],
 )
 
@@ -73,5 +22,4 @@ kernel_library(
     hdrs = [
         "multiboot.h",
     ],
-    new = False,
 )

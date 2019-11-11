@@ -3,18 +3,16 @@ package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 load("//kernel:templates.bzl", "kernel_library")
 
 kernel_library(
-    name = "memory",
+    name = "linear",
     srcs = [
-        "memory.cc",
+        "linear.cc",
     ],
     hdrs = [
+        "linear.h",
         "//kernel/arch:memory.h",
     ],
-    new = False,
-    visibility = ["//kernel/arch:__pkg__"],
     deps = [
-        "//kernel/arch/i386/boot:mmap_manager",
         "//kernel/arch/i386/boot:multiboot",
-        "//libc/stdio",
+        "//util:list",
     ],
 )

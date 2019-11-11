@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//kernel:templates.bzl", "kernel_library")
+
+kernel_library(
+    name = "tty",
+    srcs = [
+        "tty.cc",
+    ],
+    hdrs = [
+        "tty.h",
+    ],
+    deps = [
+        "//libc:string",
+    ],
+)

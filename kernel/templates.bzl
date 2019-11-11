@@ -61,7 +61,12 @@ def kernel_binary(name, **kwargs):
 
     # Add dependency on //kernel/arch:boot so kernel_main is called.
     deps = kwargs.pop("deps", [])
-    deps.append("//kernel/arch:boot")
+    deps.extend(
+        [
+            "//cxx",
+            "//kernel/arch:boot",
+        ],
+    )
     deps = depset(deps).to_list()  # de-dupe
 
     # Add arch-specific linker file as input and use it.
@@ -92,7 +97,7 @@ def kernel_binary(name, **kwargs):
         **kwargs
     )
 
-def kernel_library(abi = True, new = True, **kwargs):
+def kernel_library(*args, **kwargs):
     """A wrapped cc_library to be used by the kernel.
 
     Args:
@@ -101,19 +106,11 @@ def kernel_library(abi = True, new = True, **kwargs):
            with the kernel memory allocator.
     """
     deps = kwargs.pop("deps", [])
-    if abi:
-        deps += select({
-            "//tools/toolchain:local": [],
-            "//tools/toolchain:darwin": [],
-            "//conditions:default": ["//kernel/cxx:abi"],
-        })
-    if new:
-        deps += select({
-            "//tools/toolchain:local": [],
-            "//tools/toolchain:darwin": [],
-            "//conditions:default": ["//kernel/cxx:new"],
-        })
+    deps += [
+        "//cxx",
+    ]
     native.cc_library(
         deps = deps,
+        *args,
         **kwargs
     )

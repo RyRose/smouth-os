@@ -23,7 +23,7 @@
 #ifndef MULTIBOOT_HEADER
 #define MULTIBOOT_HEADER 1
 
-namespace boot {
+namespace arch_internal {
 
 /* How many bytes from the start of the file we search for the header. */
 #define MULTIBOOT_SEARCH 8192
@@ -168,7 +168,7 @@ struct multiboot_info {
   /* Memory Mapping buffer */
   multiboot_uint32_t mmap_length;
 #ifdef __STDC_HOSTED__
-  void *mmap_addr;
+  void* mmap_addr;
 #else
   multiboot_uint32_t mmap_addr;
 #endif
@@ -267,6 +267,6 @@ struct multiboot_apm_info {
 
 #endif /* ! ASM_FILE */
 
-} // namespace boot
+}  // namespace arch_internal
 
 #endif /* ! MULTIBOOT_HEADER */

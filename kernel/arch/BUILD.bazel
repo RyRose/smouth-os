@@ -1,32 +1,44 @@
-load("//kernel:templates.bzl", "kernel_library")
 load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
+load("//kernel:templates.bzl", "kernel_library")
 
 package(default_visibility = ["//visibility:public"])
 
-arch_library(name = "tty")
+kernel_library(
+    name = "memory",
+    hdrs = [
+        "memory.h",
+    ],
+    deps = [
+        "//util:status",
+    ],
+)
 
-arch_library(name = "memory")
+kernel_library(
+    name = "serial",
+    hdrs = [
+        "serial.h",
+    ],
+)
 
-arch_library(name = "io_port")
+kernel_library(
+    name = "boot",
+    hdrs = [
+        "boot.h",
+    ],
+    deps = [
+        ":memory",
+        ":serial",
+        "//kernel/arch/common:tty",
+    ],
+)
 
-arch_library(name = "boot")
+arch_library(
+    name = "init",
+    hdrs = [],
+)
 
 arch_file(name = "crti")
 
 arch_file(name = "crtn")
 
 arch_file(name = "linker.ld")
-
-kernel_library(
-    name = "serial",
-    new = False,
-    srcs = [
-        "serial.cc",
-    ],
-    hdrs = [
-        "serial.h",
-    ],
-    deps = [
-        ":io_port",
-    ],
-)

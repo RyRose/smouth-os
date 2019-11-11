@@ -1,10 +1,16 @@
-#include "libc/string/mem.h"
+
+#include <stdint.h>
+
+#include "libc/string.h"
+#include "util/status.h"
 
 namespace libc {
 
-int memcmp(const void *aptr, const void *bptr, size_t size) {
-  const unsigned char *a = static_cast<const unsigned char *>(aptr);
-  const unsigned char *b = static_cast<const unsigned char *>(bptr);
+util::StatusOr<int> memcmp(const void* aptr, const void* bptr, size_t size) {
+  RET_CHECK(aptr != nullptr);
+  RET_CHECK(aptr != nullptr);
+  const auto* a = static_cast<const uint8_t*>(aptr);
+  const auto* b = static_cast<const uint8_t*>(bptr);
   for (size_t i = 0; i < size; i++) {
     if (a[i] < b[i])
       return -1;
@@ -14,4 +20,4 @@ int memcmp(const void *aptr, const void *bptr, size_t size) {
   return 0;
 }
 
-} // namespace libc
+}  // namespace libc

@@ -1,12 +1,16 @@
-#include "libc/stdlib/abort.h"
+#include "libc/stdlib.h"
+
+#include "libc/kernel.h"
 
 namespace libc {
 
-__attribute__((__noreturn__)) void abort(void) {
-  // TODO: Add proper kernel panic.
+__attribute__((__noreturn__)) void abort() {
+  if (kernel_panic) {
+    kernel_panic->Panic("program aborted");
+  }
   while (true) {
   }
   __builtin_unreachable();
 }
 
-} // namespace libc
+}  // namespace libc

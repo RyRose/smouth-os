@@ -43,7 +43,7 @@ func run(ctx context.Context, vm qemu.VM) error {
 	case "gdb":
 		return vm.GDB(ctx)
 	}
-	return fmt.Errorf("Unknown output method: %v", *output)
+	return fmt.Errorf("unknown output method: %v", *output)
 }
 
 func main() {

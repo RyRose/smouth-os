@@ -1,69 +1,91 @@
-#include "kernel/arch/i386/interrupt/descriptor.h"
 #include "kernel/arch/i386/interrupt/table.h"
+
+#include "testing/assert.h"
 
 #include "gtest/gtest.h"
 
-namespace interrupt {
+namespace arch_internal {
 
-TEST(Table, TestAddress) {
-  InterruptDescriptorTable idt;
-  EXPECT_EQ(reinterpret_cast<uint64_t>(idt.table_) & 0xFFFFFFFF,
-            (idt.IDTR() >> 16) & 0xFFFFFFFF);
+TEST(Descriptor, TestDefaultGateDescriptor) {
+  GateDescriptor descriptor;
+  EXPECT_EQ(0, *reinterpret_cast<uint64_t*>(&descriptor));
 }
 
-TEST(Table, TestInitiallyZeroed) {
-  InterruptDescriptorTable idt;
-  for (int i = 0; i < MAX_ENTRIES; i++) {
-    EXPECT_EQ(0, reinterpret_cast<uint64_t *>(idt.table_)[i]);
-  }
+TEST(Descriptor, TestInterruptGateDescriptor) {
+  ASSERT_OK_AND_ASSIGN(GateDescriptor descriptor,
+                       GateDescriptor::Create(
+                           /*offset=*/0x12345678, /*segment_selector=*/0x1234,
+                           /*gate_type=*/GateType::INTERRUPT_32BIT, /*dpl=*/0));
+  EXPECT_EQ(0x12348E0012345678, *reinterpret_cast<uint64_t*>(&descriptor));
+}
+
+TEST(Descriptor, TestTrapGateDescriptor) {
+  ASSERT_OK_AND_ASSIGN(GateDescriptor descriptor,
+                       GateDescriptor::Create(
+                           /*offset=*/0x12345678, /*segment_selector=*/0x1234,
+                           /*gate_type=*/GateType::TRAP_32BIT, /*dpl=*/0));
+  EXPECT_EQ(0x12348F0012345678, *reinterpret_cast<uint64_t*>(&descriptor));
+}
+
+TEST(Descriptor, TestTaskGateDescriptor) {
+  ASSERT_OK_AND_ASSIGN(GateDescriptor descriptor,
+                       GateDescriptor::Create(
+                           /*offset=*/0, /*segment_selector=*/0x1234,
+                           /*gate_type=*/GateType::TASK, /*dpl=*/0));
+  EXPECT_EQ(0x850012340000, *reinterpret_cast<uint64_t*>(&descriptor));
+}
+
+TEST(Table, TestAddress) {
+  InterruptDescriptorTable<10> idt;
+  const uint64_t want =
+      reinterpret_cast<uint64_t>(idt.table_.Address()) & 0xFFFFFFFFu;
+  const uint64_t got = (idt.IDTR() >> 16u) & 0xFFFFFFFFu;
+  EXPECT_EQ(want, got);
+  idt.Register(1, GateDescriptor());
+  EXPECT_EQ(want, got);
 }
 
 TEST(Table, TestZerothRegistered) {
-  InterruptDescriptorTable idt;
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_EQ(1 * 8 - 1, idt.IDTR() & 0xFFFF);
+  InterruptDescriptorTable<10> idt;
+  EXPECT_TRUE(idt.Register(0, GateDescriptor()).Ok());
+  EXPECT_EQ(1 * 8 - 1, idt.IDTR() & 0xFFFFu);
 }
 
 TEST(Table, TestSequentiallyRegistered) {
-  InterruptDescriptorTable idt;
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 1).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 2).ok());
-  EXPECT_EQ(3 * 8 - 1, idt.IDTR() & 0xFFFF);
+  InterruptDescriptorTable<10> idt;
+  EXPECT_OK(idt.Register(0, GateDescriptor()));
+  EXPECT_OK(idt.Register(1, GateDescriptor()));
+  EXPECT_OK(idt.Register(2, GateDescriptor()));
+  EXPECT_EQ(3 * 8 - 1, idt.IDTR() & 0xFFFFu);
 }
 
 TEST(Table, TestLaterRegistered) {
-  InterruptDescriptorTable idt;
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 3).ok());
-  EXPECT_EQ(4 * 8 - 1, idt.IDTR() & 0xFFFF);
+  InterruptDescriptorTable<10> idt;
+  EXPECT_OK(idt.Register(3, GateDescriptor()));
+  EXPECT_EQ(4 * 8 - 1, idt.IDTR() & 0xFFFFu);
 }
 
 TEST(Table, TestZerothRepeatedlyRegistered) {
-  InterruptDescriptorTable idt;
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 0).ok());
-  EXPECT_EQ(1 * 8 - 1, idt.IDTR() & 0xFFFF);
+  InterruptDescriptorTable<10> idt;
+  EXPECT_OK(idt.Register(0, GateDescriptor()));
+  EXPECT_OK(idt.Register(0, GateDescriptor()));
+  EXPECT_OK(idt.Register(0, GateDescriptor()));
+  EXPECT_OK(idt.Register(0, GateDescriptor()));
+  EXPECT_EQ(1 * 8 - 1, idt.IDTR() & 0xFFFFu);
 }
 
 TEST(Table, TestLaterRepeatedlyRegistered) {
-  InterruptDescriptorTable idt;
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
-  EXPECT_TRUE(idt.Register(GateDescriptor(), 8).ok());
+  InterruptDescriptorTable<10> idt;
+  EXPECT_OK(idt.Register(8, GateDescriptor()));
+  EXPECT_OK(idt.Register(8, GateDescriptor()));
+  EXPECT_OK(idt.Register(8, GateDescriptor()));
+  EXPECT_OK(idt.Register(8, GateDescriptor()));
   EXPECT_EQ(9 * 8 - 1, idt.IDTR() & 0xFFFF);
 }
 
 TEST(Table, TestOverflow) {
-  InterruptDescriptorTable idt;
-  EXPECT_FALSE(idt.Register(GateDescriptor(), MAX_ENTRIES).ok());
+  InterruptDescriptorTable<10> idt;
+  EXPECT_NOT_OK(idt.Register(11, GateDescriptor()));
 }
 
-} // namespace interrupt
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+}  // namespace arch_internal

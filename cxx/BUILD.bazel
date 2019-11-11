@@ -1,0 +1,98 @@
+cc_library(
+    name = "kernel",
+    srcs = [
+        "kernel.cc",
+    ],
+    hdrs = [
+        "kernel.h",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//util:status",
+    ],
+)
+
+cc_library(
+    name = "cxx",
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = select({
+        "//tools/toolchain:local": [
+            ":newstub",
+        ],
+        "//tools/toolchain:darwin": [
+            ":newstub",
+        ],
+        "//conditions:default": [
+            ":virtual",
+            ":atexit",
+            ":new",
+            ":memcpy",
+        ],
+    }),
+)
+
+cc_library(
+    name = "virtual",
+    srcs = [
+        "virtual.cc",
+    ],
+    hdrs = [
+        "virtual.h",
+    ],
+    deps = [
+        ":kernel",
+    ],
+)
+
+cc_library(
+    name = "atexit",
+    srcs = [
+        "atexit.cc",
+    ],
+    hdrs = [
+        "atexit.h",
+    ],
+)
+
+cc_library(
+    name = "new",
+    srcs = [
+        "new.cc",
+    ],
+    hdrs = [
+        "new.h",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":kernel",
+    ],
+)
+
+cc_library(
+    name = "newstub",
+    srcs = [
+        "new.cc",
+    ],
+    hdrs = [
+        "new.h",
+    ],
+    defines = [
+        "CXX_NEW_STUB_CONFIG",
+    ],
+)
+
+cc_library(
+    name = "memcpy",
+    srcs = [
+        "memcpy.cc",
+    ],
+    hdrs = [
+        "memcpy.h",
+    ],
+)

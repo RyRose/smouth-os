@@ -2,13 +2,14 @@ load("//kernel:templates.bzl", "kernel_binary")
 
 kernel_binary(
     name = "kernel",
-    visibility = ["//visibility:public"],
     srcs = [
         "kernel.cc",
     ],
+    visibility = ["//visibility:public"],
     deps = [
+        "//kernel/arch:init",
         "//kernel/arch:memory",
         "//kernel/arch:serial",
-        "//libc/stdio",
+        "//libc:stdio",
     ],
 )

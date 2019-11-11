@@ -1,0 +1,89 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "assert",
+    hdrs = [
+        "assert.h",
+    ],
+    deps = [
+        "//libc:stdio",
+        "//libc:stdlib",
+    ],
+)
+
+cc_library(
+    name = "stdio",
+    srcs = glob(["stdio/*.cc"]),
+    hdrs = [
+        "stdio.h",
+    ],
+    deps = [
+        "//libc:kernel",
+        "//libc:stdlib",
+        "//libc:string",
+        "//util:status",
+    ],
+)
+
+cc_test(
+    name = "stdio_test",
+    size = "small",
+    srcs = [
+        "stdio_test.cc",
+    ],
+    deps = [
+        ":mock_kernel",
+        ":stdio",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "stdlib",
+    srcs = glob(["stdlib/*.cc"]),
+    hdrs = [
+        "stdlib.h",
+    ],
+    deps = [
+        "//libc:kernel",
+        "//util:status",
+    ],
+)
+
+cc_library(
+    name = "string",
+    srcs = glob(["string/*.cc"]),
+    hdrs = [
+        "string.h",
+    ],
+    deps = [
+        "//util:status",
+    ],
+)
+
+cc_library(
+    name = "kernel",
+    srcs = [
+        "kernel.cc",
+    ],
+    hdrs = [
+        "kernel.h",
+    ],
+    deps = [
+        "//util:status",
+    ],
+)
+
+cc_library(
+    name = "mock_kernel",
+    hdrs = [
+        "mock_kernel.h",
+    ],
+    deps = [
+        ":kernel",
+        "//util:status",
+        "@gtest",
+    ],
+)

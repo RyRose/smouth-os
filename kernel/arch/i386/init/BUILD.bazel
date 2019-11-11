@@ -1,0 +1,29 @@
+load("//kernel:templates.bzl", "kernel_library")
+
+kernel_library(
+    name = "init",
+    srcs = [
+        "boot.S",
+        "init.cc",
+    ],
+    tags = ["manual"],
+    visibility = ["//kernel/arch:__pkg__"],
+    deps = [
+        "//kernel/arch:boot",
+        "//kernel/arch:memory",
+        "//kernel/arch/common:tty",
+        "//kernel/arch/i386/boot:dummy_isr",
+        "//kernel/arch/i386/boot:multiboot",
+        "//kernel/arch/i386/gdt:flush",
+        "//kernel/arch/i386/gdt:table",
+        "//kernel/arch/i386/instructions",
+        "//kernel/arch/i386/interrupt:table",
+        "//kernel/arch/i386/memory:linear",
+        "//kernel/arch/i386/serial",
+        "//libc:assert",
+        "//libc:stdio",
+        "//libc:string",
+        "//util:optional",
+        "//util:status",
+    ],
+)

@@ -1,26 +1,20 @@
-#include "libc/stdio/printf.h"
+#include "libc/stdio.h"
 
 #include <stdarg.h>
-#include <stddef.h>
 #include <stdint.h>
 
-#include "libc/stdio/putchar.h"
-#include "libc/stdlib/arithmetic.h"
-#include "libc/string/str.h"
+#include "libc/stdlib.h"
+#include "libc/string.h"
+#include "util/status.h"
 
 namespace libc {
 
 namespace {
 
-int print(const char *data) {
-  int len = strlen(data);
-  if (len < 0) {
-    return len;
-  }
+util::StatusOr<int> print(const char* data) {
+  ASSIGN_OR_RETURN(int len, strlen(data));
   for (int i = 0; i < len; i++) {
-    if (putchar(data[i]) != data[i]) {
-      return -1;
-    }
+    RETURN_IF_ERROR(putchar(data[i]));
   }
   return len;
 }
@@ -28,94 +22,125 @@ int print(const char *data) {
 char convert_to_char(uint8_t number, bool is_uppercase) {
   if (number < 10) {
     return '0' + number;
-  } else if (is_uppercase) {
+  }
+  if (is_uppercase) {
     return 'A' + (number % 10);
-  } else {
-    return 'a' + (number % 10);
   }
+  return 'a' + (number % 10);
 }
 
-int print_number(uint64_t number, uint8_t base, bool negative, bool uppercase) {
+template <size_t N>
+util::StatusOr<int> print_number(uint64_t number, uint8_t base, bool negative,
+                                 bool uppercase) {
   if (number == 0) {
-    return putchar('0') == '0' ? 1 : -1;
-  } else {
-    int i = 0;
-    char converted[100];
-    while (number) {
-      converted[i] = convert_to_char(number % base, uppercase);
-      number /= base;
-      ++i;
-    }
-
-    int ret = 0;
-    if (negative) {
-      if (putchar('-') != '-') {
-        return -1;
-      } else {
-        ++ret;
-      }
-    }
-
-    --i;
-    for (; i >= 0; --i) {
-      if (putchar(converted[i]) != converted[i]) {
-        return -1;
-      }
-      ++ret;
-    }
-
-    return ret;
+    RETURN_IF_ERROR(putchar('0'));
+    return 1;
   }
-}
-} // namespace
+  int i = 0;
+  char converted[N];
+  while (number) {
+    RET_CHECK(i < N, "overflowed array caching printed number");
+    converted[i] = convert_to_char(number % base, uppercase);
+    number /= base;
+    i++;
+  }
 
-int printf(const char *format, ...) {
+  int ret = 0;
+  if (negative) {
+    RETURN_IF_ERROR(putchar('-'));
+    ret++;
+  }
+
+  i--;
+  for (; i >= 0; i--) {
+    RETURN_IF_ERROR(putchar(converted[i]));
+    ret++;
+  }
+
+  return ret;
+}
+
+}  // namespace
+
+util::StatusOr<int> printf(const char* format, ...) {
   va_list parameters;
   va_start(parameters, format);
 
-  int len = 0;
-  int format_len = strlen(format);
-  for (int i = 0; i < format_len; ++i) {
+  ASSIGN_OR_RETURN(int format_len, strlen(format));
+
+  int percents = 0;
+  for (int i = 0; i < format_len; i++) {
     if (format[i] == '%') {
-      if (++i == format_len) {
-        return -1;
-      }
-      int arg_len;
-      if (format[i] == 'c') {
-        char c = va_arg(parameters, int);
-        arg_len = putchar(c) == c ? 1 : -1;
-      } else if (format[i] == 's') {
-        char *string = va_arg(parameters, char *);
-        arg_len = print(string);
-      } else if (format[i] == 'd' || format[i] == 'i') {
-        int arg = va_arg(parameters, int);
-        arg_len = print_number(abs(arg), 10, arg < 0, true);
-      } else if (format[i] == 'X' || format[i] == 'x') {
-        uint64_t arg = va_arg(parameters, uint64_t);
-        arg_len = print_number(arg, 16, false, format[i] == 'X');
-      } else if (format[i] == 'o') {
-        uint64_t arg = va_arg(parameters, uint64_t);
-        arg_len = print_number(arg, 8, false, true);
-      } else if (format[i] == 'p') {
-        uint64_t arg = reinterpret_cast<uint64_t>(va_arg(parameters, void *));
-        arg_len = print_number(arg, 16, false, true);
-      } else {
-        return -1;
-      }
-      if (arg_len < 0) {
-        return arg_len;
-      }
-      len += arg_len;
-    } else {
-      if (putchar(format[i]) != format[i]) {
-        return -1;
-      } else {
-        len++;
-      }
+      percents++;
     }
+  }
+
+  int len = 0;
+  int arg_count = 0;
+  for (int i = 0; i < format_len; i++) {
+    if (format[i] != '%') {
+      RETURN_IF_ERROR(putchar(format[i]));
+      len++;
+      continue;
+    }
+
+    RET_CHECK(arg_count < percents, "number of %'s exceeds arguments");
+    arg_count++;
+
+    i++;
+    RET_CHECK(i < format_len, "% cannot be used as final character");
+
+    int arg_len;
+    switch (format[i]) {
+      case 'c': {
+        auto c = va_arg(parameters, int);
+        RETURN_IF_ERROR(putchar(c));
+        arg_len = 1;
+        break;
+      }
+      case 's': {
+        const char* string = va_arg(parameters, const char*);
+        ASSIGN_OR_RETURN(arg_len, print(string));
+        break;
+      }
+      case 'u': {
+        auto arg = va_arg(parameters, unsigned int);
+        ASSIGN_OR_RETURN(arg_len,
+                         print_number<100>(abs(arg), 10, arg < 0, true));
+        break;
+      }
+      case 'd':
+      case 'i': {
+        auto arg = va_arg(parameters, int);
+        ASSIGN_OR_RETURN(arg_len,
+                         print_number<100>(abs(arg), 10, arg < 0, true));
+        break;
+      }
+      case 'X':
+      case 'x': {
+        auto arg = va_arg(parameters, uint64_t);
+        ASSIGN_OR_RETURN(arg_len,
+                         print_number<100>(arg, 16, false, format[i] == 'X'));
+        break;
+      }
+      case 'o': {
+        auto arg = va_arg(parameters, uint64_t);
+        ASSIGN_OR_RETURN(arg_len, print_number<100>(arg, 8, false, true));
+        break;
+      }
+      case 'p': {
+        auto arg = reinterpret_cast<uint64_t>(va_arg(parameters, void*));
+        ASSIGN_OR_RETURN(arg_len, print_number<100>(arg, 16, false, true));
+        break;
+      }
+      default:
+        return util::Status(util::ErrorCode::INVALID_ARGUMENT,
+                            "unknown printf formatter");
+    }
+    len += arg_len;
   }
   va_end(parameters);
   return len;
 }
 
-} // namespace libc
+}  // namespace libc

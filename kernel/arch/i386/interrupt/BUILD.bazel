@@ -3,25 +3,6 @@ load("//kernel:templates.bzl", "kernel_library")
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 kernel_library(
-    name = "descriptor",
-    hdrs = [
-        "descriptor.h",
-    ],
-)
-
-cc_test(
-    name = "descriptor_test",
-    size = "small",
-    srcs = [
-        "descriptor_test.cc",
-    ],
-    deps = [
-        ":descriptor",
-        "@googletest//:gtest",
-    ],
-)
-
-kernel_library(
     name = "table",
     srcs = [
         "table.cc",
@@ -30,8 +11,10 @@ kernel_library(
         "table.h",
     ],
     deps = [
-        ":descriptor",
-        "//kernel/util:status",
+        "//libc:string",
+        "//util:list",
+        "//util:status",
+        "@gtest//:gtest_prod",
     ],
 )
 
@@ -42,9 +25,10 @@ cc_test(
         "table_test.cc",
     ],
     deps = [
-        ":descriptor",
         ":table",
-        "@googletest//:gtest",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
     ],
 )
 

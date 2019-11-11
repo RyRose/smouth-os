@@ -53,7 +53,7 @@ func (v *VM) GDB(ctx context.Context) error {
 	}
 	defer qemu.Wait()
 	defer qemu.Process.Kill()
-	gdb := exec.CommandContext(ctx, "gdb",
+	gdb := exec.CommandContext(ctx, "sudo", "gdb",
 		"-d", v.Workspace,
 		"-ex", fmt.Sprintf("file %s", v.Kernel),
 		"-ex", "target remote :1234",

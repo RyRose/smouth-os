@@ -1,0 +1,26 @@
+package(default_visibility=["//visibility:public"])
+
+cc_library(
+    name = "assert",
+    testonly = 1,
+    hdrs = [
+        "assert.h",
+    ],
+    deps = [
+        "//util:status",
+    ]
+)
+
+cc_test(
+    name = "assert_test",
+    size = "small",
+    srcs = [
+        "assert_test.cc",
+    ],
+    deps = [
+        ":assert",
+        "//util:status",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ]
+)

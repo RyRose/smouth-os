@@ -1,0 +1,6 @@
+#ifndef KERNEL_ARCH_MOCK_SERIAL_H
+#define KERNEL_ARCH_MOCK_SERIAL_H
+
+namespace arch {}
+
+#endif  // KERNEL_ARCH_MOCK_SERIAL_H

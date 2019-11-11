@@ -1,27 +1,24 @@
 #include "kernel/arch/i386/interrupt/table.h"
-#include "kernel/arch/i386/interrupt/descriptor.h"
 
-#include "kernel/util/status.h"
+#include "util/status.h"
 
-namespace interrupt {
+namespace arch_internal {
 
-util::Status InterruptDescriptorTable::Register(GateDescriptor descriptor,
-                                                uint16_t index) {
-  if (index >= MAX_ENTRIES) {
-    return util::Status(util::ErrorCode::OVERFLOW);
-  }
-  table_[index] = descriptor;
-  uint16_t limit = 8 * (index + 1) - 1;
-  if (limit > limit_) {
-    limit_ = limit;
-  }
-  return util::Status();
+util::StatusOr<GateDescriptor> GateDescriptor::Create(uint32_t offset,
+                                                      uint16_t segment_selector,
+                                                      GateType gate_type,
+                                                      uint8_t dpl) {
+  RET_CHECK((dpl & 0xF0u) == 0,
+            "descriptor privilege level must only be four bits");
+
+  GateDescriptor descriptor;
+  descriptor.offset_first = offset & 0xFFFFu;
+  descriptor.offset_second = offset >> 16u;
+  descriptor.segment_selector = segment_selector;
+  descriptor.gate_type = gate_type;
+  descriptor.dpl = dpl;
+  descriptor.present = true;
+  return descriptor;
 }
 
-uint64_t InterruptDescriptorTable::IDTR() const {
-  // TODO(RyRose): Log a warning if the memory address is greater than 2^32 - 1.
-  return (static_cast<uint64_t>(limit_)) |
-         (reinterpret_cast<uint64_t>(table_) << 16);
-}
-
-} // namespace interrupt
+}  // namespace arch_internal

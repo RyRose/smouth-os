@@ -1,15 +1,11 @@
-#include "libc/stdio/putchar.h"
-
-#include "kernel/arch/serial.h"
-#include "kernel/arch/tty.h"
+#include "libc/kernel.h"
+#include "libc/stdio.h"
 
 namespace libc {
 
-int putchar(int ic) {
-  char c = static_cast<char>(ic);
-  arch::TTY.Write(&c, sizeof(c));
-  arch::COM1.Write(static_cast<uint8_t>(ic));
-  return ic;
+util::Status putchar(int ic) {
+  RET_CHECK(kernel_put != nullptr, "kernel_put API null.");
+  return kernel_put->Put(static_cast<char>(ic));
 }
 
-} // namespace libc
+}  // namespace libc

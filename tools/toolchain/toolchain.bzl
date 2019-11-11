@@ -69,6 +69,7 @@ def toolchain(name, workspace, target, target_cpu, compiler):
 
     native.cc_toolchain(
         name = name,
+        tags = ["no-ide"],
         all_files = all_files,
         compiler_files = compiler_files,
         dwp_files = empty,

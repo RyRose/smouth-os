@@ -1,0 +1,82 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "status",
+    srcs = [
+        "status.cc",
+    ],
+    hdrs = [
+        "status.h",
+    ],
+    deps = [
+        ":either",
+    ],
+)
+
+cc_test(
+    name = "status_test",
+    size = "small",
+    srcs = [
+        "status_test.cc",
+    ],
+    deps = [
+        ":status",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "either",
+    hdrs = [
+        "either.h",
+    ],
+)
+
+cc_library(
+    name = "optional",
+    hdrs = [
+        "optional.h",
+    ],
+    deps = [
+        "//cxx:new",
+    ],
+)
+
+cc_test(
+    name = "either_test",
+    size = "small",
+    srcs = [
+        "either_test.cc",
+    ],
+    deps = [
+        ":either",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "list",
+    hdrs = [
+        "list.h",
+    ],
+    deps = [
+        "//libc:string",
+        "//util:status",
+    ],
+)
+
+cc_test(
+    name = "list_test",
+    srcs = [
+        "list_test.cc",
+    ],
+    deps = [
+        ":list",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)

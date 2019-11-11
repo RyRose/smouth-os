@@ -1,4 +1,4 @@
-#include "libc/stdlib/arithmetic.h"
+#include "libc/stdlib.h"
 
 namespace libc {
 
@@ -10,4 +10,4 @@ int abs(int n) {
   }
 }
 
-} // namespace libc
+}  // namespace libc

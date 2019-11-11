@@ -1,6 +1,6 @@
 # Memory
 
-This doc looks at kernel dynamic memory allocation so we don't have awkward large buffers everywhere in the kernel. 
+This doc looks at kernel dynamic memory allocation so we don't have awkward large buffers everywhere in the kernel.
 
 ## The First Iteration
 

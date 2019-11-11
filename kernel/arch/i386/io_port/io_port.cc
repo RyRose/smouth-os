@@ -1,8 +1,8 @@
-#include "kernel/arch/io_port.h"
+#include "kernel/arch/i386/io_port/io_port.h"
 
 #include <stdint.h>
 
-namespace arch {
+namespace arch_internal {
 
 void IoPort::outb(uint8_t output) {
   asm volatile("outb %0, %1"
@@ -40,4 +40,6 @@ uint32_t IoPort::inl() {
   return ret;
 }
 
-} // namespace arch
+uint16_t IoPort::value() { return port_number_; }
+
+}  // namespace i386
