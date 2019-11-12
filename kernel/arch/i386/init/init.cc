@@ -5,10 +5,10 @@
 #include "libc/assert.h"
 #include "libc/kernel.h"
 
-#include "kernel/arch/i386/boot/dummy_isr.h"
-#include "kernel/arch/i386/boot/multiboot.h"
 #include "kernel/arch/i386/gdt/flush.h"
 #include "kernel/arch/i386/gdt/table.h"
+#include "kernel/arch/i386/init/dummy_isr.h"
+#include "kernel/arch/i386/init/multiboot.h"
 #include "kernel/arch/i386/instructions/instructions.h"
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/memory/linear.h"

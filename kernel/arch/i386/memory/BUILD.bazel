@@ -12,7 +12,7 @@ kernel_library(
         "//kernel/arch:memory.h",
     ],
     deps = [
-        "//kernel/arch/i386/boot:multiboot",
+        "//kernel/arch/i386/init:multiboot",
         "//util:list",
     ],
 )

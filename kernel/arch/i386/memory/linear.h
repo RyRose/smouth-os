@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "kernel/arch/i386/boot/multiboot.h"
+#include "kernel/arch/i386/init/multiboot.h"
 
 #include "kernel/arch/memory.h"
 #include "util/list.h"

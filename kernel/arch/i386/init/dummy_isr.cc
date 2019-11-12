@@ -1,4 +1,4 @@
-#include "kernel/arch/i386/boot/dummy_isr.h"
+#include "kernel/arch/i386/init/dummy_isr.h"
 
 #include "kernel/arch/i386/interrupt/macros.h"
 
