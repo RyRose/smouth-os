@@ -1,12 +1,10 @@
 #include "kernel/arch/boot.h"
 
-#include "util/optional.h"
-#include "util/status.h"
+#include "cxx/kernel.h"
 
 #include "libc/assert.h"
 #include "libc/kernel.h"
 
-#include "cxx/kernel.h"
 #include "kernel/arch/i386/boot/dummy_isr.h"
 #include "kernel/arch/i386/boot/multiboot.h"
 #include "kernel/arch/i386/gdt/flush.h"
@@ -15,6 +13,10 @@
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/memory/linear.h"
 #include "kernel/arch/i386/serial/serial.h"
+
+#include "util/check.h"
+#include "util/optional.h"
+#include "util/status.h"
 
 namespace arch_internal {
 
@@ -166,14 +168,9 @@ util::StatusOr<arch::BootInfo> pre_kernel_main_internal(
 }
 
 extern "C" arch::BootInfo pre_kernel_main(multiboot_info* multiboot_ptr) {
-  const auto boot_info_or = pre_kernel_main_internal(multiboot_ptr);
-  if (!boot_info_or.Ok()) {
-    libc::printf("Kernel initialization failed: %s.\n",
-                 boot_info_or.Status().Message());
-    while (true) {
-    }
-  }
-  return boot_info_or.Value();
+  CHECK_OR_RETURN(const auto boot_info,
+                  pre_kernel_main_internal(multiboot_ptr));
+  return boot_info;
 }
 
 }  // namespace

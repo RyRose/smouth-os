@@ -23,6 +23,7 @@ kernel_library(
         "//libc:assert",
         "//libc:stdio",
         "//libc:string",
+        "//util:check",
         "//util:optional",
         "//util:status",
     ],

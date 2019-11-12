@@ -7,9 +7,9 @@ kernel_binary(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//kernel/arch:boot",
         "//kernel/arch:init",
-        "//kernel/arch:memory",
-        "//kernel/arch:serial",
         "//libc:stdio",
+        "//util:check",
     ],
 )

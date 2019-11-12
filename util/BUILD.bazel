@@ -10,6 +10,7 @@ cc_library(
     ],
     deps = [
         ":either",
+        ":overload_macros",
     ],
 )
 
@@ -78,5 +79,26 @@ cc_test(
         "//testing:assert",
         "@gtest",
         "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "check",
+    hdrs = [
+        "check.h",
+    ],
+    deps = [
+        ":overload_macros",
+        "//libc:stdlib",
+        "//util:status",
+    ],
+)
+
+cc_library(
+    name = "overload_macros",
+    hdrs = [
+        "overload_macros.h",
+    ],
+    deps = [
     ],
 )

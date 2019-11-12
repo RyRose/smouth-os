@@ -2,6 +2,7 @@
 #define KERNEL_UTIL_STATUS_H
 
 #include "util/either.h"
+#include "util/overload_macros.h"
 
 namespace util {
 
@@ -76,32 +77,27 @@ class StatusOr : public Either<util::Status, V> {
   _ASSIGN_OR_RETURN_INTERNAL(_ASSIGN_OR_RETURN_JOIN(status_or, __COUNTER__), \
                              lhs, expr)
 
-// See
-// https://stackoverflow.com/questions/16683146/can-macros-be-overloaded-by-number-of-arguments?lq=1
-// for understanding how RET_CHECK works.
-#define _RET_CHECK_JOIN(a, b) a##b
-#define _RET_CHECK_SELECT(name, num) _RET_CHECK_JOIN(name##_, num)
-#define _RET_CHECK_COUNT(_1, _2, count, ...) count
-#define _RET_CHECK_VA_SIZE(...) _RET_CHECK_COUNT(__VA_ARGS__, 2, 1, 0)
-#define _RET_CHECK_VA_SELECT(name, ...) \
-  _RET_CHECK_SELECT(name, _RET_CHECK_VA_SIZE(__VA_ARGS__))(__VA_ARGS__)
+#define _RET_CHECK_STRINGIZE_(x) #x
+#define _RET_CHECK_STRINGIZE(x) _RET_CHECK_STRINGIZE_(x)
 
-#define RET_CHECK(...) _RET_CHECK_VA_SELECT(RET_CHECK, __VA_ARGS__)
+#define RET_CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT(RET_CHECK, __VA_ARGS__)
 
-#define RET_CHECK_1(expr)                                       \
-  do {                                                          \
-    if (!(expr)) {                                              \
-      return util::Status(util::ErrorCode::INTERNAL,            \
-                          "expression \"" #expr "\" not true"); \
-    }                                                           \
+#define RET_CHECK_1(expr)                                                   \
+  do {                                                                      \
+    if (!(expr)) {                                                          \
+      return util::Status(util::ErrorCode::INTERNAL, __FILE__               \
+                          ":" _RET_CHECK_STRINGIZE(__LINE__) ": '" #expr    \
+                                                             "' not true"); \
+    }                                                                       \
   } while (0)
 
-#define RET_CHECK_2(expr, message)                                        \
-  do {                                                                    \
-    if (!(expr)) {                                                        \
-      return util::Status(util::ErrorCode::INTERNAL,                      \
-                          "expression \"" #expr "\" not true: " message); \
-    }                                                                     \
+#define RET_CHECK_2(expr, message)                                           \
+  do {                                                                       \
+    if (!(expr)) {                                                           \
+      return util::Status(util::ErrorCode::INTERNAL,                         \
+                          __FILE__ ":" _RET_CHECK_STRINGIZE(                 \
+                              __LINE__) ": '" #expr "' not true: " message); \
+    }                                                                        \
   } while (0)
 
 }  // namespace util
