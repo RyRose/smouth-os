@@ -37,14 +37,14 @@ class List {
   }
 
   util::Status Insert(size_t index, const V& value) {
-    RET_CHECK(0 <= index && index < N);
+    RET_CHECK(0 <= index && index < N && size_ < N);
     if (index >= size_) {
       array_[index] = value;
       size_ = index + 1;
       return {};
     }
-    RETURN_IF_ERROR(
-        libc::memmove(&array_[index], &array_[index + 1], size_ - index));
+    RETURN_IF_ERROR(libc::memmove(&array_[index + 1], &array_[index],
+                                  sizeof(V) * (size_ - index)));
     array_[index] = value;
     size_++;
     return {};
