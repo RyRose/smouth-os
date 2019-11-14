@@ -19,44 +19,38 @@ util::StatusOr<int> print(const char* data) {
   return len;
 }
 
-char convert_to_char(uint8_t number, bool is_uppercase) {
+template <class V>
+char convert_to_char(V number, bool is_uppercase) {
   if (number < 10) {
     return '0' + number;
   }
-  if (is_uppercase) {
-    return 'A' + (number % 10);
-  }
-  return 'a' + (number % 10);
+  return (is_uppercase ? 'A' : 'a') + (number % 10);
 }
 
 template <class V>
-util::StatusOr<int> print_number(V number, uint8_t base, bool negative,
-                                 bool uppercase) {
-  if (number == 0) {
-    RETURN_IF_ERROR(putchar('0'));
-    return 1;
-  }
+util::StatusOr<int> print_number(const V& number, const V& base,
+                                 const bool& negative, const bool& uppercase) {
+  RET_CHECK(number >= 0);
+
   int i = 0;
+  V temp = number;
   char converted[100];
-  while (number) {
-    RET_CHECK(i < 100, "overflowed array caching printed number");
-    converted[i] = convert_to_char(number % base, uppercase);
-    number /= base;
+  do {
+    converted[i] = convert_to_char<V>(temp % base, uppercase);
+    temp /= base;
+    i++;
+  } while (temp && i < 100);
+  RET_CHECK(temp == 0);
+
+  if (negative) {
+    converted[i] = '-';
     i++;
   }
 
-  int ret = 0;
-  if (negative) {
-    RETURN_IF_ERROR(putchar('-'));
-    ret++;
-  }
-
-  i--;
-  for (; i >= 0; i--) {
+  int ret = i;
+  for (i--; i >= 0; i--) {
     RETURN_IF_ERROR(putchar(converted[i]));
-    ret++;
   }
-
   return ret;
 }
 
@@ -92,6 +86,11 @@ util::StatusOr<int> printf(const char* format, ...) {
 
     int arg_len;
     switch (format[i]) {
+      case '%': {
+        RETURN_IF_ERROR(putchar('%'));
+        arg_len = 1;
+        break;
+      }
       case 'c': {
         auto c = va_arg(parameters, int);
         RETURN_IF_ERROR(putchar(c));
@@ -104,40 +103,166 @@ util::StatusOr<int> printf(const char* format, ...) {
         break;
       }
       case 'u': {
-        auto arg = va_arg(parameters, unsigned int);
-        ASSIGN_OR_RETURN(arg_len, print_number<unsigned int>(
-                                      /*number=*/arg, /*base=*/10,
-                                      /*negative=*/false, /*uppercase=*/true));
+        auto base = 10;
+        bool negative = false;
+        bool uppercase = false;
+        switch (format[i + 1]) {
+          case 'l':
+            i++;
+            switch (format[i + 1]) {
+              case 'l': {
+                i++;
+                auto arg = va_arg(parameters, unsigned long long int);
+                ASSIGN_OR_RETURN(arg_len, print_number<unsigned long long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/negative,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+              default: {
+                auto arg = va_arg(parameters, unsigned long int);
+                ASSIGN_OR_RETURN(arg_len, print_number<unsigned long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/negative,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+            }
+            break;
+          default:
+            auto arg = va_arg(parameters, unsigned int);
+            ASSIGN_OR_RETURN(arg_len, print_number<unsigned int>(
+                                          /*number=*/arg, /*base=*/base,
+                                          /*negative=*/negative,
+                                          /*uppercase=*/uppercase));
+            break;
+        }
         break;
       }
       case 'd':
       case 'i': {
-        auto arg = va_arg(parameters, int);
-        ASSIGN_OR_RETURN(
-            arg_len,
-            print_number<int>(/*number=*/abs(arg), /*base=*/10,
-                              /*negative=*/arg < 0, /*uppercase=*/true));
+        auto base = 10;
+        bool uppercase = false;
+        switch (format[i + 1]) {
+          case 'l':
+            i++;
+            switch (format[i + 1]) {
+              case 'l': {
+                i++;
+                auto arg = va_arg(parameters, signed long long int);
+                if (arg < 0) {
+                  arg = -arg;
+                }
+                ASSIGN_OR_RETURN(arg_len, print_number<signed long long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/arg < 0,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+              default: {
+                auto arg = va_arg(parameters, signed long int);
+                if (arg < 0) {
+                  arg = -arg;
+                }
+                ASSIGN_OR_RETURN(arg_len, print_number<signed long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/arg < 0,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+            }
+            break;
+          default:
+            auto arg = va_arg(parameters, signed int);
+            if (arg < 0) {
+              arg = -arg;
+            }
+            ASSIGN_OR_RETURN(arg_len, print_number<signed int>(
+                                          /*number=*/arg, /*base=*/base,
+                                          /*negative=*/arg < 0,
+                                          /*uppercase=*/uppercase));
+            break;
+        }
         break;
       }
       case 'X':
       case 'x': {
-        auto arg = va_arg(parameters, uint64_t);
-        ASSIGN_OR_RETURN(
-            arg_len, print_number<uint64_t>(/*number=*/arg, /*base=*/16,
-                                            /*negative=*/false,
-                                            /*uppercase=*/format[i] == 'X'));
+        auto base = 16;
+        bool negative = false;
+        bool uppercase = format[i] == 'X';
+        switch (format[i + 1]) {
+          case 'l':
+            i++;
+            switch (format[i + 1]) {
+              case 'l': {
+                i++;
+                auto arg = va_arg(parameters, unsigned long long int);
+                ASSIGN_OR_RETURN(arg_len, print_number<unsigned long long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/negative,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+              default: {
+                auto arg = va_arg(parameters, unsigned long int);
+                ASSIGN_OR_RETURN(arg_len, print_number<unsigned long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/negative,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+            }
+            break;
+          default:
+            auto arg = va_arg(parameters, unsigned int);
+            ASSIGN_OR_RETURN(arg_len, print_number<unsigned int>(
+                                          /*number=*/arg, /*base=*/base,
+                                          /*negative=*/negative,
+                                          /*uppercase=*/uppercase));
+            break;
+        }
         break;
       }
       case 'o': {
-        auto arg = va_arg(parameters, uint64_t);
-        ASSIGN_OR_RETURN(arg_len, print_number<uint64_t>(
-                                      /*number=*/arg, /*base=*/8,
-                                      /*negative=*/false, /*uppercase=*/true));
+        auto base = 8;
+        bool negative = false;
+        bool uppercase = false;
+        switch (format[i + 1]) {
+          case 'l':
+            i++;
+            switch (format[i + 1]) {
+              case 'l': {
+                i++;
+                auto arg = va_arg(parameters, unsigned long long int);
+                ASSIGN_OR_RETURN(arg_len, print_number<unsigned long long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/negative,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+              default: {
+                auto arg = va_arg(parameters, unsigned long int);
+                ASSIGN_OR_RETURN(arg_len, print_number<unsigned long int>(
+                                              /*number=*/arg, /*base=*/base,
+                                              /*negative=*/negative,
+                                              /*uppercase=*/uppercase));
+                break;
+              }
+            }
+            break;
+          default:
+            auto arg = va_arg(parameters, unsigned int);
+            ASSIGN_OR_RETURN(arg_len, print_number<unsigned int>(
+                                          /*number=*/arg, /*base=*/base,
+                                          /*negative=*/negative,
+                                          /*uppercase=*/uppercase));
+            break;
+        }
         break;
       }
       case 'p': {
-        auto arg = reinterpret_cast<uint64_t>(va_arg(parameters, void*));
-        ASSIGN_OR_RETURN(arg_len, print_number<uint64_t>(
+        auto arg = reinterpret_cast<uintptr_t>(va_arg(parameters, void*));
+        ASSIGN_OR_RETURN(arg_len, print_number<uintptr_t>(
                                       /*number=*/arg, /*base=*/16,
                                       /*negative=*/false, /*uppercase=*/true));
         break;

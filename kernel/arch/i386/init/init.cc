@@ -7,9 +7,9 @@
 
 #include "kernel/arch/i386/gdt/flush.h"
 #include "kernel/arch/i386/gdt/table.h"
-#include "kernel/arch/i386/init/dummy_isr.h"
 #include "kernel/arch/i386/init/multiboot.h"
 #include "kernel/arch/i386/instructions/instructions.h"
+#include "kernel/arch/i386/interrupt/macros.h"
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/memory/linear.h"
 #include "kernel/arch/i386/serial/serial.h"
@@ -22,17 +22,31 @@ namespace arch_internal {
 
 namespace {
 
+REGISTER_INTERRUPT_SERVICE_ROUTINE(DummyHandler);
+INTERRUPT_SERVICE_ROUTINE(DummyHandler,
+                          { libc::puts("== Dummy Handler 0x80 =="); });
+
+REGISTER_INTERRUPT_SERVICE_ROUTINE(DoubleFault);
+INTERRUPT_SERVICE_ROUTINE(DoubleFault, {
+  libc::puts("== Double Fault ==");
+  libc::abort();
+});
+
 InterruptDescriptorTable<256> idt;
 
 util::Status InitializeInterrupts() {
-  ASSIGN_OR_RETURN(
-      GateDescriptor d,
-      GateDescriptor::Create(
-          /*offset=*/reinterpret_cast<uint32_t>(handleDummyInterrupt),
-          /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
-          /*dpl=*/0));
-  libc::printf("Registering dummy interrupt: 0x%p.\n", handleDummyInterrupt);
-  RETURN_IF_ERROR(idt.Register(0x80, d));
+  ASSIGN_OR_RETURN(const auto& dummy_handler,
+                   GateDescriptor::Create(
+                       /*offset=*/reinterpret_cast<uintptr_t>(DummyHandler),
+                       /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
+                       /*dpl=*/0));
+  ASSIGN_OR_RETURN(const auto& double_fault,
+                   GateDescriptor::Create(
+                       /*offset=*/reinterpret_cast<uintptr_t>(DoubleFault),
+                       /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
+                       /*dpl=*/0));
+  RETURN_IF_ERROR(idt.Register(0x8, double_fault));
+  RETURN_IF_ERROR(idt.Register(0x80, dummy_handler));
   libc::printf("Loading IDT with IDTR 0x%x.\n", idt.IDTR());
   RETURN_IF_ERROR(LoadIDT(idt.IDTR()));
   libc::puts("Triggering interrupt handler 0x80.");
@@ -132,9 +146,9 @@ util::StatusOr<arch::Allocator*> InitializeAllocator(
   libc::printf("Memory Regions Found: %d\n", linear_allocator.Regions().Size());
   for (size_t i = 0; i < linear_allocator.Regions().Size(); i++) {
     ASSIGN_OR_RETURN(const auto* region, linear_allocator.Regions().At(i));
-    libc::printf("Region %d: {address=0x%x, length=%d, type=", i,
-                 region->address, region->length);
-    libc::printf("%s}\n", MemoryRegionTypeName(region->type));
+    libc::printf("Region %d: {address=0x%xll, length=0x%xll, type=%s}\n", i,
+                 region->address, region->length,
+                 MemoryRegionTypeName(region->type));
   }
   return &linear_allocator;
 }

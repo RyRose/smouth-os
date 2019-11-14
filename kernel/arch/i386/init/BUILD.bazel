@@ -9,7 +9,6 @@ kernel_library(
     tags = ["manual"],
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
-        ":dummy_isr",
         ":multiboot",
         "//kernel/arch:boot",
         "//kernel/arch:memory",
@@ -17,6 +16,7 @@ kernel_library(
         "//kernel/arch/i386/gdt:flush",
         "//kernel/arch/i386/gdt:table",
         "//kernel/arch/i386/instructions",
+        "//kernel/arch/i386/interrupt:macros",
         "//kernel/arch/i386/interrupt:table",
         "//kernel/arch/i386/memory:linear",
         "//kernel/arch/i386/serial",
@@ -26,21 +26,6 @@ kernel_library(
         "//util:check",
         "//util:optional",
         "//util:status",
-    ],
-)
-
-kernel_library(
-    name = "dummy_isr",
-    srcs = [
-        "dummy_isr.cc",
-    ],
-    hdrs = [
-        "dummy_isr.h",
-    ],
-    tags = ["manual"],
-    deps = [
-        "//kernel/arch/i386/interrupt:macros",
-        "//libc:stdio",
     ],
 )
 
