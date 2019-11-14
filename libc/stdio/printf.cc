@@ -150,23 +150,25 @@ util::StatusOr<int> printf(const char* format, ...) {
               case 'l': {
                 i++;
                 auto arg = va_arg(parameters, signed long long int);
-                if (arg < 0) {
+                bool negative = arg < 0;
+                if (negative) {
                   arg = -arg;
                 }
                 ASSIGN_OR_RETURN(arg_len, print_number<signed long long int>(
                                               /*number=*/arg, /*base=*/base,
-                                              /*negative=*/arg < 0,
+                                              /*negative=*/negative,
                                               /*uppercase=*/uppercase));
                 break;
               }
               default: {
                 auto arg = va_arg(parameters, signed long int);
-                if (arg < 0) {
+                bool negative = arg < 0;
+                if (negative) {
                   arg = -arg;
                 }
                 ASSIGN_OR_RETURN(arg_len, print_number<signed long int>(
                                               /*number=*/arg, /*base=*/base,
-                                              /*negative=*/arg < 0,
+                                              /*negative=*/negative,
                                               /*uppercase=*/uppercase));
                 break;
               }
@@ -174,12 +176,13 @@ util::StatusOr<int> printf(const char* format, ...) {
             break;
           default:
             auto arg = va_arg(parameters, signed int);
-            if (arg < 0) {
+            bool negative = arg < 0;
+            if (negative) {
               arg = -arg;
             }
             ASSIGN_OR_RETURN(arg_len, print_number<signed int>(
                                           /*number=*/arg, /*base=*/base,
-                                          /*negative=*/arg < 0,
+                                          /*negative=*/negative,
                                           /*uppercase=*/uppercase));
             break;
         }

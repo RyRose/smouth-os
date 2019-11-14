@@ -70,7 +70,7 @@ TEST_F(StdioTest, Ints) {
     }
   }
   ASSERT_OK_AND_ASSIGN(const auto& length,
-                       libc::printf("%d test %i", 123214, -12421));
+                       libc::printf("%dl test %il", 123214l, -12421l));
   EXPECT_EQ(18, length);
 }
 
@@ -95,6 +95,6 @@ TEST_F(StdioTest, HexIntsBig) {
   }
   ASSERT_OK_AND_ASSIGN(
       const auto& length,
-      libc::printf("%X test %x", 0xABDC124356789012, 0xAECDB123));
+      libc::printf("%Xll test %xll", 0xABDC124356789012ull, 0xAECDB123ull));
   EXPECT_EQ(30, length);
 }
