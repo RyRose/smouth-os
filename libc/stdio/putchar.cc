@@ -5,7 +5,7 @@ namespace libc {
 
 util::Status putchar(int ic) {
   RET_CHECK(kernel_put != nullptr, "kernel_put API null.");
-  return kernel_put->Put(static_cast<char>(ic));
+  return kernel_put(static_cast<char>(ic));
 }
 
 }  // namespace libc

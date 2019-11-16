@@ -4,16 +4,16 @@
 #include <stdint.h>
 #include "util/status.h"
 
-namespace arch_internal {
+namespace instructions {
 
 // LoadIDT calls LIDT on the provided value to load
 // into the Interrupt Descriptor Table Register (IDTR).
-inline util::Status LoadIDT(uint64_t idtr_value) {
+inline util::Status LIDT(uint64_t idtr_value) {
   RET_CHECK((idtr_value >> 48u) == 0,
             "value of IDTR contains non-zero bits in high 16 bits");
   // TODO(RyRose): Check that CPL = 0. The current privilege level (CPL) must be
   // zero for this instruction to work.
-  __asm__ volatile("LIDT %0" ::"m"(idtr_value));
+  asm volatile("LIDT %0" ::"m"(idtr_value));
   return {};
 }
 
@@ -22,9 +22,15 @@ inline util::Status LoadIDT(uint64_t idtr_value) {
 // imm8.
 template <int N>
 inline void INT() {
-  __asm__ volatile("INT %0" ::"N"(N));
+  asm volatile("INT %0" ::"N"(N));
 }
 
-}  // namespace arch_internal
+// HLT calls the HLT instruction.
+inline void HLT() { asm volatile("HLT"); }
+
+// CLI calls the CLI instruction.
+inline void CLI() { asm volatile("CLI"); }
+
+}  // namespace instructions
 
 #endif  // KERNEL_ARCH_I386_INSTRUCTIONS_INSTRUCTIONS_H

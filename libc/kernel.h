@@ -5,19 +5,9 @@
 
 namespace libc {
 
-class KernelPutInterface {
- public:
-  virtual util::Status Put(char c) = 0;
-};
+extern util::Status (*kernel_put)(char c);
 
-extern KernelPutInterface* kernel_put;
-
-class KernelPanicInterface {
- public:
-  virtual void Panic(const char* message) = 0;
-};
-
-extern KernelPanicInterface* kernel_panic;
+extern void (*kernel_panic)(const char* message);
 
 }  // namespace libc
 

@@ -39,14 +39,14 @@
 
     # Call pre-kernel main with multiboot pointer and return the BootInfo
     # struct.
-	call pre_kernel_main
+	call PreKernelMain
 
 	# Push pointer of BootInfo struct returned by pre_kernel_main
 	# to be used by kernel_main.
 	pushl %eax
 
 	# Transfer control to the main kernel.
-	call kernel_main
+	call KernelMain
 
 	# Hang if kernel_main unexpectedly returns.
 	cli

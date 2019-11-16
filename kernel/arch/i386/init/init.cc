@@ -48,9 +48,9 @@ util::Status InitializeInterrupts() {
   RETURN_IF_ERROR(idt.Register(0x8, double_fault));
   RETURN_IF_ERROR(idt.Register(0x80, dummy_handler));
   libc::printf("Loading IDT with IDTR 0x%x.\n", idt.IDTR());
-  RETURN_IF_ERROR(LoadIDT(idt.IDTR()));
+  RETURN_IF_ERROR(instructions::LIDT(idt.IDTR()));
   libc::puts("Triggering interrupt handler 0x80.");
-  INT<0x80>();
+  instructions::INT<0x80>();
   return {};
 }
 
@@ -74,16 +74,16 @@ util::Status InitializeGlobalDescriptorTable() {
 
 util::Optional<arch::Terminal> tty;
 
-util::StatusOr<arch::Terminal*> InitializeTTY() {
+util::Status InitializeTTY() {
   ASSIGN_OR_RETURN(tty, arch::Terminal::Create(
                             80, 25, reinterpret_cast<uint16_t*>(0xB8000)));
   tty.Value().Clear();
-  return &tty.Value();
+  return {};
 }
 
 util::Optional<SerialPort> com1;
 
-SerialPort* InitializeCOM1() {
+void InitializeCOM1() {
   const uint16_t base = 0x3F8;
   com1 = SerialPort::Create(/*port=*/IoPort(base),
                             /*interrupt=*/IoPort(base + 1),
@@ -91,44 +91,16 @@ SerialPort* InitializeCOM1() {
                             /*line_control=*/IoPort(base + 3),
                             /*modem_control=*/IoPort(base + 4),
                             /*line_status=*/IoPort(base + 5));
-  return &com1.Value();
-}
-
-class KernelPut : public libc::KernelPutInterface {
- public:
-  KernelPut(arch::Terminal* terminal, arch::SerialPortInterface* serial)
-      : terminal_(terminal), serial_(serial) {}
-
-  util::Status Put(char c) override {
-    if (terminal_) {
-      terminal_->Put(c);
-    }
-    if (serial_) {
-      serial_->Write(c);
-    }
-    return {};
-  }
-
- private:
-  arch::Terminal* terminal_;
-  arch::SerialPortInterface* serial_;
-};
-
-util::Optional<KernelPut> kernel_put;
-
-void InitializePrintf(arch::Terminal* terminal,
-                      arch::SerialPortInterface* serial) {
-  kernel_put = KernelPut(terminal, serial);
-  libc::kernel_put = &kernel_put.Value();
+  // Write newline to get output on a different line than preamble text.
+  com1.Value().Write('\n');
 }
 
 LinearAllocator<100> linear_allocator;
 
 template <size_t N>
-util::StatusOr<arch::Allocator*> InitializeAllocator(
-    multiboot_info* multiboot_ptr) {
-  libc::printf("Multiboot Pointer: 0x%p\n", multiboot_ptr);
+util::Status InitializeAllocator(multiboot_info* multiboot_ptr) {
   RET_CHECK(multiboot_ptr != nullptr);
+  libc::printf("Multiboot Pointer: 0x%p\n", multiboot_ptr);
 
   libc::puts("Initializing entries.");
   util::List<multiboot_mmap_entry, N> entries;
@@ -150,40 +122,56 @@ util::StatusOr<arch::Allocator*> InitializeAllocator(
                  region->address, region->length,
                  MemoryRegionTypeName(region->type));
   }
-  return &linear_allocator;
+  return {};
 }
 
-util::StatusOr<void*> KernelNew(size_t n) {
-  return linear_allocator.Allocate(n);
+void InitializeStubs() {
+  cxx::kernel_new = [](size_t n) { return linear_allocator.Allocate(n); };
+  libc::kernel_put = [](char c) -> util::Status {
+    if (tty.Exists()) {
+      tty.Value().Put(c);
+    }
+    if (com1.Exists()) {
+      com1.Value().Write(c);
+    }
+    return {};
+  };
+  libc::kernel_panic = [](const char* message) {
+    libc::puts("Kernel Panic!");
+    libc::printf("Message: %s\n", message);
+    IoPort qemu_shutdown_port(0x604);
+    while (true) {
+      qemu_shutdown_port.outw(0x2000);
+      instructions::CLI();
+      instructions::HLT();
+    }
+  };
+  cxx::kernel_panic = libc::kernel_panic;
 }
 
-util::StatusOr<arch::BootInfo> pre_kernel_main_internal(
+util::StatusOr<arch::BootInfo> PreKernelMainInternal(
     multiboot_info* multiboot_ptr) {
-  ASSIGN_OR_RETURN(auto* terminal, InitializeTTY());
-  InitializePrintf(terminal, nullptr);
-  libc::puts("== Initialized Terminal ==");
+  InitializeStubs();
   libc::puts("== Initializing Serial Port ==");
-  auto* serial_port = InitializeCOM1();
-  serial_port->Write('\n');
-  InitializePrintf(terminal, serial_port);
-  libc::puts("== Initialized Serial Port ==");
-  ASSIGN_OR_RETURN(auto* allocator, InitializeAllocator<100>(multiboot_ptr));
+  InitializeCOM1();
+  libc::puts("== Initializing Terminal ==");
+  RETURN_IF_ERROR(InitializeTTY());
+  libc::puts("== Initializing Memory Allocator ==");
+  RETURN_IF_ERROR(InitializeAllocator<100>(multiboot_ptr));
   libc::puts("== Initializing Kernel New ==");
-  cxx::kernel_new = KernelNew;
   libc::puts("== Initializing GDT ==");
   RETURN_IF_ERROR(InitializeGlobalDescriptorTable());
   libc::puts("== Initializing Interrupts ==");
   RETURN_IF_ERROR(InitializeInterrupts());
   libc::printf(
-      "== Returning BootInfo {tty=0x%p, com1=0x%p, allocator=0x%p} ==\n",
-      terminal, serial_port, allocator);
-  return arch::BootInfo(/*tty=*/terminal, /*com1=*/serial_port,
-                        /*allocator=*/allocator);
+      "== Returning BootInfo {tty=0x%p, com1=0x%p, allocator=0x%p} ==\n", &tty,
+      &com1, &linear_allocator);
+  return arch::BootInfo(/*tty=*/&tty.Value(), /*com1=*/&com1.Value(),
+                        /*allocator=*/&linear_allocator);
 }
 
-extern "C" arch::BootInfo pre_kernel_main(multiboot_info* multiboot_ptr) {
-  CHECK_OR_RETURN(const auto boot_info,
-                  pre_kernel_main_internal(multiboot_ptr));
+extern "C" arch::BootInfo PreKernelMain(multiboot_info* multiboot_ptr) {
+  CHECK_OR_RETURN(const auto boot_info, PreKernelMainInternal(multiboot_ptr));
   return boot_info;
 }
 

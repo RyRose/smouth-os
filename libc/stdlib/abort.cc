@@ -6,7 +6,7 @@ namespace libc {
 
 __attribute__((__noreturn__)) void abort() {
   if (kernel_panic) {
-    kernel_panic->Panic("program aborted");
+    kernel_panic("program aborted");
   }
   while (true) {
   }

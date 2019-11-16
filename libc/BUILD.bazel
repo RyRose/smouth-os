@@ -32,7 +32,6 @@ cc_test(
         "stdio_test.cc",
     ],
     deps = [
-        ":mock_kernel",
         ":stdio",
         "//testing:assert",
         "@gtest",
@@ -73,17 +72,5 @@ cc_library(
     ],
     deps = [
         "//util:status",
-    ],
-)
-
-cc_library(
-    name = "mock_kernel",
-    hdrs = [
-        "mock_kernel.h",
-    ],
-    deps = [
-        ":kernel",
-        "//util:status",
-        "@gtest",
     ],
 )

@@ -2,7 +2,8 @@
 
 namespace libc {
 
-KernelPutInterface* kernel_put = nullptr;
-KernelPanicInterface* kernel_panic = nullptr;
+util::Status (*kernel_put)(char c) = nullptr;
+
+void (*kernel_panic)(const char* message) = nullptr;
 
 }  // namespace libc
