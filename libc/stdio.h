@@ -55,7 +55,8 @@ util::StatusOr<int> print_number(const V& number, const V& base,
 
 template <typename T>
 util::StatusOr<int> print(T data, char c) {
-  RET_CHECK(strchr("xXdiuo", c));
+  ASSIGN_OR_RETURN(const auto* ptr, strchr("xXdiuo", c));
+  RET_CHECK(ptr != nullptr);
   T base;
   switch (c) {
     case 'x':
@@ -84,7 +85,8 @@ util::StatusOr<int> print(T* data, char c) {
 
 template <>
 util::StatusOr<int> print(char data, char c) {
-  RET_CHECK(strchr("%c", c));
+  ASSIGN_OR_RETURN(const auto* ptr, strchr("%c", c));
+  RET_CHECK(ptr != nullptr);
   RETURN_IF_ERROR(putchar(data));
   return 1;
 }

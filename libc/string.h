@@ -12,8 +12,8 @@ util::Status memcpy(void*, const void*, size_t);
 util::Status memmove(void*, const void*, size_t);
 util::Status memset(void*, int, size_t);
 
-const char* strchr(const char*, char c);
-int strcmp(const char*, const char*);
+util::StatusOr<const char*> strchr(const char*, char c);
+util::StatusOr<int> strcmp(const char*, const char*);
 util::StatusOr<size_t> strlen(const char*);
 
 }  // namespace libc
