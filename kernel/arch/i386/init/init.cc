@@ -118,7 +118,7 @@ util::Status InitializeAllocator(multiboot_info* multiboot_ptr) {
   libc::printf("Memory Regions Found: %d\n", linear_allocator.Regions().Size());
   for (size_t i = 0; i < linear_allocator.Regions().Size(); i++) {
     ASSIGN_OR_RETURN(const auto* region, linear_allocator.Regions().At(i));
-    libc::printf("Region %d: {address=0x%xll, length=0x%xll, type=%s}\n", i,
+    libc::printf("Region %d: {address=0x%x, length=0x%x, type=%s}\n", i,
                  region->address, region->length,
                  MemoryRegionTypeName(region->type));
   }
@@ -164,8 +164,8 @@ util::StatusOr<arch::BootInfo> PreKernelMainInternal(
   libc::puts("== Initializing Interrupts ==");
   RETURN_IF_ERROR(InitializeInterrupts());
   libc::printf(
-      "== Returning BootInfo {tty=0x%p, com1=0x%p, allocator=0x%p} ==\n", &tty,
-      &com1, &linear_allocator);
+      "== Returning BootInfo {tty=0x%p, com1=0x%p, allocator=0x%p} ==\n",
+      &tty.Value(), &com1.Value(), &linear_allocator);
   return arch::BootInfo(/*tty=*/&tty.Value(), /*com1=*/&com1.Value(),
                         /*allocator=*/&linear_allocator);
 }
