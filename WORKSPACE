@@ -32,16 +32,19 @@ toolchain_repository(
     target = "i686-elf",
 )
 
-http_archive(
+premade_toolchain_repository(
     name = "toolchain-i686-elf-linux",
-    build_file = "//tools/toolchain:toolchain.BUILD",
-    sha256 = "30106bd24018a911d3bc6f3de58d16f20cc1ea393b04d34c40692c640609b8c6",
-    urls = ["https://storage.googleapis.com/smouth-os/toolchain-i686-elf-linux.zip"],
+    paths = [
+        "//tools/toolchain/premade:i686-elf-linux.0.zip",
+        "//tools/toolchain/premade:i686-elf-linux.1.zip",
+        "//tools/toolchain/premade:i686-elf-linux.2.zip",
+        "//tools/toolchain/premade:i686-elf-linux.3.zip",
+    ],
 )
 
 premade_toolchain_repository(
     name = "toolchain-i686-elf-darwin",
-    path = "//tools/toolchain/premade:i686-elf-darwin.zip",
+    paths = ["//tools/toolchain/premade:i686-elf-darwin.zip"],
 )
 
 # Rules needed for golang tests

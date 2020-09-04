@@ -1,23 +1,18 @@
-test \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
-  --test_output=errors \
-  --verbose_failures \
-  --test_verbose_timeout_warnings
-
-run \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
-  --verbose_failures \
-  --strip=never
-
 build \
   --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
   --verbose_failures \
   --strip=never
 
-# Options for cross-compiling SmouthOS on the i386 architecture.
+test \
+  --test_output=errors \
+  --test_verbose_timeout_warnings
+
+###################################################################
+# Options for cross-compiling SmouthOS on the i386 architecture. ##
+###################################################################
 
 # Build and use local toolchain.
-common:i386 \
+build:i386 \
   --crosstool_top=//tools/toolchain \
   --cpu=i386 \
   --compiler=g++ \
@@ -25,7 +20,7 @@ common:i386 \
   --action_env=TARGET=i686-elf
 
 # Use pre-built Linux toolchain. For use in CI.
-common:i386-linux-premade \
+build:i386-linux-premade \
   --crosstool_top=//tools/toolchain:linux-premade \
   --cpu=i386 \
   --compiler=g++ \
@@ -33,24 +28,24 @@ common:i386-linux-premade \
   --action_env=TARGET=i686-elf
 
 # Use pre-built MacOS toolchain. For use in CI.
-common:i386-darwin-premade \
+build:i386-darwin-premade \
   --crosstool_top=//tools/toolchain:darwin-premade \
   --cpu=i386 \
   --compiler=g++ \
   --action_env=WORKSPACE=toolchain-i686-elf-darwin \
   --action_env=TARGET=i686-elf
 
-# Continuous Integration (ci) options for running SmouthOS on Jenkins.
+############################################################################
+## Continuous Integration (ci) options for running SmouthOS on Travis CI. ##
+############################################################################
 
-common:ci \
+build:ci \
   --noshow_progress \
   --noshow_loading_progress \
   --color=no \
-  -c opt
-
-build:ci \
   --genrule_strategy=standalone \
   --sandbox_debug \
+  -c opt \
   --spawn_strategy=standalone
 
 test:ci \

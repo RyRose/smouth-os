@@ -45,15 +45,16 @@ class Status {
 template <typename V>
 class StatusOr : public Either<util::Status, V> {
  public:
-  StatusOr(ErrorCode code) : Either<util::Status, V>(util::Status(code)) {}
-  StatusOr(util::Status status) : Either<util::Status, V>(status) {}
-  StatusOr(V value) : Either<util::Status, V>(value) {}
+  StatusOr(const ErrorCode& code)
+      : Either<util::Status, V>(util::Status(code)) {}
+  StatusOr(const util::Status& status) : Either<util::Status, V>(status) {}
+  StatusOr(const V& value) : Either<util::Status, V>(value) {}
   StatusOr() = delete;
 
   bool Ok() const { return !this->is_left; }
-  util::Status Status() const { return this->left; }
+  const util::Status& Status() const { return this->left; }
   const util::Status& AsStatus() const { return this->left; }
-  V Value() const { return this->right; }
+  const V& Value() const { return this->right; }
 };
 
 #define RETURN_IF_ERROR(expr)         \

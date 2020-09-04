@@ -74,9 +74,8 @@ util::Status InitializeGlobalDescriptorTable() {
 
 util::Optional<arch::Terminal> tty;
 
-util::Status InitializeTTY() {
-  ASSIGN_OR_RETURN(tty, arch::Terminal::Create(
-                            80, 25, reinterpret_cast<uint16_t*>(0xB8000)));
+util::Status InitializeTTY(uint16_t* framebuffer) {
+  ASSIGN_OR_RETURN(tty, arch::Terminal::Create(80, 25, framebuffer));
   tty.Value().Clear();
   return {};
 }
@@ -149,13 +148,29 @@ void InitializeStubs() {
   cxx::kernel_panic = libc::kernel_panic;
 }
 
+util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
+  RETURN_IF_ERROR(libc::printf(
+      "cmdline: %s\n", reinterpret_cast<const char*>(multiboot_ptr->cmdline)));
+  RETURN_IF_ERROR(
+      libc::printf("mmap_length: %d\n", multiboot_ptr->mmap_length));
+  RETURN_IF_ERROR(libc::printf(
+      "boot_loader_name: %s\n",
+      reinterpret_cast<const char*>(multiboot_ptr->boot_loader_name)));
+  RETURN_IF_ERROR(
+      libc::printf("framebuffer_addr: %d\n", multiboot_ptr->framebuffer_addr));
+  RETURN_IF_ERROR(libc::printf("flags: 0x%X\n", multiboot_ptr->flags));
+  return {};
+}
+
 util::StatusOr<arch::BootInfo> PreKernelMainInternal(
     multiboot_info* multiboot_ptr) {
   InitializeStubs();
   libc::puts("== Initializing Serial Port ==");
   InitializeCOM1();
   libc::puts("== Initializing Terminal ==");
-  RETURN_IF_ERROR(InitializeTTY());
+  RETURN_IF_ERROR(InitializeTTY(reinterpret_cast<uint16_t*>(0xB8000)));
+  libc::puts("== Multiboot Info ==");
+  RETURN_IF_ERROR(PrintMultibootInfo(multiboot_ptr));
   libc::puts("== Initializing Memory Allocator ==");
   RETURN_IF_ERROR(InitializeAllocator<100>(multiboot_ptr));
   libc::puts("== Initializing Kernel New ==");

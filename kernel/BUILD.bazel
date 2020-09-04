@@ -1,3 +1,5 @@
+package(default_visibility = ["//visibility:public"])
+
 load("//kernel:templates.bzl", "kernel_binary")
 
 kernel_binary(

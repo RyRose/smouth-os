@@ -55,7 +55,7 @@ util::StatusOr<int> print_number(const V& number, const V& base,
 
 template <typename T>
 util::StatusOr<int> print(T data, char c) {
-  ASSIGN_OR_RETURN(const auto* ptr, strchr("xXdiuo", c));
+  ASSIGN_OR_RETURN(const auto* ptr, strchr("xXdivuo", c));
   RET_CHECK(ptr != nullptr);
   T base;
   switch (c) {
@@ -66,6 +66,7 @@ util::StatusOr<int> print(T data, char c) {
     case 'd':
     case 'i':
     case 'u':
+    case 'v':
       base = 10;
       break;
     case 'o':
@@ -85,7 +86,7 @@ util::StatusOr<int> print(T* data, char c) {
 
 template <>
 util::StatusOr<int> print(char data, char c) {
-  ASSIGN_OR_RETURN(const auto* ptr, strchr("%c", c));
+  ASSIGN_OR_RETURN(const auto* ptr, strchr("%cv", c));
   RET_CHECK(ptr != nullptr);
   RETURN_IF_ERROR(putchar(data));
   return 1;
@@ -93,7 +94,8 @@ util::StatusOr<int> print(char data, char c) {
 
 template <>
 util::StatusOr<int> print(const char* data, char c) {
-  RET_CHECK(c == 's');
+  ASSIGN_OR_RETURN(const auto* ptr, strchr("sv", c));
+  RET_CHECK(ptr != nullptr);
   int i = 0;
   for (; data[i]; i++) {
     RETURN_IF_ERROR(putchar(data[i]));

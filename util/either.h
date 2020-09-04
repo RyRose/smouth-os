@@ -6,8 +6,8 @@ namespace util {
 template <typename Left, typename Right>
 class Either {
  public:
-  Either(Left left_) : left(left_), is_left(true) {}
-  Either(Right right_) : right(right_), is_left(false) {}
+  Either(const Left& left_) : left(left_), is_left(true) {}
+  Either(const Right& right_) : right(right_), is_left(false) {}
   Either() = delete;
 
   union {

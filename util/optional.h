@@ -10,7 +10,7 @@ template <typename V>
 class Optional {
  public:
   Optional() : value_{}, exists_(false) {}
-  Optional(V val) : exists_(true) { new (&value_) V(val); }
+  Optional(const V& val) : exists_(true) { new (&value_) V(val); }
   ~Optional() {
     if (Exists()) {
       Value().~V();
