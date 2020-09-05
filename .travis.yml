@@ -31,7 +31,10 @@ before_install:
       export LD_LIBRARY_PATH
       sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
       sudo apt-get update
-      sudo apt-get install -y libstdc++6 gcc-7 g++-7
+      sudo apt-get install -y libstdc++6 gcc-7 g++-7 qemu
+    fi
+    if [[ "${OS}" == "darwin" ]]; then
+      brew install qemu
     fi
   - wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
   - |
@@ -66,5 +69,10 @@ script:
       --config ci \
       --config "i386-${OS}-premade" \
       -- //kernel
+  - |
+    bazel run \
+      --config ci \
+      --config "i386-${OS}-premade" \
+      -- //tools/go/cmd/qemu:serial
 notifications:
   email: false
