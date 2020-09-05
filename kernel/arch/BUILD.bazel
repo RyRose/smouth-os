@@ -1,9 +1,8 @@
 load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
-load("//kernel:templates.bzl", "kernel_library")
 
 package(default_visibility = ["//visibility:public"])
 
-kernel_library(
+cc_library(
     name = "memory",
     hdrs = [
         "memory.h",
@@ -13,14 +12,14 @@ kernel_library(
     ],
 )
 
-kernel_library(
+cc_library(
     name = "serial",
     hdrs = [
         "serial.h",
     ],
 )
 
-kernel_library(
+cc_library(
     name = "boot",
     hdrs = [
         "boot.h",

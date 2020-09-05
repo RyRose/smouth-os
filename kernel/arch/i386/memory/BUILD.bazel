@@ -1,8 +1,6 @@
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-load("//kernel:templates.bzl", "kernel_library")
-
-kernel_library(
+cc_library(
     name = "linear",
     srcs = [
         "linear.cc",

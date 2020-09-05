@@ -1,6 +1,4 @@
-load("//kernel:templates.bzl", "kernel_library")
-
-kernel_library(
+cc_library(
     name = "init",
     srcs = [
         "boot.S",
@@ -29,7 +27,7 @@ kernel_library(
     ],
 )
 
-kernel_library(
+cc_library(
     name = "multiboot",
     hdrs = [
         "multiboot.h",
