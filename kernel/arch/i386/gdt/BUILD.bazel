@@ -1,8 +1,6 @@
-load("//kernel:templates.bzl", "kernel_library")
-
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-kernel_library(
+cc_library(
     name = "table",
     srcs = [
         "table.cc",
@@ -31,7 +29,7 @@ cc_test(
     ],
 )
 
-kernel_library(
+cc_library(
     name = "flush",
     srcs = [
         "flush.S",

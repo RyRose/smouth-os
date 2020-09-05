@@ -96,21 +96,3 @@ def kernel_binary(name, **kwargs):
         linkopts = linkopts,
         **kwargs
     )
-
-def kernel_library(*args, **kwargs):
-    """A wrapped cc_library to be used by the kernel.
-
-    Args:
-      abi: Whether or not to include C++ ABI-related functions.
-      new: Whether or not to include support for C++ new/delete that integrates
-           with the kernel memory allocator.
-    """
-    deps = kwargs.pop("deps", [])
-    deps += [
-        "//cxx",
-    ]
-    native.cc_library(
-        deps = deps,
-        *args,
-        **kwargs
-    )
