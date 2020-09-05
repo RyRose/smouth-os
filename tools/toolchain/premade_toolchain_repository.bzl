@@ -1,5 +1,6 @@
 def _premade_toolchain_repository_impl(ctx):
     for path in ctx.attr.paths:
+        ctx.report_progress("extracting zip file: %s" % path)
         ctx.extract(path)
     ctx.symlink(ctx.attr.build_file, "BUILD")
 
