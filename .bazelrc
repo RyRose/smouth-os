@@ -42,5 +42,4 @@ build:i386-darwin-premade \
 build:ci \
   --noshow_progress \
   --noshow_loading_progress \
-  --color=no \
-  --sandbox_debug
+  --color=no
