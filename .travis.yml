@@ -61,34 +61,28 @@ before_install:
 script:
   - |
     bazel \
-      --output_base="$HOME/.cache/bazel/output" \
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
       build \
       --config ci \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --  //... -//tools/toolchain/...
   - |
     bazel \
-      --output_base="$HOME/.cache/bazel/output" \
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
       test \
       --config ci \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --  //... -//tools/toolchain/...
   - |
     bazel \
-      --output_base="$HOME/.cache/bazel/output" \
       --batch \
       --host_jvm_args=-Xmx500m \
       --host_jvm_args=-Xms500m \
       build \
       --config ci \
       --config "i386-${OS}-premade" \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       -- //kernel
 notifications:
   email: false
