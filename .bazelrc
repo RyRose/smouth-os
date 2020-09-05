@@ -42,12 +42,4 @@ build:i386-darwin-premade \
 build:ci \
   --noshow_progress \
   --noshow_loading_progress \
-  --color=no \
-  --genrule_strategy=standalone \
-  --sandbox_debug \
-  -c opt \
-  --spawn_strategy=standalone
-
-test:ci \
-  --test_output=errors \
-  --test_strategy=standalone
+  --color=no

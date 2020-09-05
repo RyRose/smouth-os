@@ -1,12 +1,6 @@
 dist: trusty
 language: cpp
 
-
-cache:
-  directories:
-    - $HOME/.bazel_repository_cache
-    - $HOME/.cache/bazel/output
-
 os:
   - linux
   - osx
@@ -60,35 +54,17 @@ before_install:
 
 script:
   - |
-    bazel \
-      --output_base="$HOME/.cache/bazel/output" \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      build \
+    bazel build \
       --config ci \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --  //... -//tools/toolchain/...
   - |
-    bazel \
-      --output_base="$HOME/.cache/bazel/output" \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      test \
+    bazel test \
       --config ci \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       --  //... -//tools/toolchain/...
   - |
-    bazel \
-      --output_base="$HOME/.cache/bazel/output" \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      build \
+    bazel build \
       --config ci \
       --config "i386-${OS}-premade" \
-      --experimental_repository_cache="$HOME/.bazel_repository_cache" \
       -- //kernel
 notifications:
   email: false
