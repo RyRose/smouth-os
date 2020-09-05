@@ -2,17 +2,11 @@ load("//tools/toolchain:toolchain_repository.bzl", "toolchain_repository")
 load("//tools/toolchain:premade_toolchain_repository.bzl", "premade_toolchain_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# rules_cc is required transitively by googletest.
-http_archive(
-    name = "rules_cc",
-    strip_prefix = "rules_cc-master",
-    urls = ["https://github.com/bazelbuild/rules_cc/archive/master.zip"],
-)
-
 http_archive(
     name = "gtest",
-    strip_prefix = "googletest-master",
-    url = "https://github.com/google/googletest/archive/master.zip",
+    sha256 = "94c634d499558a76fa649edb13721dce6e98fb1e7018dfaeba3cd7a083945e91",
+    strip_prefix = "googletest-release-1.10.0",
+    url = "https://github.com/google/googletest/archive/release-1.10.0.zip",
 )
 
 toolchain_repository(
