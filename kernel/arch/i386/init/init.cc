@@ -138,9 +138,15 @@ void InitializeStubs() {
   libc::kernel_panic = [](const char* message) {
     libc::puts("Kernel Panic!");
     libc::printf("Message: %s\n", message);
-    IoPort qemu_shutdown_port(0x604);
+    IoPort new_qemu_shutdown_port(0x604);
+    new_qemu_shutdown_port.outw(0x2000);
+    libc::puts(
+        "QEMU did not shut down. This is expected for older versions of QEMU. "
+        "Trying older variant of shutting down QEMU.");
+    IoPort old_qemu_shutdown_port(0xB004);
+    old_qemu_shutdown_port.outw(0x2000);
+    libc::puts("Could not shut down. Looping CLI/HLT forever.");
     while (true) {
-      qemu_shutdown_port.outw(0x2000);
       instructions::CLI();
       instructions::HLT();
     }
