@@ -1,12 +1,6 @@
 dist: trusty
 language: cpp
 
-
-cache:
-  directories:
-    - $HOME/.bazel_repository_cache
-    - $HOME/.cache/bazel/output
-
 os:
   - linux
   - osx
