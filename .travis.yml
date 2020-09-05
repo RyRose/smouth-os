@@ -54,27 +54,15 @@ before_install:
 
 script:
   - |
-    bazel \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      build \
+    bazel build \
       --config ci \
       --  //... -//tools/toolchain/...
   - |
-    bazel \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      test \
+    bazel test \
       --config ci \
       --  //... -//tools/toolchain/...
   - |
-    bazel \
-      --batch \
-      --host_jvm_args=-Xmx500m \
-      --host_jvm_args=-Xms500m \
-      build \
+    bazel build \
       --config ci \
       --config "i386-${OS}-premade" \
       -- //kernel
