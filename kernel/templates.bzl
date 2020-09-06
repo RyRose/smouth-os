@@ -1,3 +1,5 @@
+load("//tools/go:builddefs.bzl", "qemu_test")
+
 def crt_file(name, filename, visibility = []):
     """A CRT (C RunTime) file provided by the compiler used for the startup routines.
 
@@ -47,7 +49,7 @@ def kernel_binary(name, **kwargs):
     native.cc_library(
         name = crtend,
         alwayslink = True,
-        tags = ["manual"],
+        tags = ["arch-only"],
         srcs = [crtend_file],
     )
 
@@ -55,7 +57,7 @@ def kernel_binary(name, **kwargs):
     native.cc_library(
         name = crtn,
         alwayslink = True,
-        tags = ["manual"],
+        tags = ["arch-only"],
         srcs = ["//kernel/arch:crtn"],
     )
 
@@ -71,9 +73,9 @@ def kernel_binary(name, **kwargs):
     linkopts.append("-T $(location //kernel/arch:linker.ld)")
     linkopts = depset(linkopts).to_list()  # de-dupe
 
-    # # Add `manual` so it's ignored with ... expansion.
+    # # Add architecture tags to ensure it's properly captured in ... expansion.
     tags = kwargs.pop("tags", [])
-    tags.append("manual")
+    tags.extend(["arch-only", "i386"])
     tags = depset(tags).to_list()  # de-dupe
 
     # crtbegin, crti, crtend, and crtn are specifically ordered such that the
@@ -90,3 +92,18 @@ def kernel_binary(name, **kwargs):
         linkopts = linkopts,
         **kwargs
     )
+
+def kernel_test(name, srcs, deps, timeout="short", **kwargs):
+    tags = kwargs.pop("tags", [])
+    tags.extend(["arch-only", "i386"])
+    tags = depset(tags).to_list()  # de-dupe
+
+    kernel = "%s_kernel_binary" % name
+    kernel_binary(
+        name = kernel,
+        srcs = srcs,
+        deps = deps,
+        tags = tags,
+        **kwargs
+    )
+    qemu_test(name = name, kernel = kernel, tags = tags, timeout=timeout, **kwargs)

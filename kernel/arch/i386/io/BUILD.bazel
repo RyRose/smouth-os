@@ -20,6 +20,6 @@ cc_library(
     ],
     deps = [
         ":io_port",
-        "//kernel/arch:serial",
+        "//kernel/arch/common:serial",
     ],
 )

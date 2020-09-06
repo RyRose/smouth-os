@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("//kernel:templates.bzl", "kernel_binary")
+load("//kernel:templates.bzl", "kernel_binary", "kernel_test")
 
 kernel_binary(
     name = "kernel",
@@ -8,6 +8,18 @@ kernel_binary(
         "kernel.cc",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//kernel/arch:init",
+        "//libc:stdio",
+        "//util:check",
+    ],
+)
+
+kernel_test(
+    name = "kernel_test",
+    srcs = [
+        "kernel_test.cc",
+    ],
     deps = [
         "//kernel/arch:init",
         "//libc:stdio",

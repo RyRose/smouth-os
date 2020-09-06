@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_MEMORY_H
 #define KERNEL_ARCH_MEMORY_H
 
-#include <stdint.h>
+#include <stddef.h>
 
 #include "util/status.h"
 
