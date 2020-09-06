@@ -20,11 +20,9 @@ namespace arch {
 
 namespace {
 
-REGISTER_INTERRUPT_SERVICE_ROUTINE(DummyHandler);
 INTERRUPT_SERVICE_ROUTINE(DummyHandler,
                           { libc::puts("== Dummy Handler 0x80 =="); });
 
-REGISTER_INTERRUPT_SERVICE_ROUTINE(DoubleFault);
 INTERRUPT_SERVICE_ROUTINE(DoubleFault, {
   libc::puts("== Double Fault ==");
   libc::abort();

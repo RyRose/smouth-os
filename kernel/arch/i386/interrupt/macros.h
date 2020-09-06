@@ -1,11 +1,10 @@
 #ifndef KERNEL_ARCH_I386_INTERRUPT_MACROS_H
 #define KERNEL_ARCH_I386_INTERRUPT_MACROS_H
 
-#define REGISTER_INTERRUPT_SERVICE_ROUTINE(name) extern "C" void name()
-
 #define _INTERRUPT_SERVICE_ROUTINE_STRINGIZE(x) #x
 
 #define INTERRUPT_SERVICE_ROUTINE(name, function) \
+  extern "C" void name();                         \
   namespace {                                     \
   extern "C" void name##Internal() function       \
   }                                               \
