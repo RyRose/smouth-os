@@ -5,8 +5,7 @@ def arch_library(name, **kwargs):
     })
 
     tags = kwargs.pop("tags", [])
-    tags.append("arch-only")
-    tags = depset(tags).to_list()  # de-dupe
+    tags.extend(["arch-only", "i386"])
 
     native.cc_library(
         name = name,
@@ -18,8 +17,7 @@ def arch_library(name, **kwargs):
 
 def arch_file(name, **kwargs):
     tags = kwargs.pop("tags", [])
-    tags.append("arch-only")
-    tags = depset(tags).to_list()  # de-dupe
+    tags.extend(["arch-only", "i386"])
 
     native.filegroup(
         name = name,

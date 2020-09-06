@@ -1,0 +1,23 @@
+load("//kernel:templates.bzl", "kernel_test")
+
+cc_library(
+    name = "macros",
+    hdrs = [
+        "macros.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//libc:stdio",
+        "//libc:stdlib",
+    ],
+)
+
+kernel_test(
+    name = "macros_ktest",
+    srcs = [
+        "macros_ktest.cc",
+    ],
+    deps = [
+        ":macros",
+    ],
+)

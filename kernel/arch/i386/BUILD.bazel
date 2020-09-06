@@ -44,9 +44,13 @@ cc_library(
     hdrs = [
         "//kernel/arch:init.h",
     ],
-    tags = ["i386-only"],
+    tags = [
+        "i386",
+        "i386-only",
+    ],
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
+        "//cxx:kernel",
         "//kernel/arch/common:tty",
         "//kernel/arch/i386/boot",
         "//kernel/arch/i386/boot:multiboot",
@@ -58,10 +62,23 @@ cc_library(
         "//kernel/arch/i386/io:serial",
         "//kernel/arch/i386/memory:linear",
         "//libc:assert",
+        "//libc:kernel",
         "//libc:stdio",
         "//libc:string",
         "//util:check",
         "//util:optional",
         "//util:status",
+    ],
+)
+
+cc_library(
+    name = "boot",
+    tags = [
+        "i386",
+        "i386-only",
+    ],
+    visibility = ["//kernel/arch:__pkg__"],
+    deps = [
+        "//kernel/arch/i386/boot",
     ],
 )
