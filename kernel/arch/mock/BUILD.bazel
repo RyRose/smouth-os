@@ -7,3 +7,9 @@ exports_files([
     "crti",
     "crtn",
 ])
+
+cc_library(
+    name = "init",
+    srcs = [],
+    visibility = ["//kernel:__subpackages__"],
+)

@@ -1,7 +1,7 @@
 
 #include "kernel/arch/i386/memory/linear.h"
 
-namespace arch_internal {
+namespace arch {
 
 const char* MemoryRegionTypeName(const MemoryRegionType& type) {
   switch (type) {
@@ -20,4 +20,4 @@ const char* MemoryRegionTypeName(const MemoryRegionType& type) {
   }
 }
 
-}  // namespace arch_internal
+}  // namespace arch

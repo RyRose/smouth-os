@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "testing/assert.h"
 
-namespace arch_internal {
+namespace arch {
 
 TEST(Descriptor, TestNullDescriptor) {
   Descriptor d = Descriptor();
@@ -30,4 +30,4 @@ TEST(Descriptor, TestDataDescriptor) {
   EXPECT_EQ(0xCF92000000FFFF, b);
 }
 
-}  // namespace arch_internal
+}  // namespace arch

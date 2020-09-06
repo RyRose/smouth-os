@@ -7,7 +7,7 @@
 #include "util/list.h"
 #include "util/status.h"
 
-namespace arch_internal {
+namespace arch {
 
 // Descriptor is a class that represents a Global Descriptor Table (GDT) segment
 // descriptor. It provides the processor with size, location, access, and status
@@ -133,6 +133,6 @@ class GlobalDescriptorTable {
   util::List<Descriptor, N> table_;
 };
 
-}  // namespace arch_internal
+}  // namespace arch
 
 #endif  // KERNEL_ARCH_I386_GDT_GDT_H

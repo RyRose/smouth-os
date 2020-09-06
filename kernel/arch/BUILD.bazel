@@ -19,21 +19,13 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "boot",
-    hdrs = [
-        "boot.h",
-    ],
+arch_library(
+    name = "init",
     deps = [
         ":memory",
         ":serial",
         "//kernel/arch/common:tty",
     ],
-)
-
-arch_library(
-    name = "init",
-    hdrs = [],
 )
 
 arch_file(name = "crti")

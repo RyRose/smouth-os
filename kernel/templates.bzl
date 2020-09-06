@@ -59,14 +59,8 @@ def kernel_binary(name, **kwargs):
         srcs = ["//kernel/arch:crtn"],
     )
 
-    # Add dependency on //kernel/arch:boot so kernel_main is called.
     deps = kwargs.pop("deps", [])
-    deps.extend(
-        [
-            "//cxx",
-            "//kernel/arch:boot",
-        ],
-    )
+    deps.append("//cxx")
     deps = depset(deps).to_list()  # de-dupe
 
     # Add arch-specific linker file as input and use it.

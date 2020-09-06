@@ -1,7 +1,7 @@
 #include "kernel/arch/i386/serial/serial.h"
 #include "kernel/arch/i386/io_port/io_port.h"
 
-namespace arch_internal {
+namespace arch {
 
 SerialPort SerialPort::Create(IoPort port, IoPort interrupt, IoPort fifo,
                               IoPort line_control, IoPort modem_control,
@@ -32,4 +32,4 @@ void SerialPort::Write(uint8_t b) {
   port_.outb(b);
 }
 
-}  // namespace arch_internal
+}  // namespace arch
