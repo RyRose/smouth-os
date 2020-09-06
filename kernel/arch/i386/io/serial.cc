@@ -1,5 +1,6 @@
-#include "kernel/arch/i386/serial/serial.h"
-#include "kernel/arch/i386/io_port/io_port.h"
+#include "kernel/arch/i386/io/serial.h"
+
+#include "kernel/arch/i386/io/io_port.h"
 
 namespace arch {
 

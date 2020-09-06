@@ -16,10 +16,10 @@ before_install:
   - |
     case "${TRAVIS_OS_NAME}" in
       osx)
-        OS=darwin
+        export OS=darwin
         ;;
       linux)
-        OS=linux
+        export OS=linux
         ;;
       *)
         echo "${TRAVIS_OS_NAME} is not a supported OS."
@@ -56,23 +56,6 @@ before_install:
 
 
 script:
-  - |
-    bazel build \
-      --config ci \
-      --  //... -//tools/toolchain/...
-  - |
-    bazel test \
-      --config ci \
-      --  //... -//tools/toolchain/...
-  - |
-    bazel build \
-      --config ci \
-      --config "i386-${OS}-premade" \
-      -- //kernel
-  - |
-    bazel run \
-      --config ci \
-      --config "i386-${OS}-premade" \
-      -- //tools/go/cmd/qemu:serial
+  - tools/scripts/continuous.sh
 notifications:
   email: false
