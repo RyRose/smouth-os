@@ -3,13 +3,12 @@
 
 #include <stddef.h>
 
-#include "kernel/arch/i386/init/multiboot.h"
-
+#include "kernel/arch/i386/boot/multiboot.h"
 #include "kernel/arch/memory.h"
 #include "util/list.h"
 #include "util/status.h"
 
-namespace arch_internal {
+namespace arch {
 
 enum class MemoryRegionType {
   AVAILABLE = 1,
@@ -100,6 +99,6 @@ class LinearAllocator : public arch::Allocator {
   }
 };
 
-}  // namespace arch_internal
+}  // namespace arch
 
 #endif  // KERNEL_MEMORY_LINEAR_H

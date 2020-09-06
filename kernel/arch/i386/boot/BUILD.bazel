@@ -1,0 +1,23 @@
+package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
+
+cc_library(
+    name = "boot",
+    srcs = [
+        "boot.S",
+        "boot.cc",
+    ],
+    hdrs = [
+        "boot.h",
+    ],
+    tags = ["manual"],
+    deps = [
+        ":multiboot",
+    ],
+)
+
+cc_library(
+    name = "multiboot",
+    hdrs = [
+        "multiboot.h",
+    ],
+)

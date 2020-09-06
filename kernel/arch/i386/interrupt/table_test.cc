@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-namespace arch_internal {
+namespace arch {
 
 TEST(Descriptor, TestDefaultGateDescriptor) {
   GateDescriptor descriptor;
@@ -88,4 +88,4 @@ TEST(Table, TestOverflow) {
   EXPECT_NOT_OK(idt.Register(11, GateDescriptor()));
 }
 
-}  // namespace arch_internal
+}  // namespace arch

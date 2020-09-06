@@ -8,7 +8,7 @@ namespace {
 extern "C" void InstallAndFlushGDTInternal(uint64_t gdt_ptr);
 }  // namespace
 
-namespace arch_internal {
+namespace arch {
 
 util::Status InstallAndFlushGDT(uint64_t gdt_ptr) {
   RET_CHECK((gdt_ptr >> 16u) != 0, "gdt pointer null");
@@ -18,4 +18,4 @@ util::Status InstallAndFlushGDT(uint64_t gdt_ptr) {
   return {};
 }
 
-}  // namespace arch_internal
+}  // namespace arch

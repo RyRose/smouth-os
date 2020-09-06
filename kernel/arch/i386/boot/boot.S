@@ -37,13 +37,8 @@
 	# TODO(RyRose): Ensure this doesn't modify stack.
 	call _init
 
-    # Call pre-kernel main with multiboot pointer and return the BootInfo
-    # struct.
+    # Call pre-kernel main with multiboot pointer.
 	call PreKernelMain
-
-	# Push pointer of BootInfo struct returned by pre_kernel_main
-	# to be used by kernel_main.
-	pushl %eax
 
 	# Transfer control to the main kernel.
 	call KernelMain

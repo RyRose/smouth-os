@@ -4,7 +4,7 @@
 #include "kernel/arch/i386/io_port/io_port.h"
 #include "kernel/arch/serial.h"
 
-namespace arch_internal {
+namespace arch {
 
 class SerialPort : public arch::SerialPortInterface {
  public:
@@ -37,6 +37,6 @@ class SerialPort : public arch::SerialPortInterface {
   IoPort line_status_;
 };
 
-}  // namespace arch_internal
+}  // namespace arch
 
 #endif  // KERNEL_ARCH_I386_SERIAL_H

@@ -28,10 +28,41 @@ genrule(
     outs = [
         "crtn.o",
     ],
-    tags = ["manual"],
     cmd = "$(CC) $(CC_FLAGS) -c $< -o $@",
+    tags = ["manual"],
     toolchains = [
         "@bazel_tools//tools/cpp:current_cc_toolchain",
         "@bazel_tools//tools/cpp:cc_flags",
+    ],
+)
+
+cc_library(
+    name = "init",
+    srcs = [
+        "init.cc",
+    ],
+    hdrs = [
+        "//kernel/arch:init.h",
+    ],
+    tags = ["manual"],
+    visibility = ["//kernel/arch:__pkg__"],
+    deps = [
+        "//kernel/arch:memory",
+        "//kernel/arch/common:tty",
+        "//kernel/arch/i386/boot",
+        "//kernel/arch/i386/boot:multiboot",
+        "//kernel/arch/i386/gdt:flush",
+        "//kernel/arch/i386/gdt:table",
+        "//kernel/arch/i386/instructions",
+        "//kernel/arch/i386/interrupt:macros",
+        "//kernel/arch/i386/interrupt:table",
+        "//kernel/arch/i386/memory:linear",
+        "//kernel/arch/i386/serial",
+        "//libc:assert",
+        "//libc:stdio",
+        "//libc:string",
+        "//util:check",
+        "//util:optional",
+        "//util:status",
     ],
 )

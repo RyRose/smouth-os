@@ -1,11 +1,12 @@
-#ifndef KERNEL_ARCH_BOOT_H
-#define KERNEL_ARCH_BOOT_H
+#ifndef KERNEL_ARCH_INIT_H
+#define KERNEL_ARCH_INIT_H
 
 #include <stdint.h>
 
 #include "kernel/arch/common/tty.h"
 #include "kernel/arch/memory.h"
 #include "kernel/arch/serial.h"
+#include "util/status.h"
 
 namespace arch {
 
@@ -18,6 +19,9 @@ struct BootInfo {
   SerialPortInterface* com1;
   Allocator* allocator;
 };
+
+// Do architecture-specific initialization before entering the main kernel.
+util::StatusOr<BootInfo> Initialize();
 
 }  // namespace arch
 

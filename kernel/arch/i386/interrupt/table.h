@@ -11,7 +11,7 @@
 #include "util/list.h"
 #include "util/status.h"
 
-namespace arch_internal {
+namespace arch {
 
 enum GateType {
   EMPTY = 0u,
@@ -91,6 +91,6 @@ class InterruptDescriptorTable {
   util::List<GateDescriptor, N> table_;
 };
 
-}  // namespace arch_internal
+}  // namespace arch
 
 #endif

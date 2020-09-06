@@ -1,24 +1,22 @@
-#include "kernel/arch/boot.h"
+#include "kernel/arch/init.h"
 
 #include "cxx/kernel.h"
-
-#include "libc/assert.h"
-#include "libc/kernel.h"
-
+#include "kernel/arch/i386/boot/boot.h"
+#include "kernel/arch/i386/boot/multiboot.h"
 #include "kernel/arch/i386/gdt/flush.h"
 #include "kernel/arch/i386/gdt/table.h"
-#include "kernel/arch/i386/init/multiboot.h"
 #include "kernel/arch/i386/instructions/instructions.h"
 #include "kernel/arch/i386/interrupt/macros.h"
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/memory/linear.h"
 #include "kernel/arch/i386/serial/serial.h"
-
+#include "libc/assert.h"
+#include "libc/kernel.h"
 #include "util/check.h"
 #include "util/optional.h"
 #include "util/status.h"
 
-namespace arch_internal {
+namespace arch {
 
 namespace {
 
@@ -72,10 +70,10 @@ util::Status InitializeGlobalDescriptorTable() {
   return InstallAndFlushGDT(gdt.Pointer());
 }
 
-util::Optional<arch::Terminal> tty;
+util::Optional<Terminal> tty;
 
 util::Status InitializeTTY(uint16_t* framebuffer) {
-  ASSIGN_OR_RETURN(tty, arch::Terminal::Create(80, 25, framebuffer));
+  ASSIGN_OR_RETURN(tty, Terminal::Create(80, 25, framebuffer));
   tty.Value().Clear();
   return {};
 }
@@ -168,17 +166,18 @@ util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
   return {};
 }
 
-util::StatusOr<arch::BootInfo> PreKernelMainInternal(
-    multiboot_info* multiboot_ptr) {
+}  // namespace
+
+util::StatusOr<BootInfo> Initialize() {
   InitializeStubs();
   libc::puts("== Initializing Serial Port ==");
   InitializeCOM1();
   libc::puts("== Initializing Terminal ==");
   RETURN_IF_ERROR(InitializeTTY(reinterpret_cast<uint16_t*>(0xB8000)));
   libc::puts("== Multiboot Info ==");
-  RETURN_IF_ERROR(PrintMultibootInfo(multiboot_ptr));
+  RETURN_IF_ERROR(PrintMultibootInfo(&multiboot_information));
   libc::puts("== Initializing Memory Allocator ==");
-  RETURN_IF_ERROR(InitializeAllocator<100>(multiboot_ptr));
+  RETURN_IF_ERROR(InitializeAllocator<100>(&multiboot_information));
   libc::puts("== Initializing Kernel New ==");
   libc::puts("== Initializing GDT ==");
   RETURN_IF_ERROR(InitializeGlobalDescriptorTable());
@@ -187,15 +186,8 @@ util::StatusOr<arch::BootInfo> PreKernelMainInternal(
   libc::printf(
       "== Returning BootInfo {tty=0x%p, com1=0x%p, allocator=0x%p} ==\n",
       &tty.Value(), &com1.Value(), &linear_allocator);
-  return arch::BootInfo(/*tty=*/&tty.Value(), /*com1=*/&com1.Value(),
-                        /*allocator=*/&linear_allocator);
+  return BootInfo(/*tty=*/&tty.Value(), /*com1=*/&com1.Value(),
+                  /*allocator=*/&linear_allocator);
 }
 
-extern "C" arch::BootInfo PreKernelMain(multiboot_info* multiboot_ptr) {
-  CHECK_OR_RETURN(const auto boot_info, PreKernelMainInternal(multiboot_ptr));
-  return boot_info;
-}
-
-}  // namespace
-
-}  // namespace arch_internal
+}  // namespace arch

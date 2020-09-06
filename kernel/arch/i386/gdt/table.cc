@@ -3,7 +3,7 @@
 
 #include "libc/string.h"
 
-namespace arch_internal {
+namespace arch {
 
 util::StatusOr<Descriptor> Descriptor::Create(uint32_t base, uint32_t limit,
                                               uint8_t segment_type,
@@ -28,4 +28,4 @@ util::StatusOr<Descriptor> Descriptor::Create(uint32_t base, uint32_t limit,
   return d;
 }
 
-}  // namespace arch_internal
+}  // namespace arch

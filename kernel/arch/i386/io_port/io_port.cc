@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace arch_internal {
+namespace arch {
 
 void IoPort::outb(uint8_t output) {
   asm volatile("outb %0, %1"
@@ -42,4 +42,4 @@ uint32_t IoPort::inl() {
 
 uint16_t IoPort::value() { return port_number_; }
 
-}  // namespace arch_internal
+}  // namespace arch

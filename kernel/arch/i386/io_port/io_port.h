@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace arch_internal {
+namespace arch {
 
 // A class that represents an IO port to be read and/or written to.
 class IoPort {
@@ -35,6 +35,6 @@ class IoPort {
   uint16_t port_number_;
 };
 
-}  // namespace arch_internal
+}  // namespace arch
 
 #endif  // KERNEL_ARCH_I386_IO_PORT_H

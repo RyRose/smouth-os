@@ -2,7 +2,7 @@
 
 #include "util/status.h"
 
-namespace arch_internal {
+namespace arch {
 
 util::StatusOr<GateDescriptor> GateDescriptor::Create(uint32_t offset,
                                                       uint16_t segment_selector,
@@ -21,4 +21,4 @@ util::StatusOr<GateDescriptor> GateDescriptor::Create(uint32_t offset,
   return descriptor;
 }
 
-}  // namespace arch_internal
+}  // namespace arch

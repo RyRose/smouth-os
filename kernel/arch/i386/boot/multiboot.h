@@ -23,7 +23,7 @@
 #ifndef MULTIBOOT_HEADER
 #define MULTIBOOT_HEADER 1
 
-namespace arch_internal {
+namespace arch {
 
 /* How many bytes from the start of the file we search for the header. */
 #define MULTIBOOT_SEARCH 8192
@@ -267,6 +267,6 @@ struct multiboot_apm_info {
 
 #endif /* ! ASM_FILE */
 
-}  // namespace arch_internal
+}  // namespace arch
 
 #endif /* ! MULTIBOOT_HEADER */
