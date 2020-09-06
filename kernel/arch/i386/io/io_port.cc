@@ -1,4 +1,4 @@
-#include "kernel/arch/i386/io_port/io_port.h"
+#include "kernel/arch/i386/io/io_port.h"
 
 #include <stdint.h>
 

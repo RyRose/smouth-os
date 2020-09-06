@@ -1,6 +1,16 @@
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 cc_library(
+    name = "io_port",
+    srcs = [
+        "io_port.cc",
+    ],
+    hdrs = [
+        "io_port.h",
+    ],
+)
+
+cc_library(
     name = "serial",
     srcs = [
         "serial.cc",
@@ -9,7 +19,7 @@ cc_library(
         "serial.h",
     ],
     deps = [
+        ":io_port",
         "//kernel/arch:serial",
-        "//kernel/arch/i386/io_port",
     ],
 )

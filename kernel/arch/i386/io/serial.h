@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_I386_SERIAL_H
 #define KERNEL_ARCH_I386_SERIAL_H
 
-#include "kernel/arch/i386/io_port/io_port.h"
+#include "kernel/arch/i386/io/io_port.h"
 #include "kernel/arch/serial.h"
 
 namespace arch {
