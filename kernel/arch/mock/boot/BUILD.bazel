@@ -1,5 +1,0 @@
-cc_library(
-    name = "init",
-    srcs = [],
-    visibility = ["//kernel:__subpackages__"],
-)

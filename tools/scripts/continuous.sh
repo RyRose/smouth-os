@@ -1,27 +1,19 @@
 #!/bin/sh
 
 if [[ "${OS}" == "" ]]; then
-  I386_CONFIG="i386"
+  I386_PREMADE_CONFIG_FLAG=""
 else
-  I386_CONFIG="i386-${OS}-premade"
+  I386_PREMADE_CONFIG_FLAG="--config i386-${OS}-premade"
 fi
 
-set -eu;
-
-bazel build \
-  --config ci \
-  --  //... -//tools/toolchain/...
+set -eux;
 
 bazel test \
   --config ci \
   --  //... -//tools/toolchain/...
 
-bazel build \
+bazel test \
   --config ci \
-  --config "${I386_CONFIG}" \
-  -- //kernel
-
-bazel run \
-  --config ci \
-  --config "${I386_CONFIG}" \
-  -- //tools/go/cmd/qemu:serial
+  --config i386 \
+  ${I386_PREMADE_CONFIG_FLAG} \
+  -- //...

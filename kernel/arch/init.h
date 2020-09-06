@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
+#include "kernel/arch/common/memory.h"
+#include "kernel/arch/common/serial.h"
 #include "kernel/arch/common/tty.h"
-#include "kernel/arch/memory.h"
-#include "kernel/arch/serial.h"
 #include "util/status.h"
 
 namespace arch {

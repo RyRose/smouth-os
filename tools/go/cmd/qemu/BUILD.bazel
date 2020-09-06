@@ -19,14 +19,15 @@ go_binary(
         "//kernel",
     ],
     embed = [":go_default_library"],
-    tags = ["manual"],
+    tags = [
+        "arch-only",
+        "i386",
+    ],
     visibility = ["//visibility:public"],
 )
 
 go_binary(
     name = "serial",
-    embed = [":go_default_library"],
-    visibility = ["//visibility:public"],
     args = [
         "--cpu=$(TARGET_CPU)",
         "--kernel=$(location //kernel)",
@@ -35,13 +36,16 @@ go_binary(
     data = [
         "//kernel",
     ],
-    tags = ["manual"],
+    embed = [":go_default_library"],
+    tags = [
+        "arch-only",
+        "i386",
+    ],
+    visibility = ["//visibility:public"],
 )
 
 go_binary(
     name = "gdb",
-    embed = [":go_default_library"],
-    visibility = ["//visibility:public"],
     args = [
         "--cpu=$(TARGET_CPU)",
         "--kernel=$(location //kernel)",
@@ -49,8 +53,13 @@ go_binary(
         "--workspace_file=$(location //:workspace_name)",
     ],
     data = [
-        "//kernel",
         "//:workspace_name",
+        "//kernel",
     ],
-    tags = ["manual"],
+    embed = [":go_default_library"],
+    tags = [
+        "arch-only",
+        "i386",
+    ],
+    visibility = ["//visibility:public"],
 )

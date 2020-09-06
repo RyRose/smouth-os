@@ -44,10 +44,9 @@ cc_library(
     hdrs = [
         "//kernel/arch:init.h",
     ],
-    tags = ["manual"],
+    tags = ["i386-only"],
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
-        "//kernel/arch:memory",
         "//kernel/arch/common:tty",
         "//kernel/arch/i386/boot",
         "//kernel/arch/i386/boot:multiboot",

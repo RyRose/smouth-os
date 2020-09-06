@@ -12,3 +12,20 @@ cc_library(
         "//libc:string",
     ],
 )
+
+cc_library(
+    name = "memory",
+    hdrs = [
+        "memory.h",
+    ],
+    deps = [
+        "//util:status",
+    ],
+)
+
+cc_library(
+    name = "serial",
+    hdrs = [
+        "serial.h",
+    ],
+)

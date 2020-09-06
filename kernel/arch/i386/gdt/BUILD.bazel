@@ -38,7 +38,7 @@ cc_library(
     hdrs = [
         "flush.h",
     ],
-    tags = ["manual"],
+    tags = ["i386-only"],
     deps = [
         "//util:status",
     ],

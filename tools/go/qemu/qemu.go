@@ -2,6 +2,7 @@ package qemu
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -25,20 +26,32 @@ func (v *VM) Monitor(ctx context.Context) error {
 	return cmd.Run()
 }
 
-func (v *VM) Serial(ctx context.Context) error {
+func (v *VM) Serial(ctx context.Context) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, v.qemu(), "-kernel", v.Kernel, "-nographic", "--no-reboot")
+
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return nil, err
 	}
-
+	var output bytes.Buffer
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		for scanner.Scan() {
-			log.Printf("%q", scanner.Text())
+			output.Write(scanner.Bytes())
+			output.WriteByte('\n')
+			s := fmt.Sprintf("%q", scanner.Text())
+			log.Print(s[1 : len(s)-1])
 		}
 	}()
-	return cmd.Run()
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("failed to run QEMU: %w:\n%v", err, stderr.String())
+	}
+	return output.Bytes(), err
 }
 
 func (v *VM) GDB(ctx context.Context) error {

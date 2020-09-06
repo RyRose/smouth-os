@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -39,7 +38,8 @@ func run(ctx context.Context, vm qemu.VM) error {
 	case "monitor":
 		return vm.Monitor(ctx)
 	case "serial":
-		return vm.Serial(ctx)
+		_, err := vm.Serial(ctx)
+		return err
 	case "gdb":
 		return vm.GDB(ctx)
 	}
@@ -63,17 +63,7 @@ func main() {
 		Workspace: workspace(),
 	}
 
-	if err := run(ctx, vm); err != nil && ctx.Err == nil {
+	if err := run(ctx, vm); err != nil {
 		log.Fatalf("QEMU execution failed: %v", err)
-	}
-
-	// If context is canceled, we likely exited early. This messes up terminals so we
-	// execute `stty sane` to fix the weirdness.
-	if ctx.Err() != nil {
-		stty := exec.Command("stty", "sane")
-		stty.Stdin = os.Stdin
-		stty.Stdout = os.Stdout
-		stty.Stderr = os.Stderr
-		stty.Run()
 	}
 }

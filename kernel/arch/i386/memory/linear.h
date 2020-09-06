@@ -2,9 +2,10 @@
 #define KERNEL_MEMORY_LINEAR_H
 
 #include <stddef.h>
+#include <stdint.h>
 
+#include "kernel/arch/common/memory.h"
 #include "kernel/arch/i386/boot/multiboot.h"
-#include "kernel/arch/memory.h"
 #include "util/list.h"
 #include "util/status.h"
 

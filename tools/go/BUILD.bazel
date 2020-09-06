@@ -1,0 +1,10 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+exports_files(srcs = ["qemu_test.go"])
+
+go_test(
+    name = "go_default_test",
+    srcs = ["qemu_test.go"],
+    tags = ["arch-only"],
+    deps = ["//tools/go/qemu:go_default_library"],
+)
