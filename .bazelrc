@@ -1,4 +1,11 @@
+
+#######################################
+## Options used across builds/tests. ##
+#######################################
+
 build \
+  --build_tag_filters -i386-only,-arch-only \
+  --test_tag_filters -i386-only,-arch-only \
   --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
   --verbose_failures \
   --strip=never
@@ -7,12 +14,14 @@ test \
   --test_output=errors \
   --test_verbose_timeout_warnings
 
-###################################################################
-# Options for cross-compiling SmouthOS on the i386 architecture. ##
-###################################################################
+####################################################################
+## Options for cross-compiling SmouthOS on the i386 architecture. ##
+####################################################################
 
 # Build and use local toolchain.
 build:i386 \
+  --build_tag_filters i386 \
+  --test_tag_filters i386 \
   --crosstool_top=//tools/toolchain \
   --cpu=i386 \
   --compiler=g++ \
@@ -22,18 +31,12 @@ build:i386 \
 # Use pre-built Linux toolchain. For use in CI.
 build:i386-linux-premade \
   --crosstool_top=//tools/toolchain:linux-premade \
-  --cpu=i386 \
-  --compiler=g++ \
   --action_env=WORKSPACE=toolchain-i686-elf-linux \
-  --action_env=TARGET=i686-elf
 
 # Use pre-built MacOS toolchain. For use in CI.
 build:i386-darwin-premade \
   --crosstool_top=//tools/toolchain:darwin-premade \
-  --cpu=i386 \
-  --compiler=g++ \
-  --action_env=WORKSPACE=toolchain-i686-elf-darwin \
-  --action_env=TARGET=i686-elf
+  --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
 ############################################################################
 ## Continuous Integration (ci) options for running SmouthOS on Travis CI. ##

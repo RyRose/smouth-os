@@ -1,12 +1,12 @@
 #ifndef KERNEL_ARCH_I386_SERIAL_H
 #define KERNEL_ARCH_I386_SERIAL_H
 
+#include "kernel/arch/common/serial.h"
 #include "kernel/arch/i386/io/io_port.h"
-#include "kernel/arch/serial.h"
 
 namespace arch {
 
-class SerialPort : public arch::SerialPortInterface {
+class SerialPort : public SerialPortInterface {
  public:
   static SerialPort Create(IoPort port, IoPort interrupt, IoPort fifo,
                            IoPort line_control, IoPort modem_control,

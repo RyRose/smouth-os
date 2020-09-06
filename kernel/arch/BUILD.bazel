@@ -2,28 +2,11 @@ load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
 
 package(default_visibility = ["//visibility:public"])
 
-cc_library(
-    name = "memory",
-    hdrs = [
-        "memory.h",
-    ],
-    deps = [
-        "//util:status",
-    ],
-)
-
-cc_library(
-    name = "serial",
-    hdrs = [
-        "serial.h",
-    ],
-)
-
 arch_library(
     name = "init",
     deps = [
-        ":memory",
-        ":serial",
+        "//kernel/arch/common:memory",
+        "//kernel/arch/common:serial",
         "//kernel/arch/common:tty",
     ],
 )

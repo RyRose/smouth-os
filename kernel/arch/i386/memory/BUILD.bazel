@@ -7,9 +7,9 @@ cc_library(
     ],
     hdrs = [
         "linear.h",
-        "//kernel/arch:memory.h",
     ],
     deps = [
+        "//kernel/arch/common:memory",
         "//kernel/arch/i386/boot:multiboot",
         "//util:list",
     ],
