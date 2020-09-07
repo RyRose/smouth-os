@@ -9,9 +9,8 @@
 #include "kernel/arch/i386/interrupt/macros.h"
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/io/serial.h"
-#include "kernel/arch/i386/memory/linear.h"
-#include "libc/assert.h"
 #include "libc/kernel.h"
+#include "libc/stdio.h"
 #include "util/check.h"
 #include "util/optional.h"
 #include "util/status.h"
@@ -89,38 +88,67 @@ void InitializeCOM1() {
                             /*line_status=*/IoPort(base + 5));
 }
 
-LinearAllocator<100> linear_allocator;
+util::StatusOr<const char*> MultibootMmapEntryTypeName(
+    multiboot_uint32_t type) {
+  switch (type) {
+    case MULTIBOOT_MEMORY_AVAILABLE:
+      return "available";
+    case MULTIBOOT_MEMORY_RESERVED:
+      return "reserved";
+    case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+      return "acpi reclaimable";
+    case MULTIBOOT_MEMORY_NVS:
+      return "nvs";
+    case MULTIBOOT_MEMORY_BADRAM:
+      return "bad ram";
+    default:
+      return util::Status("invalid multiboot memory type");
+  }
+}
 
-template <size_t N>
-util::Status InitializeAllocator(multiboot_info* multiboot_ptr) {
+util::StatusOr<util::List<MemoryRegion, 100>> InitializeMemoryRegions(
+    multiboot_info* multiboot_ptr) {
   RET_CHECK(multiboot_ptr != nullptr);
-  libc::printf("Multiboot Pointer: 0x%p\n", multiboot_ptr);
+  libc::puts("Multiboot Info: {");
+  libc::printf("  flags: 0x%x\n", multiboot_ptr->flags);
+  libc::printf("  mem_lower: %d KiB\n", multiboot_ptr->mem_lower);
+  libc::printf("  mem_upper: %d KiB\n", multiboot_ptr->mem_upper);
+  libc::printf("  cmdline: %q\n",
+               reinterpret_cast<const char*>(multiboot_ptr->cmdline));
+  libc::printf("  mmap_addr: 0x%p\n", multiboot_ptr->mmap_addr);
+  libc::printf("  boot_loader_name: %q\n",
+               reinterpret_cast<const char*>(multiboot_ptr->boot_loader_name));
+  libc::puts("}");
 
-  libc::puts("Initializing entries.");
-  util::List<multiboot_mmap_entry, N> entries;
-  const auto* mmap_address =
+  const auto* mmap_entries =
       reinterpret_cast<multiboot_mmap_entry*>(multiboot_ptr->mmap_addr);
-  libc::printf("Memory map address: 0x%p\n", mmap_address);
+
   const size_t mmap_entry_count =
       multiboot_ptr->mmap_length / sizeof(multiboot_mmap_entry);
   libc::printf("Memory map entry count: %d\n", mmap_entry_count);
+
+  util::List<MemoryRegion, 100> entries;
   for (size_t i = 0; i < mmap_entry_count; i++) {
-    RETURN_IF_ERROR(entries.Add(mmap_address[i]));
+    ASSIGN_OR_RETURN(const char* type,
+                     MultibootMmapEntryTypeName(mmap_entries[i].type));
+    libc::printf("Region %d: {addr=0x%x, len=0x%x (%d KiB), type=%s}\n", i,
+                 mmap_entries[i].addr, mmap_entries[i].len,
+                 mmap_entries[i].len / 1024, type);
+
+    MemoryRegion region;
+    region.address = mmap_entries[i].addr;
+    region.length = mmap_entries[i].len;
+    if (mmap_entries[i].type == MULTIBOOT_MEMORY_AVAILABLE) {
+      region.type = MemoryRegionType::AVAILABLE;
+    } else {
+      region.type = MemoryRegionType::RESERVED;
+    }
+    RETURN_IF_ERROR(entries.Add(region));
   }
-  RET_CHECK(entries.Size() == mmap_entry_count, "mmap entry mismatch");
-  ASSIGN_OR_RETURN(linear_allocator, LinearAllocator<N>::Create(entries));
-  libc::printf("Memory Regions Found: %d\n", linear_allocator.Regions().Size());
-  for (size_t i = 0; i < linear_allocator.Regions().Size(); i++) {
-    ASSIGN_OR_RETURN(const auto* region, linear_allocator.Regions().At(i));
-    libc::printf("Region %d: {address=0x%x, length=0x%x, type=%s}\n", i,
-                 region->address, region->length,
-                 MemoryRegionTypeName(region->type));
-  }
-  return {};
+  return entries;
 }
 
 void InitializeStubs() {
-  cxx::kernel_new = [](size_t n) { return linear_allocator.Allocate(n); };
   libc::kernel_put = [](char c) -> util::Status {
     if (tty.Exists()) {
       tty.Value().Put(c);
@@ -166,26 +194,33 @@ util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
 }  // namespace
 
 util::StatusOr<BootInfo> Initialize() {
+  BootInfo info;
+
   libc::puts("== Initializing Stubs ==");
   InitializeStubs();
+
   libc::puts("== Initializing Serial Port ==");
   InitializeCOM1();
+  info.com1 = &com1.Value();
+
   libc::puts("== Initializing Terminal ==");
   RETURN_IF_ERROR(InitializeTTY(reinterpret_cast<uint16_t*>(0xB8000)));
+  info.tty = &tty.Value();
+
   libc::puts("== Multiboot Info ==");
   RETURN_IF_ERROR(PrintMultibootInfo(&multiboot_information));
-  libc::puts("== Initializing Memory Allocator ==");
-  RETURN_IF_ERROR(InitializeAllocator<100>(&multiboot_information));
-  libc::puts("== Initializing Kernel New ==");
+
+  libc::puts("== Initializing Memory Regions ==");
+  ASSIGN_OR_RETURN(info.memory_regions,
+                   InitializeMemoryRegions(&multiboot_information));
+
   libc::puts("== Initializing GDT ==");
   RETURN_IF_ERROR(InitializeGlobalDescriptorTable());
+
   libc::puts("== Initializing Interrupts ==");
   RETURN_IF_ERROR(InitializeInterrupts());
-  libc::printf(
-      "== Returning BootInfo {tty=0x%p, com1=0x%p, allocator=0x%p} ==\n",
-      &tty.Value(), &com1.Value(), &linear_allocator);
-  return BootInfo(/*tty=*/&tty.Value(), /*com1=*/&com1.Value(),
-                  /*allocator=*/&linear_allocator);
+
+  return info;
 }
 
 }  // namespace arch
