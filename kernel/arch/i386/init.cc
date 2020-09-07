@@ -50,7 +50,7 @@ util::Status InitializeInterrupts() {
   return {};
 }
 
-GlobalDescriptorTable<8> gdt;
+GlobalDescriptorTable<3> gdt;
 
 util::Status InitializeGlobalDescriptorTable() {
   ASSIGN_OR_RETURN(Descriptor code_descriptor,
@@ -88,53 +88,17 @@ void InitializeCOM1() {
                             /*line_status=*/IoPort(base + 5));
 }
 
-util::StatusOr<const char*> MultibootMmapEntryTypeName(
-    multiboot_uint32_t type) {
-  switch (type) {
-    case MULTIBOOT_MEMORY_AVAILABLE:
-      return "available";
-    case MULTIBOOT_MEMORY_RESERVED:
-      return "reserved";
-    case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
-      return "acpi reclaimable";
-    case MULTIBOOT_MEMORY_NVS:
-      return "nvs";
-    case MULTIBOOT_MEMORY_BADRAM:
-      return "bad ram";
-    default:
-      return util::Status("invalid multiboot memory type");
-  }
-}
-
 util::StatusOr<util::List<MemoryRegion, 100>> InitializeMemoryRegions(
     multiboot_info* multiboot_ptr) {
   RET_CHECK(multiboot_ptr != nullptr);
-  libc::puts("Multiboot Info: {");
-  libc::printf("  flags: 0x%x\n", multiboot_ptr->flags);
-  libc::printf("  mem_lower: %d KiB\n", multiboot_ptr->mem_lower);
-  libc::printf("  mem_upper: %d KiB\n", multiboot_ptr->mem_upper);
-  libc::printf("  cmdline: %q\n",
-               reinterpret_cast<const char*>(multiboot_ptr->cmdline));
-  libc::printf("  mmap_addr: 0x%p\n", multiboot_ptr->mmap_addr);
-  libc::printf("  boot_loader_name: %q\n",
-               reinterpret_cast<const char*>(multiboot_ptr->boot_loader_name));
-  libc::puts("}");
+
+  util::List<MemoryRegion, 100> entries;
 
   const auto* mmap_entries =
       reinterpret_cast<multiboot_mmap_entry*>(multiboot_ptr->mmap_addr);
-
   const size_t mmap_entry_count =
       multiboot_ptr->mmap_length / sizeof(multiboot_mmap_entry);
-  libc::printf("Memory map entry count: %d\n", mmap_entry_count);
-
-  util::List<MemoryRegion, 100> entries;
   for (size_t i = 0; i < mmap_entry_count; i++) {
-    ASSIGN_OR_RETURN(const char* type,
-                     MultibootMmapEntryTypeName(mmap_entries[i].type));
-    libc::printf("Region %d: {addr=0x%x, len=0x%x (%d KiB), type=%s}\n", i,
-                 mmap_entries[i].addr, mmap_entries[i].len,
-                 mmap_entries[i].len / 1024, type);
-
     MemoryRegion region;
     region.address = mmap_entries[i].addr;
     region.length = mmap_entries[i].len;
@@ -145,6 +109,13 @@ util::StatusOr<util::List<MemoryRegion, 100>> InitializeMemoryRegions(
     }
     RETURN_IF_ERROR(entries.Add(region));
   }
+
+  MemoryRegion kernel_region;
+  kernel_region.address = reinterpret_cast<uint64_t>(&kKernelStart);
+  kernel_region.length =
+      reinterpret_cast<uint64_t>(&kKernelEnd) - kernel_region.address;
+  kernel_region.type = MemoryRegionType::RESERVED;
+  RETURN_IF_ERROR(entries.Add(kernel_region));
   return entries;
 }
 
@@ -177,17 +148,53 @@ void InitializeStubs() {
   cxx::kernel_panic = libc::kernel_panic;
 }
 
+util::StatusOr<const char*> MultibootMmapEntryTypeName(
+    multiboot_uint32_t type) {
+  switch (type) {
+    case MULTIBOOT_MEMORY_AVAILABLE:
+      return "available";
+    case MULTIBOOT_MEMORY_RESERVED:
+      return "reserved";
+    case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+      return "acpi reclaimable";
+    case MULTIBOOT_MEMORY_NVS:
+      return "nvs";
+    case MULTIBOOT_MEMORY_BADRAM:
+      return "bad ram";
+    default:
+      return util::Status("invalid multiboot memory type");
+  }
+}
+
 util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
-  RETURN_IF_ERROR(libc::printf(
-      "cmdline: %s\n", reinterpret_cast<const char*>(multiboot_ptr->cmdline)));
-  RETURN_IF_ERROR(
-      libc::printf("mmap_length: %d\n", multiboot_ptr->mmap_length));
-  RETURN_IF_ERROR(libc::printf(
-      "boot_loader_name: %s\n",
-      reinterpret_cast<const char*>(multiboot_ptr->boot_loader_name)));
-  RETURN_IF_ERROR(
-      libc::printf("framebuffer_addr: %d\n", multiboot_ptr->framebuffer_addr));
-  RETURN_IF_ERROR(libc::printf("flags: 0x%X\n", multiboot_ptr->flags));
+  RET_CHECK(multiboot_ptr);
+  libc::puts("Multiboot Info: {");
+  libc::printf("  flags: 0x%x\n", multiboot_ptr->flags);
+  libc::printf("  mem_lower: %d KiB\n", multiboot_ptr->mem_lower);
+  libc::printf("  mem_upper: %d KiB\n", multiboot_ptr->mem_upper);
+  libc::printf("  cmdline: %q\n",
+               reinterpret_cast<const char*>(multiboot_ptr->cmdline));
+  libc::printf("  mmap_addr: 0x%p\n", multiboot_ptr->mmap_addr);
+  libc::printf("  mmap_length: %d\n", multiboot_ptr->mmap_length);
+
+  libc::puts("  mmap_entries: [");
+  const auto* mmap_entries =
+      reinterpret_cast<multiboot_mmap_entry*>(multiboot_ptr->mmap_addr);
+  const size_t mmap_entry_count =
+      multiboot_ptr->mmap_length / sizeof(multiboot_mmap_entry);
+  for (size_t i = 0; i < mmap_entry_count; i++) {
+    ASSIGN_OR_RETURN(const char* type,
+                     MultibootMmapEntryTypeName(mmap_entries[i].type));
+    libc::printf("  {addr=0x%x, len=0x%x (%d KiB), type=%s},\n",
+                 mmap_entries[i].addr, mmap_entries[i].len,
+                 mmap_entries[i].len / 1024, type);
+  }
+  libc::puts("  ]");
+
+  libc::printf("  boot_loader_name: %q\n",
+               reinterpret_cast<const char*>(multiboot_ptr->boot_loader_name));
+  libc::printf("  framebuffer_addr: %d\n", multiboot_ptr->framebuffer_addr);
+  libc::puts("}");
   return {};
 }
 
@@ -208,11 +215,11 @@ util::StatusOr<BootInfo> Initialize() {
   info.tty = &tty.Value();
 
   libc::puts("== Multiboot Info ==");
-  RETURN_IF_ERROR(PrintMultibootInfo(&multiboot_information));
+  RETURN_IF_ERROR(PrintMultibootInfo(&kMultibootInformation));
 
   libc::puts("== Initializing Memory Regions ==");
   ASSIGN_OR_RETURN(info.memory_regions,
-                   InitializeMemoryRegions(&multiboot_information));
+                   InitializeMemoryRegions(&kMultibootInformation));
 
   libc::puts("== Initializing GDT ==");
   RETURN_IF_ERROR(InitializeGlobalDescriptorTable());
