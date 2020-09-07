@@ -52,6 +52,8 @@ void InitializeStubs() {
 extern "C" void PreKernelMain(multiboot_info* multiboot_ptr) {
   InitializeStubs();
   multiboot_information = *multiboot_ptr;
+  // Write newline to get output on a different line than preamble text.
+  KernelPut('\n');
   KernelPuts("== Initialized Pre-Kernel Main ==");
 }
 
