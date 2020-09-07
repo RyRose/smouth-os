@@ -51,6 +51,7 @@ cc_library(
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
         "//cxx:kernel",
+        "//kernel/arch/common:memory",
         "//kernel/arch/common:tty",
         "//kernel/arch/i386/boot:boot-internal",
         "//kernel/arch/i386/boot:multiboot",
@@ -60,8 +61,6 @@ cc_library(
         "//kernel/arch/i386/interrupt:macros",
         "//kernel/arch/i386/interrupt:table",
         "//kernel/arch/i386/io:serial",
-        "//kernel/arch/i386/memory:linear",
-        "//libc:assert",
         "//libc:kernel",
         "//libc:stdio",
         "//libc:string",
