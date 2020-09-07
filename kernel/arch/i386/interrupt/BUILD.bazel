@@ -35,5 +35,5 @@ cc_library(
     hdrs = [
         "macros.h",
     ],
-    tags = ["manual"],
+    tags = ["i386-only"],
 )

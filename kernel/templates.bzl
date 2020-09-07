@@ -29,7 +29,7 @@ def crt_file(name, filename, visibility = []):
             "mkdir -p $$(dirname $@); " +
             "cp $$($(CC) $(CC_FLAGS) -print-file-name=$$(basename $@)) $@;"
         ),
-        tags = ["manual"],
+        tags = ["arch-only"],
     )
 
 def kernel_binary(name, **kwargs):
