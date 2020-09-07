@@ -4,11 +4,13 @@ package qemu_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"syscall"
 	"testing"
 
@@ -52,8 +54,20 @@ func TestRun(t *testing.T) {
 		t.Fatalf("%#v.Serial(%v) = _, %v; want successful execution of QEMU", vm, ctx, err)
 	}
 
+	re := regexp.MustCompile("<ktest>[^{]*(.*)[^}]*</ktest>")
+	parts := re.FindAllSubmatch(out, -1)
+	for _, arr := range parts {
+		data := make(map[string]interface{})
+		if err := json.Unmarshal(arr[1], &data); err != nil {
+			t.Errorf("json.Unmarshal(%s, %v) = %v; want valid JSON between ktest tags", arr[1], data, err)
+			continue
+		}
+		t.Errorf("%s:%s: %s = %q; want %q", data["file"], data["line"], data["expr"], data["got"], data["want"])
+	}
+
 	magic := "<<KERNEL TEST COMPLETE>>"
 	if !bytes.Contains(out, []byte(magic)) {
-		t.Fatalf("Got serial output but did not contain magic string %q", magic)
+		t.Errorf("!bytes.Contain(<serial port output>, %q); want serial port output containing magic string", magic)
 	}
+
 }

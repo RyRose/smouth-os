@@ -94,11 +94,20 @@ util::StatusOr<int> print(char data, char c) {
 
 template <>
 util::StatusOr<int> print(const char* data, char c) {
-  ASSIGN_OR_RETURN(const auto* ptr, strchr("sv", c));
+  ASSIGN_OR_RETURN(const auto* ptr, strchr("sqv", c));
   RET_CHECK(ptr != nullptr);
+  if (c == 'q') {
+    RETURN_IF_ERROR(putchar('"'));
+  }
   int i = 0;
   for (; data[i]; i++) {
+    if (c == 'q' && data[i] == '"') {
+      RETURN_IF_ERROR(putchar('\\'));
+    }
     RETURN_IF_ERROR(putchar(data[i]));
+  }
+  if (c == 'q') {
+    RETURN_IF_ERROR(putchar('"'));
   }
   return i;
 }
