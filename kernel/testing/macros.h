@@ -97,6 +97,7 @@
         "expr", #expr, "want", "valid expression", "line",                  \
         _KERNEL_TESTING_MACRO_STRINGIZE(__LINE__), "file", __FILE__, "got", \
         "false");                                                           \
+    libc::abort();                                                          \
   } while (0)
 
 #define KERNEL_ASSERT_2(expr, want)                                         \
@@ -110,6 +111,7 @@
         "expr", #expr, "want", want, "line",                                \
         _KERNEL_TESTING_MACRO_STRINGIZE(__LINE__), "file", __FILE__, "got", \
         "false");                                                           \
+    libc::abort();                                                          \
   } while (0)
 
 #define KERNEL_ASSERT_OK(...) \

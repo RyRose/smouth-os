@@ -13,7 +13,7 @@ genrule(
         "crti.o",
     ],
     cmd = "$(CC) $(CC_FLAGS) -c $< -o $@",
-    tags = ["manual"],
+    tags = ["i386-only"],
     toolchains = [
         "@bazel_tools//tools/cpp:current_cc_toolchain",
         "@bazel_tools//tools/cpp:cc_flags",
@@ -29,7 +29,7 @@ genrule(
         "crtn.o",
     ],
     cmd = "$(CC) $(CC_FLAGS) -c $< -o $@",
-    tags = ["manual"],
+    tags = ["i386-only"],
     toolchains = [
         "@bazel_tools//tools/cpp:current_cc_toolchain",
         "@bazel_tools//tools/cpp:cc_flags",
@@ -52,7 +52,7 @@ cc_library(
     deps = [
         "//cxx:kernel",
         "//kernel/arch/common:tty",
-        "//kernel/arch/i386/boot",
+        "//kernel/arch/i386/boot:boot-internal",
         "//kernel/arch/i386/boot:multiboot",
         "//kernel/arch/i386/gdt:flush",
         "//kernel/arch/i386/gdt:table",

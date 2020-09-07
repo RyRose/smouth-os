@@ -5,6 +5,6 @@ exports_files(srcs = ["qemu_test.go"])
 go_test(
     name = "go_default_test",
     srcs = ["qemu_test.go"],
-    tags = ["arch-only"],
+    tags = ["manual"],
     deps = ["//tools/go/qemu:go_default_library"],
 )

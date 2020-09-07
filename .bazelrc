@@ -20,8 +20,8 @@ test \
 
 # Build and use local toolchain.
 build:i386 \
-  --build_tag_filters i386,i386-only \
-  --test_tag_filters i386,i386-only \
+  --build_tag_filters i386,i386-only,arch-only \
+  --test_tag_filters i386,i386-only,arch-only \
   --crosstool_top=//tools/toolchain \
   --cpu=i386 \
   --compiler=g++ \
