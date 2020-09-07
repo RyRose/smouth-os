@@ -2,10 +2,11 @@ def arch_library(name, **kwargs):
     deps = kwargs.pop("deps", [])
     deps += select({
         "//tools/toolchain:i386": ["//kernel/arch/i386:" + name],
+        "//conditions:default": [],
     })
 
     tags = kwargs.pop("tags", [])
-    tags.extend(["arch-only", "i386"])
+    tags.extend(["i386"])
 
     native.cc_library(
         name = name,
@@ -17,13 +18,14 @@ def arch_library(name, **kwargs):
 
 def arch_file(name, **kwargs):
     tags = kwargs.pop("tags", [])
-    tags.extend(["arch-only", "i386"])
+    tags.extend(["i386"])
 
     native.filegroup(
         name = name,
         tags = tags,
         srcs = select({
             "//tools/toolchain:i386": ["//kernel/arch/i386:" + name],
+            "//conditions:default": [],
         }),
         **kwargs
     )
