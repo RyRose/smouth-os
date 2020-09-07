@@ -166,6 +166,7 @@ util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
 }  // namespace
 
 util::StatusOr<BootInfo> Initialize() {
+  libc::puts("== Initializing Stubs ==");
   InitializeStubs();
   libc::puts("== Initializing Serial Port ==");
   InitializeCOM1();

@@ -4,6 +4,19 @@ cc_library(
     name = "boot",
     srcs = [
         "boot.S",
+    ],
+    tags = [
+        "i386",
+        "i386-only",
+    ],
+    deps = [
+        ":boot-internal",
+    ],
+)
+
+cc_library(
+    name = "boot-internal",
+    srcs = [
         "boot.cc",
     ],
     hdrs = [
@@ -11,7 +24,6 @@ cc_library(
     ],
     tags = [
         "i386",
-        "i386-only",
     ],
     deps = [
         ":multiboot",
