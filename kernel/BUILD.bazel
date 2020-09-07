@@ -14,15 +14,3 @@ kernel_binary(
         "//util:check",
     ],
 )
-
-kernel_test(
-    name = "kernel_test",
-    srcs = [
-        "kernel_test.cc",
-    ],
-    deps = [
-        "//kernel/arch:init",
-        "//libc:stdio",
-        "//util:check",
-    ],
-)

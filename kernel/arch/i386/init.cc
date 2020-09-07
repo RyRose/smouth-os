@@ -20,13 +20,14 @@ namespace arch {
 
 namespace {
 
-INTERRUPT_SERVICE_ROUTINE(DummyHandler,
-                          { libc::puts("== Dummy Handler 0x80 =="); });
+INTERRUPT_SERVICE_ROUTINE(DummyHandler) {
+  libc::puts("== Dummy Handler 0x80 ==");
+}
 
-INTERRUPT_SERVICE_ROUTINE(DoubleFault, {
+INTERRUPT_SERVICE_ROUTINE(DoubleFault) {
   libc::puts("== Double Fault ==");
   libc::abort();
-});
+}
 
 InterruptDescriptorTable<256> idt;
 
@@ -86,8 +87,6 @@ void InitializeCOM1() {
                             /*line_control=*/IoPort(base + 3),
                             /*modem_control=*/IoPort(base + 4),
                             /*line_status=*/IoPort(base + 5));
-  // Write newline to get output on a different line than preamble text.
-  com1.Value().Write('\n');
 }
 
 LinearAllocator<100> linear_allocator;

@@ -62,21 +62,17 @@ def kernel_binary(name, **kwargs):
     )
 
     deps = kwargs.pop("deps", [])
-    deps.append("//cxx")
-    deps = depset(deps).to_list()  # de-dupe
+    deps.extend(["//cxx", "//kernel/arch:boot"])
 
     # Add arch-specific linker file as input and use it.
     additional_linker_inputs = kwargs.pop("additional_linker_inputs", [])
     additional_linker_inputs.append("//kernel/arch:linker.ld")
-    additional_linker_inputs = depset(additional_linker_inputs).to_list()  # de-dupe
     linkopts = kwargs.pop("linkopts", [])
     linkopts.append("-T $(location //kernel/arch:linker.ld)")
-    linkopts = depset(linkopts).to_list()  # de-dupe
 
     # # Add architecture tags to ensure it's properly captured in ... expansion.
     tags = kwargs.pop("tags", [])
     tags.extend(["arch-only", "i386"])
-    tags = depset(tags).to_list()  # de-dupe
 
     # crtbegin, crti, crtend, and crtn are specifically ordered such that the
     # global constructors and destructors are called correctly. crti/crtbegin
@@ -93,17 +89,16 @@ def kernel_binary(name, **kwargs):
         **kwargs
     )
 
-def kernel_test(name, srcs, deps, timeout="short", **kwargs):
+def kernel_test(name, timeout = "short", **kwargs):
     tags = kwargs.pop("tags", [])
     tags.extend(["arch-only", "i386"])
-    tags = depset(tags).to_list()  # de-dupe
 
     kernel = "%s_kernel_binary" % name
     kernel_binary(
         name = kernel,
-        srcs = srcs,
-        deps = deps,
+        srcs = kwargs.pop("srcs", []),
+        deps = kwargs.pop("deps", []),
         tags = tags,
         **kwargs
     )
-    qemu_test(name = name, kernel = kernel, tags = tags, timeout=timeout, **kwargs)
+    qemu_test(name = name, kernel = kernel, tags = tags, timeout = timeout, **kwargs)

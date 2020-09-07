@@ -3,11 +3,8 @@
 
 #define _INTERRUPT_SERVICE_ROUTINE_STRINGIZE(x) #x
 
-#define INTERRUPT_SERVICE_ROUTINE(name, function) \
-  extern "C" void name();                         \
-  namespace {                                     \
-  extern "C" void name##Internal() function       \
-  }                                               \
+#define INTERRUPT_SERVICE_ROUTINE(name)               \
+  extern "C" void name();                             \
   asm(".global " #name                              \
       "\n"                                          \
       ".align 4\n" #name                            \
@@ -17,6 +14,7 @@
       "call " _INTERRUPT_SERVICE_ROUTINE_STRINGIZE(name##Internal)   \
       "\n"                                          \
       "popal\n"                                     \
-      "iret\n")
+      "iret\n"); \
+  extern "C" void name##Internal()
 
 #endif  // KERNEL_ARCH_I386_INTERRUPT_MACROS_H

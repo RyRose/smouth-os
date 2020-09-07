@@ -1,6 +1,12 @@
 load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
+load("//kernel:templates.bzl", "kernel_test")
 
 package(default_visibility = ["//visibility:public"])
+
+arch_library(
+    name = "boot",
+    hdrs = [],
+)
 
 arch_library(
     name = "init",
@@ -8,6 +14,19 @@ arch_library(
         "//kernel/arch/common:memory",
         "//kernel/arch/common:serial",
         "//kernel/arch/common:tty",
+    ],
+)
+
+kernel_test(
+    name = "init_ktest",
+    srcs = [
+        "init_ktest.cc",
+    ],
+    deps = [
+        ":init",
+        "//kernel/testing:macros",
+        "//libc:stdio",
+        "//util:check",
     ],
 )
 

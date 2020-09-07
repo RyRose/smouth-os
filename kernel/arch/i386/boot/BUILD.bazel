@@ -9,9 +9,16 @@ cc_library(
     hdrs = [
         "boot.h",
     ],
-    tags = ["i386-only"],
+    tags = [
+        "i386",
+        "i386-only",
+    ],
     deps = [
         ":multiboot",
+        "//cxx:kernel",
+        "//kernel/arch/i386/io:io_port",
+        "//kernel/arch/i386/io:serial",
+        "//libc:kernel",
     ],
 )
 
