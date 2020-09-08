@@ -1,0 +1,70 @@
+package(default_visibility = ["//kernel:__subpackages__"])
+
+load("//kernel:templates.bzl", "kernel_test")
+
+cc_library(
+    name = "init",
+    srcs = [
+        "init.cc",
+    ],
+    hdrs = [
+        "init.h",
+    ],
+    deps = [
+        ":memory",
+        "//cxx:kernel",
+        "//kernel/arch:init",
+        "//libc:stdio",
+        "//util:status",
+    ],
+)
+
+kernel_test(
+    name = "init_ktest",
+    srcs = [
+        "init_ktest.cc",
+    ],
+    deps = [
+        ":init",
+        "//kernel/arch:init",
+        "//kernel/testing:macros",
+    ],
+)
+
+cc_library(
+    name = "memory",
+    hdrs = [
+        "memory.h",
+    ],
+    deps = [
+        "//kernel/arch/common:memory",
+        "//util:list",
+        "//util:status",
+    ],
+)
+
+cc_test(
+    name = "memory_test",
+    size = "small",
+    srcs = [
+        "memory_test.cc",
+    ],
+    deps = [
+        ":memory",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+kernel_test(
+    name = "memory_ktest",
+    srcs = [
+        "memory_ktest.cc",
+    ],
+    deps = [
+        ":memory",
+        "//kernel/arch:init",
+        "//kernel/testing:macros",
+    ],
+)

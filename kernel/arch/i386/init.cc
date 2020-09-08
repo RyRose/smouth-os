@@ -110,12 +110,13 @@ util::StatusOr<util::List<MemoryRegion, 100>> InitializeMemoryRegions(
     RETURN_IF_ERROR(entries.Add(region));
   }
 
-  MemoryRegion kernel_region;
-  kernel_region.address = reinterpret_cast<uint64_t>(&kKernelStart);
-  kernel_region.length =
-      reinterpret_cast<uint64_t>(&kKernelEnd) - kernel_region.address;
-  kernel_region.type = MemoryRegionType::RESERVED;
-  RETURN_IF_ERROR(entries.Add(kernel_region));
+  // Reserve memory for kernel data.
+  RETURN_IF_ERROR(entries.Add(
+      MemoryRegion(/*address=*/reinterpret_cast<uint64_t>(&kKernelStart),
+                   /*length=*/
+                   (reinterpret_cast<uint64_t>(&kKernelEnd) -
+                    reinterpret_cast<uint64_t>(&kKernelStart)),
+                   /*type=*/MemoryRegionType::RESERVED)));
   return entries;
 }
 
