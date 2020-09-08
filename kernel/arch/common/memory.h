@@ -10,6 +10,12 @@ namespace arch {
 enum class MemoryRegionType { AVAILABLE, RESERVED };
 
 struct MemoryRegion {
+ public:
+  MemoryRegion(uint64_t address, uint64_t length, MemoryRegionType type)
+      : address(address), length(length), type(type){};
+
+  MemoryRegion() = default;
+
   uint64_t address;
   uint64_t length;
   MemoryRegionType type;
