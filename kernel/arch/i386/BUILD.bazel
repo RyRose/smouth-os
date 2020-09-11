@@ -58,7 +58,7 @@ cc_library(
         "//kernel/arch/i386/gdt:flush",
         "//kernel/arch/i386/gdt:table",
         "//kernel/arch/i386/instructions",
-        "//kernel/arch/i386/interrupt:macros",
+        "//kernel/arch/i386/interrupt:isrs",
         "//kernel/arch/i386/interrupt:table",
         "//kernel/arch/i386/io:serial",
         "//libc:kernel",

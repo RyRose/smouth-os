@@ -6,12 +6,11 @@
 #include "kernel/arch/i386/gdt/flush.h"
 #include "kernel/arch/i386/gdt/table.h"
 #include "kernel/arch/i386/instructions/instructions.h"
-#include "kernel/arch/i386/interrupt/macros.h"
+#include "kernel/arch/i386/interrupt/isrs.h"
 #include "kernel/arch/i386/interrupt/table.h"
 #include "kernel/arch/i386/io/serial.h"
 #include "libc/kernel.h"
 #include "libc/stdio.h"
-#include "util/check.h"
 #include "util/optional.h"
 #include "util/status.h"
 
@@ -19,30 +18,25 @@ namespace arch {
 
 namespace {
 
-INTERRUPT_SERVICE_ROUTINE(DummyHandler) {
-  libc::puts("== Dummy Handler 0x80 ==");
-}
-
-INTERRUPT_SERVICE_ROUTINE(DoubleFault) {
-  libc::puts("== Double Fault ==");
-  libc::abort();
-}
-
 InterruptDescriptorTable<256> idt;
 
 util::Status InitializeInterrupts() {
-  ASSIGN_OR_RETURN(const auto& dummy_handler,
-                   GateDescriptor::Create(
-                       /*offset=*/reinterpret_cast<uintptr_t>(DummyHandler),
-                       /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
-                       /*dpl=*/0));
-  ASSIGN_OR_RETURN(const auto& double_fault,
-                   GateDescriptor::Create(
-                       /*offset=*/reinterpret_cast<uintptr_t>(DoubleFault),
-                       /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
-                       /*dpl=*/0));
-  RETURN_IF_ERROR(idt.Register(0x8, double_fault));
+  ASSIGN_OR_RETURN(
+      const auto& dummy_handler,
+      GateDescriptor::Create(
+          /*offset=*/reinterpret_cast<uintptr_t>(isrs::dummy_handler),
+          /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
+          /*dpl=*/0));
   RETURN_IF_ERROR(idt.Register(0x80, dummy_handler));
+
+  ASSIGN_OR_RETURN(
+      const auto& double_fault,
+      GateDescriptor::Create(
+          /*offset=*/reinterpret_cast<uintptr_t>(isrs::double_fault),
+          /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
+          /*dpl=*/0));
+  RETURN_IF_ERROR(idt.Register(0x8, double_fault));
+
   libc::printf("Loading IDT with IDTR 0x%x.\n", idt.IDTR());
   RETURN_IF_ERROR(instructions::LIDT(idt.IDTR()));
   libc::puts("Triggering interrupt handler 0x80.");
@@ -209,10 +203,12 @@ util::StatusOr<BootInfo> Initialize() {
 
   libc::puts("== Initializing Serial Port ==");
   InitializeCOM1();
+  RET_CHECK(com1.Exists());
   info.com1 = &com1.Value();
 
   libc::puts("== Initializing Terminal ==");
   RETURN_IF_ERROR(InitializeTTY(reinterpret_cast<uint16_t*>(0xB8000)));
+  RET_CHECK(tty.Exists());
   info.tty = &tty.Value();
 
   libc::puts("== Multiboot Info ==");
