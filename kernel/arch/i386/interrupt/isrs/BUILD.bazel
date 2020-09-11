@@ -1,0 +1,23 @@
+load("//kernel/arch/i386/interrupt/isrs:interrupt_service_routine.bzl", "interrupt_service_routine")
+
+package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
+
+exports_files(["isrs.S"])
+
+filegroup(
+    name = "isrs",
+    srcs = [
+        ":double_fault",
+        ":dummy_handler",
+    ],
+)
+
+[
+    interrupt_service_routine(
+        name = name,
+    )
+    for name in [
+        "dummy_handler",
+        "double_fault",
+    ]
+]

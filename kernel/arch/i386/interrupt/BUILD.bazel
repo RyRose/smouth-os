@@ -31,9 +31,20 @@ cc_test(
 )
 
 cc_library(
-    name = "macros",
-    hdrs = [
-        "macros.h",
+    name = "isrs",
+    srcs = [
+        "isrs.cc",
+        "//kernel/arch/i386/interrupt/isrs",
     ],
-    tags = ["i386-only"],
+    hdrs = [
+        "isrs.h",
+    ],
+    tags = [
+        "i386",
+        "i386-only",
+    ],
+    deps = [
+        "//libc:stdio",
+        "//libc:stdlib",
+    ],
 )
