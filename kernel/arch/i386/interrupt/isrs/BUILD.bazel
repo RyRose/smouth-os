@@ -2,7 +2,7 @@ load("//kernel/arch/i386/interrupt/isrs:interrupt_service_routine.bzl", "interru
 
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
-exports_files(["isrs.S"])
+exports_files(["isr.S"])
 
 filegroup(
     name = "isrs",

@@ -15,7 +15,7 @@ util::StatusOr<GateDescriptor> GateDescriptor::Create(uint32_t offset,
   descriptor.offset_first = offset & 0xFFFFu;
   descriptor.offset_second = offset >> 16u;
   descriptor.segment_selector = segment_selector;
-  descriptor.gate_type = gate_type;
+  descriptor.gate_type = static_cast<uint8_t>(gate_type);
   descriptor.dpl = dpl;
   descriptor.present = true;
   return descriptor;

@@ -1,7 +1,7 @@
-#include "kernel/arch/i386/gdt/table.h"
-#include "util/status.h"
 
-#include "libc/string.h"
+#include "kernel/arch/i386/gdt/table.h"
+
+#include "util/status.h"
 
 namespace arch {
 
