@@ -8,7 +8,6 @@ class Either {
  public:
   Either(const Left& left_) : left(left_), is_left(true) {}
   Either(const Right& right_) : right(right_), is_left(false) {}
-  Either(Either<Left, Right>&&);
   Either() = delete;
 
   union {

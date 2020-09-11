@@ -23,7 +23,7 @@ void* operator new(size_t size) {
   }
   auto ptr_or = cxx::kernel_new(size);
   if (!ptr_or.Ok()) {
-    panic(ptr_or.Status().Message());
+    panic(ptr_or.AsStatus().Message());
   }
   return ptr_or.Value();
 }
@@ -34,7 +34,7 @@ void* operator new[](size_t size) {
   }
   auto ptr_or = cxx::kernel_new(size);
   if (!ptr_or.Ok()) {
-    panic(ptr_or.Status().Message());
+    panic(ptr_or.AsStatus().Message());
   }
   return ptr_or.Value();
 }
