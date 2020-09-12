@@ -21,7 +21,7 @@ TEST(List, TestSingleAdd) {
 
 TEST(List, TestAddOverflow) {
   List<int, 10> list;
-  for (int i = 0; i < list.Capacity(); i++) {
+  for (size_t i = 0; i < list.Capacity(); i++) {
     EXPECT_OK(list.Add(i));
     ASSERT_OK_AND_ASSIGN(const auto* val, list.At(i));
     EXPECT_EQ(i, *val);
@@ -47,7 +47,7 @@ TEST(List, TestSingleInsertNotFront) {
 
 TEST(List, TestInsertShift) {
   List<int, 10> list;
-  for (int i = 0; i < 8; i++) {
+  for (size_t i = 0; i < 8; i++) {
     ASSERT_OK(list.Add(i));
   }
   EXPECT_OK(list.Insert(4, 100));
@@ -62,7 +62,7 @@ TEST(List, TestInsertShift) {
 
 TEST(List, TestInsertOverflow) {
   List<int, 10> list;
-  for (int i = 0; i < list.Capacity(); i++) {
+  for (size_t i = 0; i < list.Capacity(); i++) {
     EXPECT_OK(list.Add(i));
   }
   EXPECT_EQ(10, list.Size());
@@ -77,7 +77,7 @@ TEST(List, TestInsertBadIndex) {
 
 TEST(List, TestSet) {
   List<int, 10> list;
-  for (int i = 0; i < list.Capacity(); i++) {
+  for (size_t i = 0; i < list.Capacity(); i++) {
     ASSERT_OK(list.Add(i));
   }
   EXPECT_OK(list.Set(7, 1312));

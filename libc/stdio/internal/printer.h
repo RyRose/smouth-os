@@ -39,10 +39,6 @@ class Printer {
       case PrintType::BUFFER:
         buffer_[index_] = '\0';
         return length + 1;
-      case PrintType::KERNEL:
-        [[fallthrough]];
-      case PrintType::DRY_RUN:
-        [[fallthrough]];
       default:
         return length;
     }
