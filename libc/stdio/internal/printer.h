@@ -8,33 +8,103 @@
 
 namespace libc {
 
+enum class PrintType {
+  KERNEL,
+  BUFFER,
+  BUFFER_MAXIMUM,
+  DRY_RUN,
+};
+
 class Printer {
  public:
+  Printer() : Printer(PrintType::KERNEL) {}
+  explicit Printer(PrintType type) : Printer(type, nullptr) {}
+
+  Printer(PrintType type, char* buffer) : Printer(type, buffer, 0) {}
+
+  Printer(PrintType type, char* buffer, size_t maximum)
+      : type_(type), buffer_(buffer), maximum_(maximum), index_(0) {}
+
   template <typename T, typename... Args>
   util::StatusOr<int> Printf(const char* format, const T& value,
                              const Args&... args) {
+    ASSIGN_OR_RETURN(const int length, PrintfInternal(format, value, args...));
+    switch (type_) {
+      case PrintType::BUFFER_MAXIMUM:
+        if (length >= maximum_) {
+          buffer_[index_ - 1] = '\0';
+          return length;
+        }
+        [[fallthrough]];
+      case PrintType::BUFFER:
+        buffer_[index_] = '\0';
+        return length + 1;
+      case PrintType::KERNEL:
+        [[fallthrough]];
+      case PrintType::DRY_RUN:
+        [[fallthrough]];
+      default:
+        return length;
+    }
+  }
+
+  util::StatusOr<int> Printf(const char* format) {
+    return Printf("%s", format);
+  }
+
+ private:
+  PrintType type_;
+  char* buffer_;
+  int maximum_;
+  int index_;
+
+  template <typename T, typename... Args>
+  util::StatusOr<int> PrintfInternal(const char* format, const T& value,
+                                     const Args&... args) {
     int i = 0;
     while (*format) {
       if (*format != '%' || *(++format) == '%') {
-        RETURN_IF_ERROR(PutChar(*format));
-        i++;
+        ASSIGN_OR_RETURN(const int temp, PutChar(*format));
+        i += temp;
         format++;
         continue;
       }
       ASSIGN_OR_RETURN(const auto& print_length, Print(value, *format));
-      ASSIGN_OR_RETURN(const auto& printf_length, Printf(++format, args...));
+      ASSIGN_OR_RETURN(const auto& printf_length,
+                       PrintfInternal(++format, args...));
       return i + print_length + printf_length;
     }
     return util::Status(util::ErrorCode::INVALID_ARGUMENT,
                         "too many printf formatters specified.");
   }
 
-  util::StatusOr<int> Printf(const char* format) { return Print(format, 's'); }
+  util::StatusOr<int> PrintfInternal(const char* format) {
+    return Print(format, 's');
+  }
 
- private:
-  util::Status PutChar(int ic) {
-    RET_CHECK(kernel_put != nullptr, "kernel_put API null.");
-    return kernel_put(static_cast<char>(ic));
+  util::StatusOr<int> PutChar(char ic) {
+    switch (type_) {
+      case PrintType::KERNEL:
+        RET_CHECK(kernel_put != nullptr, "kernel_put API null.");
+        RETURN_IF_ERROR(kernel_put(ic));
+        return 1;
+      case PrintType::BUFFER:
+        buffer_[index_] = ic;
+        index_++;
+        return 1;
+      case PrintType::BUFFER_MAXIMUM:
+        if (index_ >= maximum_) {
+          return 0;
+        }
+        buffer_[index_] = ic;
+        index_++;
+        return 1;
+      case PrintType::DRY_RUN:
+        return 1;
+      default:
+        return util::Status(util::ErrorCode::INVALID_ARGUMENT,
+                            "invalid print type provided");
+    }
   }
 
   template <class V>
@@ -63,9 +133,10 @@ class Printer {
       i++;
     }
 
-    int ret = i;
+    int ret = 0;
     for (i--; i >= 0; i--) {
-      RETURN_IF_ERROR(PutChar(converted[i]));
+      ASSIGN_OR_RETURN(const int result, PutChar(converted[i]));
+      ret += result;
     }
     return ret;
   }
@@ -104,29 +175,31 @@ class Printer {
   util::StatusOr<int> Print(char data, char c) {
     ASSIGN_OR_RETURN(const auto* ptr, strchr("%cv", c));
     RET_CHECK(ptr != nullptr);
-    RETURN_IF_ERROR(PutChar(data));
-    return 1;
+    return PutChar(data);
   }
 
   util::StatusOr<int> Print(const char* data, char c) {
     ASSIGN_OR_RETURN(const auto* ptr, strchr("sqv", c));
     RET_CHECK(ptr != nullptr);
+    int count = 0;
     if (c == 'q') {
-      RETURN_IF_ERROR(PutChar('"'));
+      ASSIGN_OR_RETURN(const int temp, PutChar('"'));
+      count += temp;
     }
-    int i = 0;
-    for (; data[i]; i++) {
+    for (int i = 0; data[i]; i++) {
       if (c == 'q' && data[i] == '"') {
-        RETURN_IF_ERROR(PutChar('\\'));
+        ASSIGN_OR_RETURN(const int temp, PutChar('\\'));
+        count += temp;
         i += 1;
       }
-      RETURN_IF_ERROR(PutChar(data[i]));
+      ASSIGN_OR_RETURN(const int temp, PutChar(data[i]));
+      count += temp;
     }
     if (c == 'q') {
-      RETURN_IF_ERROR(PutChar('"'));
-      i += 1;
+      ASSIGN_OR_RETURN(const int temp, PutChar('"'));
+      count += temp;
     }
-    return i;
+    return count;
   }
 };
 

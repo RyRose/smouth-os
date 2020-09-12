@@ -9,8 +9,6 @@
 
 namespace libc {
 
-util::Status putchar(int);
-
 template <typename T, typename... Args>
 util::StatusOr<int> printf(const char* format, const T& value,
                            const Args&... args) {
@@ -18,7 +16,41 @@ util::StatusOr<int> printf(const char* format, const T& value,
   return p.Printf(format, value, args...);
 }
 
+util::StatusOr<int> printf(const char* format);
+
+template <typename T, typename... Args>
+util::StatusOr<int> sprintf(char* buffer, const char* format, const T& value,
+                            const Args&... args) {
+  Printer p(PrintType::BUFFER, buffer);
+  return p.Printf(format, value, args...);
+}
+
+util::StatusOr<int> sprintf(char* buffer, const char* format);
+
+template <typename T, typename... Args>
+util::StatusOr<int> snprintf(char* buffer, size_t bufsz, const char* format,
+                             const T& value, const Args&... args) {
+  Printer p(PrintType::BUFFER_MAXIMUM, buffer, bufsz);
+  return p.Printf(format, value, args...);
+}
+
+util::StatusOr<int> snprintf(char* buffer, size_t bufsz, const char* format);
+
+template <typename T, typename... Args>
+util::StatusOr<int> asprintf(char** strp, const char* format, const T& value,
+                             const Args&... args) {
+  Printer dry_runner(PrintType::DRY_RUN);
+  ASSIGN_OR_RETURN(const int len, dry_runner.Printf(format, value, args...));
+  *strp = new char[len];
+  Printer p(PrintType::BUFFER, *strp);
+  return p.Printf(format, value, args...);
+}
+
+util::StatusOr<int> asprintf(char** strp, const char* format);
+
 util::StatusOr<int> puts(const char*);
+
+util::Status putchar(int);
 
 }  // namespace libc
 
