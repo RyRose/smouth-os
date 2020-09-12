@@ -3,11 +3,13 @@
 
 namespace libc {
 
+util::StatusOr<int> printf(const char* format) {
+  Printer p;
+  return p.Printf(format);
+}
+
 util::StatusOr<int> puts(const char* string) { return printf("%s\n", string); }
 
-util::Status putchar(int ic) {
-  RET_CHECK(kernel_put != nullptr, "kernel_put API null.");
-  return kernel_put(static_cast<char>(ic));
-}
+util::Status putchar(int ic) { return printf("%c", static_cast<char>(ic)); }
 
 }  // namespace libc
