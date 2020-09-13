@@ -85,7 +85,7 @@ TEST(RetCheckF, Equals) {
   const util::Status actual = eq(5, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:13: _lhs == _rhs: a (5) == b (10) not true: 1, "
+      "util/ret_checkf_test.cc:12: _lhs == _rhs: a (5) == b (10) not true: 1, "
       "2, 3, 4, 5",
       actual.Message());
 }
@@ -95,7 +95,7 @@ TEST(RetCheckF, EqualsEmpty) {
   const util::Status actual = eqEmpty(5, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:48: _lhs == _rhs: a (5) == b (10) not true: "
+      "util/ret_checkf_test.cc:47: _lhs == _rhs: a (5) == b (10) not true: "
       "INTERNAL",
       actual.Message());
 }
@@ -105,7 +105,7 @@ TEST(RetCheckF, NotEquals) {
   const util::Status actual = ne(10, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:18: _lhs != _rhs: a (10) != b (10) not true: 1, "
+      "util/ret_checkf_test.cc:17: _lhs != _rhs: a (10) != b (10) not true: 1, "
       "2, 3, 4, 5",
       actual.Message());
 }
@@ -115,7 +115,7 @@ TEST(RetCheckF, NotEqualsEmpty) {
   const util::Status actual = neEmpty(10, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:53: _lhs != _rhs: a (10) != b (10) not true: "
+      "util/ret_checkf_test.cc:52: _lhs != _rhs: a (10) != b (10) not true: "
       "INTERNAL",
       actual.Message());
 }
@@ -125,7 +125,7 @@ TEST(RetCheckF, LessThan) {
   const util::Status actual = lt(15, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:23: _lhs < _rhs: a (15) < b (10) not true: 1, "
+      "util/ret_checkf_test.cc:22: _lhs < _rhs: a (15) < b (10) not true: 1, "
       "2, 3, 4, 5",
       actual.Message());
 }
@@ -135,7 +135,7 @@ TEST(RetCheckF, LessThanEmpty) {
   const util::Status actual = ltEmpty(15, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:58: _lhs < _rhs: a (15) < b (10) not true: "
+      "util/ret_checkf_test.cc:57: _lhs < _rhs: a (15) < b (10) not true: "
       "INTERNAL",
       actual.Message());
 }
@@ -146,7 +146,7 @@ TEST(RetCheckF, LessThanEquals) {
   const util::Status actual = le(15, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:28: _lhs <= _rhs: a (15) <= b (10) not true: 1, "
+      "util/ret_checkf_test.cc:27: _lhs <= _rhs: a (15) <= b (10) not true: 1, "
       "2, 3, 4, 5",
       actual.Message());
 }
@@ -157,7 +157,7 @@ TEST(RetCheckF, LessThanEqualsEmpty) {
   const util::Status actual = leEmpty(15, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:63: _lhs <= _rhs: a (15) <= b (10) not true: "
+      "util/ret_checkf_test.cc:62: _lhs <= _rhs: a (15) <= b (10) not true: "
       "INTERNAL",
       actual.Message());
 }
@@ -167,7 +167,7 @@ TEST(RetCheckF, GreaterThan) {
   const util::Status actual = gt(10, 15);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:33: _lhs > _rhs: a (10) > b (15) not true: 1, "
+      "util/ret_checkf_test.cc:32: _lhs > _rhs: a (10) > b (15) not true: 1, "
       "2, 3, 4, 5",
       actual.Message());
 }
@@ -177,7 +177,7 @@ TEST(RetCheckF, GreaterThanEmpty) {
   const util::Status actual = gtEmpty(10, 15);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:68: _lhs > _rhs: a (10) > b (15) not true: "
+      "util/ret_checkf_test.cc:67: _lhs > _rhs: a (10) > b (15) not true: "
       "INTERNAL",
       actual.Message());
 }
@@ -188,7 +188,7 @@ TEST(RetCheckF, GreaterThanEquals) {
   const util::Status actual = ge(10, 15);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:38: _lhs >= _rhs: a (10) >= b (15) not true: 1, "
+      "util/ret_checkf_test.cc:37: _lhs >= _rhs: a (10) >= b (15) not true: 1, "
       "2, 3, 4, 5",
       actual.Message());
 }
@@ -199,7 +199,7 @@ TEST(RetCheckF, GreaterThanEqualsEmpty) {
   const util::Status actual = geEmpty(10, 15);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:73: _lhs >= _rhs: a (10) >= b (15) not true: "
+      "util/ret_checkf_test.cc:72: _lhs >= _rhs: a (10) >= b (15) not true: "
       "INTERNAL",
       actual.Message());
 }
@@ -208,7 +208,7 @@ TEST(RetCheckF, Check) {
   EXPECT_OK(check(true));
   const util::Status actual = check(false);
   ASSERT_NOT_OK(actual);
-  EXPECT_STREQ("util/ret_checkf_test.cc:43: condition: 1, 2, 3, 4, 5",
+  EXPECT_STREQ("util/ret_checkf_test.cc:42: condition: 1, 2, 3, 4, 5",
                actual.Message());
 }
 
@@ -216,7 +216,7 @@ TEST(RetCheckF, CheckEmpty) {
   EXPECT_OK(checkEmpty(true));
   const util::Status actual = checkEmpty(false);
   ASSERT_NOT_OK(actual);
-  EXPECT_STREQ("util/ret_checkf_test.cc:78: 'condition' not true",
+  EXPECT_STREQ("util/ret_checkf_test.cc:77: 'condition' not true",
                actual.Message());
 }
 
