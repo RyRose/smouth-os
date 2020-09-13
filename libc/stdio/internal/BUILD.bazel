@@ -1,0 +1,11 @@
+package(default_visibility = ["//libc:__subpackages__"])
+
+cc_library(
+    name = "printer",
+    hdrs = ["printer.h"],
+    deps = [
+        "//libc:kernel",
+        "//libc:string",
+        "//util:status",
+    ],
+)

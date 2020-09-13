@@ -23,7 +23,7 @@ void* operator new(size_t size) {
   }
   auto ptr_or = cxx::kernel_new(size);
   if (!ptr_or.Ok()) {
-    panic(ptr_or.Status().Message());
+    panic(ptr_or.AsStatus().Message());
   }
   return ptr_or.Value();
 }
@@ -34,22 +34,22 @@ void* operator new[](size_t size) {
   }
   auto ptr_or = cxx::kernel_new(size);
   if (!ptr_or.Ok()) {
-    panic(ptr_or.Status().Message());
+    panic(ptr_or.AsStatus().Message());
   }
   return ptr_or.Value();
 }
 
-void operator delete(void*) {
+void operator delete(void*)noexcept {
   panic("TODO(RyRose): kernel delete unavailable for delete* call");
 }
 
-void operator delete[](void*) {
+void operator delete[](void*) noexcept {
   panic("TODO(RyRose): kernel delete unavailable for delete[] call");
 }
 
 // In-place new assumes that caller knows the memory address of p to be valid.
-void* operator new(size_t, void* p) throw() { return p; }
-void* operator new[](size_t, void* p) throw() { return p; }
+void* operator new(size_t, void* p) noexcept { return p; }
+void* operator new[](size_t, void* p) noexcept { return p; }
 
 // Dummy implementations of delete here to ensure the linker doesn't complain.
 void operator delete(void*, size_t) throw() {}

@@ -70,3 +70,35 @@ TEST_F(StdioTest, HexIntsBig) {
   EXPECT_EQ("ABDC124356789012 test aecdb123", *kernel_cache);
   EXPECT_EQ(30, length);
 }
+
+TEST_F(StdioTest, Sprintf) {
+  char actual[100];
+  ASSERT_OK_AND_ASSIGN(const auto& length, libc::sprintf(actual, "test"));
+  const char* expected = "test";
+  for (int i = 0; i < 5; i++) {
+    EXPECT_EQ(expected[i], actual[i]);
+  }
+  EXPECT_EQ(5, length);
+}
+
+TEST_F(StdioTest, Snprintf) {
+  char actual[4];
+  ASSERT_OK_AND_ASSIGN(const auto& length,
+                       libc::snprintf(actual, 4, "test %s", "foo"));
+  const char* expected = "tes";
+  for (int i = 0; i < 4; i++) {
+    EXPECT_EQ(expected[i], actual[i]);
+  }
+  EXPECT_EQ(4, length);
+}
+
+TEST_F(StdioTest, Asprintf) {
+  char* actual;
+  ASSERT_OK_AND_ASSIGN(const auto& length,
+                       libc::asprintf(&actual, "test %s", "foo"));
+  const char* expected = "test foo";
+  for (int i = 0; i < 9; i++) {
+    EXPECT_EQ(expected[i], actual[i]);
+  }
+  EXPECT_EQ(9, length);
+}

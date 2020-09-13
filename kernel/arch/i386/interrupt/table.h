@@ -13,7 +13,7 @@
 
 namespace arch {
 
-enum GateType {
+enum class GateType {
   EMPTY = 0u,
   TASK = 0x5u,
   INTERRUPT_32BIT = 0xEu,
@@ -33,7 +33,7 @@ struct GateDescriptor {
       : offset_first(0),
         segment_selector(0),
         zeroes(0),
-        gate_type(GateType::EMPTY),
+        gate_type(static_cast<uint8_t>(GateType::EMPTY)),
         segment(false),
         dpl(0),
         present(false),
@@ -49,7 +49,7 @@ struct GateDescriptor {
   uint8_t zeroes : 8;
   // Four bits that determine the gate type (Interrupt/Task/Trap) and 16/32
   // bitness.
-  GateType gate_type : 4;
+  uint8_t gate_type : 4;
   // Whether this descriptor points to a code/data segment. Else, it points
   // to some other system segment. We consider interrupt handlers some other
   // system segment and thus this bit should always be false.

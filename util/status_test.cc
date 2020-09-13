@@ -12,6 +12,8 @@ util::StatusOr<int> asPositive(int a) {
   return -a;
 }
 
+util::Status asPositiveStatus(int a) { return asPositive(a); }
+
 util::StatusOr<int> negativePlusFive(int a) {
   ASSIGN_OR_RETURN(const auto& pos, asPositive(a));
   return pos + 5;
@@ -42,13 +44,13 @@ TEST(Status, TestExplicitConstructor) {
 TEST(StatusOr, TestErrorCode) {
   StatusOr<int> status_or = ErrorCode::UNKNOWN;
   EXPECT_FALSE(status_or.Ok());
-  EXPECT_EQ(ErrorCode::UNKNOWN, status_or.Status().Code());
+  EXPECT_EQ(ErrorCode::UNKNOWN, status_or.AsStatus().Code());
 }
 
 TEST(StatusOr, TestStatus) {
   StatusOr<int> status_or = Status();
   EXPECT_FALSE(status_or.Ok());
-  EXPECT_EQ(ErrorCode::OK, status_or.Status().Code());
+  EXPECT_EQ(ErrorCode::OK, status_or.AsStatus().Code());
 }
 
 TEST(StatusOr, TestValue) {
@@ -72,6 +74,11 @@ TEST(Macros, AssignOrReturn) {
   EXPECT_TRUE(negativePlusFive(-10).Ok());
   ASSERT_OK_AND_ASSIGN(const auto& value, negativePlusFive(-10));
   EXPECT_EQ(15, value);
+}
+
+TEST(Macros, StatusOrToStatus) {
+  EXPECT_OK(asPositiveStatus(-5));
+  EXPECT_NOT_OK(asPositiveStatus(5));
 }
 
 }  // namespace util

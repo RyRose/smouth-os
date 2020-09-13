@@ -25,7 +25,7 @@ util::Status InitializeInterrupts() {
       const auto& dummy_handler,
       GateDescriptor::Create(
           /*offset=*/reinterpret_cast<uintptr_t>(isrs::dummy_handler),
-          /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
+          /*segment_selector=*/0x8, /*gate_type=*/GateType::INTERRUPT_32BIT,
           /*dpl=*/0));
   RETURN_IF_ERROR(idt.Register(0x80, dummy_handler));
 
@@ -33,7 +33,7 @@ util::Status InitializeInterrupts() {
       const auto& double_fault,
       GateDescriptor::Create(
           /*offset=*/reinterpret_cast<uintptr_t>(isrs::double_fault),
-          /*segment_selector=*/0x8, /*gate_type=*/INTERRUPT_32BIT,
+          /*segment_selector=*/0x8, /*gate_type=*/GateType::INTERRUPT_32BIT,
           /*dpl=*/0));
   RETURN_IF_ERROR(idt.Register(0x8, double_fault));
 

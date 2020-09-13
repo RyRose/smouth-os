@@ -8,12 +8,12 @@ void* operator new(size_t);
 
 void* operator new[](size_t);
 
-void operator delete(void* p);
+void operator delete(void* p) noexcept;
 
-void operator delete[](void* p);
+void operator delete[](void* p) noexcept;
 
-void* operator new(size_t, void*) throw();
-void* operator new[](size_t, void*) throw();
+void* operator new(size_t, void*) noexcept;
+void* operator new[](size_t, void*) noexcept;
 void operator delete(void* p, size_t size) throw();
 void operator delete[](void* p, size_t size) throw();
 

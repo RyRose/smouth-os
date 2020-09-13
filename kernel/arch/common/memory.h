@@ -11,8 +11,8 @@ enum class MemoryRegionType { AVAILABLE, RESERVED };
 
 struct MemoryRegion {
  public:
-  MemoryRegion(uint64_t address, uint64_t length, MemoryRegionType type)
-      : address(address), length(length), type(type){};
+  MemoryRegion(uint64_t address_, uint64_t length_, MemoryRegionType type_)
+      : address(address_), length(length_), type(type_){};
 
   MemoryRegion() = default;
 

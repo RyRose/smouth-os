@@ -16,14 +16,24 @@ enum class ErrorCode {
 
 const char* ErrorCodeName(const ErrorCode& code);
 
+template <class T>
+class StatusOr;
+
 // A class to represent if a function either resulted in an error or was ok.
 class Status {
  public:
   Status() : Status(ErrorCode::OK) {}
+  template <class T>
+  Status(StatusOr<T> status_or) : Status(status_or.AsStatus()) {}
   explicit Status(ErrorCode code) : Status(code, "") {}
+  // TODO(RyRose): Free the memory from strings passed in this way.
+  explicit Status(char* message) : Status(const_cast<const char*>(message)) {}
   explicit Status(const char* message) : Status(ErrorCode::UNKNOWN, message) {}
+
   Status(ErrorCode code, const char* message)
       : code_(code), message_(message) {}
+
+  Status(const util::Status&) = default;
 
   // Returns the error code.
   ErrorCode Code() const { return code_; }
@@ -34,8 +44,9 @@ class Status {
   // Returns whether the status is ok.
   bool Ok() const { return code_ == ErrorCode::OK; }
 
-  const Status& AsStatus() const { return *this; }
+  Status AsStatus() const { return *this; }
 
+ private:
   // The type of error.
   ErrorCode code_;
   const char* message_;
@@ -52,8 +63,12 @@ class StatusOr : public Either<util::Status, V> {
   StatusOr() = delete;
 
   bool Ok() const { return !this->is_left; }
-  const util::Status& Status() const { return this->left; }
-  const util::Status& AsStatus() const { return this->left; }
+  util::Status AsStatus() const {
+    if (this->Ok()) {
+      return {};
+    }
+    return this->left;
+  }
   const V& Value() const { return this->right; }
 };
 

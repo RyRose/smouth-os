@@ -20,7 +20,7 @@ def _interrupt_service_routine_impl(ctx):
 interrupt_service_routine = rule(
     implementation = _interrupt_service_routine_impl,
     attrs = {
-        "_template": attr.label(default = Label("//kernel/arch/i386/interrupt/isrs:isrs.S"), allow_single_file = True),
+        "_template": attr.label(default = Label("//kernel/arch/i386/interrupt/isrs:isr.S"), allow_single_file = True),
         "interrupt_service_routine_c": attr.string(default = ""),
         "interrupt_service_routine": attr.string(default = ""),
     },

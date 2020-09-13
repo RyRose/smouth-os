@@ -98,7 +98,7 @@ def compiler_flags(name, workspace, target):
                             "-Wrestrict",
                             "-Wshadow",
                             "-Wswitch-default",
-                            "-Wswitch-enum",
+                            "-Wswitch",
                             "-Wunused-but-set-parameter",
                             "-Wuseless-cast",
                             "-fdiagnostics-color=always",

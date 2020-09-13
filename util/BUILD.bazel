@@ -29,6 +29,32 @@ cc_test(
 )
 
 cc_library(
+    name = "ret_checkf",
+    hdrs = [
+        "ret_checkf.h",
+    ],
+    deps = [
+        ":overload_macros",
+        ":status",
+        "//libc:stdio",
+    ],
+)
+
+cc_test(
+    name = "ret_checkf_test",
+    size = "small",
+    srcs = [
+        "ret_checkf_test.cc",
+    ],
+    deps = [
+        ":ret_checkf",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "either",
     hdrs = [
         "either.h",

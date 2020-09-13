@@ -21,6 +21,7 @@ cc_library(
         "//libc:kernel",
         "//libc:stdlib",
         "//libc:string",
+        "//libc/stdio/internal:printer",
         "//util:status",
     ],
 )
