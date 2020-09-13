@@ -164,11 +164,19 @@ class Printer {
 
   template <typename T>
   util::StatusOr<int> Print(T* data, char c) {
-    RET_CHECK(c == 'p');
+    ASSIGN_OR_RETURN(const auto* ptr, strchr("vp", c));
+    RET_CHECK(ptr != nullptr);
     return PrintNumber<uintptr_t>(reinterpret_cast<uintptr_t>(data), 16, true);
   }
 
-  util::StatusOr<int> Print(char data, char c) {
+  util::StatusOr<int> Print(const nullptr_t, char c) {
+    ASSIGN_OR_RETURN(const auto* ptr, strchr("vp", c));
+    RET_CHECK(ptr != nullptr);
+    return PrintNumber<uintptr_t>(reinterpret_cast<uintptr_t>(nullptr), 16,
+                                  true);
+  }
+
+  util::StatusOr<int> Print(const char data, char c) {
     ASSIGN_OR_RETURN(const auto* ptr, strchr("%cv", c));
     RET_CHECK(ptr != nullptr);
     return PutChar(data);

@@ -26,6 +26,8 @@ class Status {
   template <class T>
   Status(StatusOr<T> status_or) : Status(status_or.AsStatus()) {}
   explicit Status(ErrorCode code) : Status(code, "") {}
+  // TODO(RyRose): Free the memory from strings passed in this way.
+  explicit Status(char* message) : Status(const_cast<const char*>(message)) {}
   explicit Status(const char* message) : Status(ErrorCode::UNKNOWN, message) {}
 
   Status(ErrorCode code, const char* message)
