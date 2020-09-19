@@ -1,6 +1,7 @@
 
 #include "kernel/arch/i386/gdt/table.h"
 
+#include "util/ret_checkf.h"
 #include "util/status.h"
 
 namespace arch {
@@ -9,10 +10,11 @@ util::StatusOr<Descriptor> Descriptor::Create(uint32_t base, uint32_t limit,
                                               uint8_t segment_type,
                                               bool descriptor_type, uint8_t dpl,
                                               bool db, bool granularity) {
-  RET_CHECK((limit >> 20u) == 0, "high 12 bit of limit is non-zero");
-  RET_CHECK((dpl & 0xFCu) == 0, "high 6 bits of dpl is non-zero");
-  RET_CHECK((segment_type & 0xF0u) == 0,
-            "high 4 bits of segment type is non-zero");
+  RET_CHECKF_EQ(limit >> 20u, 0u, "high 12 bits of limit (0x%x) is non-zero",
+                limit);
+  RET_CHECKF_EQ(dpl & 0xFCu, 0u, "high 6 bits of dpl (0x%x) is non-zero", dpl);
+  RET_CHECKF_EQ(segment_type & 0xF0u, 0u,
+                "high 4 bits of segment type (0x%x) is non-zero", segment_type);
 
   Descriptor d;
   d.base0 = base & 0xFFFFFFu;

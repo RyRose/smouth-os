@@ -11,6 +11,7 @@ cc_library(
     deps = [
         "//libc:string",
         "//util:list",
+        "//util:ret_checkf",
         "//util:status",
         "@gtest//:gtest_prod",
     ],

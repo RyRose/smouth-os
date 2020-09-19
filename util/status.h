@@ -96,7 +96,7 @@ class StatusOr : public Either<util::Status, V> {
 #define _RET_CHECK_STRINGIZE_(x) #x
 #define _RET_CHECK_STRINGIZE(x) _RET_CHECK_STRINGIZE_(x)
 
-#define RET_CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT(RET_CHECK, __VA_ARGS__)
+#define RET_CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT_2(RET_CHECK, __VA_ARGS__)
 
 #define RET_CHECK_1(expr)                                                   \
   do {                                                                      \

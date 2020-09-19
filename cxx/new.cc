@@ -1,10 +1,10 @@
 #include "cxx/new.h"
 
-#ifndef CXX_NEW_STUB_CONFIG
-
 #include <stddef.h>
 
 #include "cxx/kernel.h"
+
+#if !(__STDC_HOSTED__)
 
 namespace {
 void panic(const char* message) {
@@ -16,6 +16,28 @@ void panic(const char* message) {
   }
 }
 }  // namespace
+
+void* operator new(size_t size, const std::nothrow_t&) noexcept {
+  if (cxx::kernel_new == nullptr) {
+    return nullptr;
+  }
+  auto ptr_or = cxx::kernel_new(size);
+  if (!ptr_or.Ok()) {
+    return nullptr;
+  }
+  return ptr_or.Value();
+}
+
+void* operator new[](size_t size, const std::nothrow_t&) noexcept {
+  if (cxx::kernel_new == nullptr) {
+    return nullptr;
+  }
+  auto ptr_or = cxx::kernel_new(size);
+  if (!ptr_or.Ok()) {
+    return nullptr;
+  }
+  return ptr_or.Value();
+}
 
 void* operator new(size_t size) {
   if (cxx::kernel_new == nullptr) {
@@ -55,4 +77,4 @@ void* operator new[](size_t, void* p) noexcept { return p; }
 void operator delete(void*, size_t) throw() {}
 void operator delete[](void*, size_t) throw() {}
 
-#endif  // CXX_NEW_STUB_CONFIG
+#endif  // __STDC_HOSTED__

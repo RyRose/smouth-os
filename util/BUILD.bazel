@@ -30,6 +30,9 @@ cc_test(
 
 cc_library(
     name = "ret_checkf",
+    srcs = [
+        "ret_checkf.cc",
+    ],
     hdrs = [
         "ret_checkf.h",
     ],
