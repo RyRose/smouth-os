@@ -10,7 +10,7 @@ set -eux;
 
 bazel test \
   --config ci \
-  --  //... -//tools/toolchain/...
+  --  //...
 
 bazel test \
   --config ci \

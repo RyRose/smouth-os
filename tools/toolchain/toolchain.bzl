@@ -1,6 +1,6 @@
 load("//tools/toolchain:toolchain_config.bzl", "toolchain_config")
 
-def toolchain(name, workspace, target, target_cpu, compiler):
+def toolchain(name, workspace, target, target_cpu, compiler, **kwargs):
     binaries = [
         "ar",
         "as",
@@ -21,6 +21,7 @@ def toolchain(name, workspace, target, target_cpu, compiler):
                 "//tools/toolchain/binaries:" + binary,
                 "@%s//:%s" % (workspace, binary),
             ],
+            **kwargs
         )
         binary_mapping[binary] = ":" + name + "-" + binary
 
@@ -30,6 +31,7 @@ def toolchain(name, workspace, target, target_cpu, compiler):
         srcs = binary_mapping.values() + [
             "@%s//:compiler_pieces" % workspace,
         ],
+        **kwargs
     )
 
     linker_files = name + "-linker_files"
@@ -42,6 +44,7 @@ def toolchain(name, workspace, target, target_cpu, compiler):
             binary_mapping["ld"],
             "@%s//:compiler_pieces" % workspace,
         ],
+        **kwargs
     )
 
     compiler_files = name + "-compiler_files"
@@ -53,6 +56,7 @@ def toolchain(name, workspace, target, target_cpu, compiler):
             binary_mapping["gcc"],
             binary_mapping["ld"],
         ],
+        **kwargs
     )
 
     empty = name + "-empty"
@@ -65,11 +69,16 @@ def toolchain(name, workspace, target, target_cpu, compiler):
         workspace = workspace,
         target_cpu = target_cpu,
         compiler = compiler,
+        **kwargs
     )
+
+    # Update tags to ensure the Bazel CLion plugin picks up the toolchain properly:
+    # https://github.com/bazelbuild/intellij/issues/486
+    tags = kwargs.pop("tags", [])
+    tags.append("no-ide")
 
     native.cc_toolchain(
         name = name,
-        tags = ["no-ide"],
         all_files = all_files,
         compiler_files = compiler_files,
         dwp_files = empty,
@@ -79,4 +88,6 @@ def toolchain(name, workspace, target, target_cpu, compiler):
         supports_param_files = 0,
         toolchain_config = config,
         toolchain_identifier = target,
+        tags = tags,
+        **kwargs
     )
