@@ -2,6 +2,8 @@
 #define KERNEL_ARCH_I386_INSTRUCTIONS_INSTRUCTIONS_H
 
 #include <stdint.h>
+
+#include "util/ret_checkf.h"
 #include "util/status.h"
 
 namespace instructions {
@@ -9,8 +11,9 @@ namespace instructions {
 // LoadIDT calls LIDT on the provided value to load
 // into the Interrupt Descriptor Table Register (IDTR).
 inline util::Status LIDT(uint64_t idtr_value) {
-  RET_CHECK((idtr_value >> 48u) == 0,
-            "value of IDTR contains non-zero bits in high 16 bits");
+  RET_CHECKF_EQ((idtr_value >> 48u), 0ul,
+                "value of IDTR (0x%x) contains non-zero bits in high 16 bits",
+                idtr_value);
   // TODO(RyRose): Check that CPL = 0. The current privilege level (CPL) must be
   // zero for this instruction to work.
   asm volatile("LIDT %0" ::"m"(idtr_value));

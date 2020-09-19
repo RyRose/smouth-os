@@ -5,6 +5,12 @@
 #include "util/overload_macros.h"
 #include "util/status.h"
 
+namespace util {
+// Statically-allocated array of chars for RET_CHECKF to fall back to use if
+// unable to allocate the message on the heap.
+extern char kRetCheckfMessage[1024];
+}  // namespace util
+
 #define RET_CHECKF(...) \
   UTIL_OVERLOAD_MACROS_VA_SELECT_3(_RET_CHECKF, __VA_ARGS__)
 
@@ -12,15 +18,25 @@
 
 #define _RET_CHECKF_2(expr, message) RET_CHECK(expr, message)
 
-#define _RET_CHECKF_3(expr, format, ...)                                      \
-  do {                                                                        \
-    if ((expr)) {                                                             \
-      break;                                                                  \
-    }                                                                         \
-    char* _message;                                                           \
-    RETURN_IF_ERROR(libc::asprintf(&_message, "%s:%d: %s: " format, __FILE__, \
-                                   __LINE__, #expr, __VA_ARGS__));            \
-    return util::Status(util::ErrorCode::INTERNAL, _message);                 \
+#define _RET_CHECKF_3(expr, format, ...)                                       \
+  do {                                                                         \
+    if ((expr)) {                                                              \
+      break;                                                                   \
+    }                                                                          \
+    char* _asprintf_message;                                                   \
+    auto _asprintf_result =                                                    \
+        libc::asprintf(&_asprintf_message, "%s:%d: %s: " format, __FILE__,     \
+                       __LINE__, #expr, __VA_ARGS__);                          \
+    if (_asprintf_result.Ok()) {                                               \
+      return util::Status(util::ErrorCode::INTERNAL, _asprintf_message);       \
+    }                                                                          \
+    auto _snprintf_result = libc::snprintf(                                    \
+        util::kRetCheckfMessage, sizeof(util::kRetCheckfMessage),              \
+        "%s:%d: %s: " format, __FILE__, __LINE__, #expr, __VA_ARGS__);         \
+    if (_snprintf_result.Ok()) {                                               \
+      return util::Status(util::ErrorCode::INTERNAL, util::kRetCheckfMessage); \
+    }                                                                          \
+    return util::Status(util::ErrorCode::INTERNAL, format);                    \
   } while (0)
 
 #define _RET_CHECKF_OP(lhs, rhs, op) \

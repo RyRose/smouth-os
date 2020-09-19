@@ -11,6 +11,7 @@ cc_library(
     deps = [
         "//libc:string",
         "//util:list",
+        "//util:ret_checkf",
         "//util:status",
     ],
 )
@@ -43,6 +44,7 @@ cc_library(
         "i386-only",
     ],
     deps = [
+        "//util:ret_checkf",
         "//util:status",
     ],
 )

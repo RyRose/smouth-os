@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "cxx/new.h"
 #include "libc/stdio/internal/printer.h"
 #include "libc/string.h"
 #include "util/status.h"
@@ -41,7 +42,8 @@ util::StatusOr<int> asprintf(char** strp, const char* format, const T& value,
                              const Args&... args) {
   Printer dry_runner(PrintType::DRY_RUN);
   ASSIGN_OR_RETURN(const int len, dry_runner.Printf(format, value, args...));
-  *strp = new char[len];
+  *strp = new (std::nothrow) char[len];
+  RET_CHECK(*strp != nullptr);
   Printer p(PrintType::BUFFER, *strp);
   return p.Printf(format, value, args...);
 }

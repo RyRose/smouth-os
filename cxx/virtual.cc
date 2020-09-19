@@ -2,6 +2,8 @@
 
 #include "cxx/kernel.h"
 
+#if !(__STDC_HOSTED__)
+
 void __cxa_pure_virtual() {
   if (cxx::kernel_panic != nullptr) {
     cxx::kernel_panic("__cxa_pure_virtual called.");
@@ -10,3 +12,5 @@ void __cxa_pure_virtual() {
   while (true) {
   }
 }
+
+#endif

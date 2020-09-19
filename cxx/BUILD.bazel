@@ -19,20 +19,12 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = select({
-        "//tools/toolchain:local": [
-            ":newstub",
-        ],
-        "//tools/toolchain:darwin": [
-            ":newstub",
-        ],
-        "//conditions:default": [
-            ":virtual",
-            ":atexit",
-            ":new",
-            ":memcpy",
-        ],
-    }),
+    deps = [
+        ":atexit",
+        ":memcpy",
+        ":new",
+        ":virtual",
+    ],
 )
 
 cc_library(
@@ -71,19 +63,6 @@ cc_library(
     ],
     deps = [
         ":kernel",
-    ],
-)
-
-cc_library(
-    name = "newstub",
-    srcs = [
-        "new.cc",
-    ],
-    hdrs = [
-        "new.h",
-    ],
-    defines = [
-        "CXX_NEW_STUB_CONFIG",
     ],
 )
 

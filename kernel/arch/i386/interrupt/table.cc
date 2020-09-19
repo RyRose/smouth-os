@@ -1,5 +1,6 @@
 #include "kernel/arch/i386/interrupt/table.h"
 
+#include "util/ret_checkf.h"
 #include "util/status.h"
 
 namespace arch {
@@ -8,8 +9,9 @@ util::StatusOr<GateDescriptor> GateDescriptor::Create(uint32_t offset,
                                                       uint16_t segment_selector,
                                                       GateType gate_type,
                                                       uint8_t dpl) {
-  RET_CHECK((dpl & 0xF0u) == 0,
-            "descriptor privilege level must only be four bits");
+  RET_CHECKF_EQ((dpl & 0xF0u), 0u,
+                "descriptor privilege level (0x%x) must only be four bits",
+                dpl);
 
   GateDescriptor descriptor;
   descriptor.offset_first = offset & 0xFFFFu;

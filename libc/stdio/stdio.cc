@@ -21,7 +21,8 @@ util::StatusOr<int> snprintf(char* buffer, size_t bufsz, const char* format) {
 util::StatusOr<int> asprintf(char** strp, const char* format) {
   Printer dry_runner(PrintType::DRY_RUN);
   ASSIGN_OR_RETURN(const int len, dry_runner.Printf(format));
-  *strp = new char[len];
+  *strp = new (std::nothrow) char[len];
+  RET_CHECK(*strp != nullptr);
   Printer p(PrintType::BUFFER, *strp);
   return p.Printf(format);
 }
