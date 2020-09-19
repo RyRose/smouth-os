@@ -11,7 +11,7 @@ namespace util {
 #define _UTIL_CHECK_STRINGIZE_(a) #a
 #define _UTIL_CHECK_STRINGIZE(a) _UTIL_CHECK_STRINGIZE_(a)
 
-#define CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT(CHECK, __VA_ARGS__)
+#define CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT_2(CHECK, __VA_ARGS__)
 
 #define CHECK_1(expr)                                                     \
   do {                                                                    \
@@ -32,7 +32,7 @@ namespace util {
     }                                                                     \
   } while (0)
 
-#define CHECK_OK(...) UTIL_OVERLOAD_MACROS_VA_SELECT(CHECK_OK, __VA_ARGS__)
+#define CHECK_OK(...) UTIL_OVERLOAD_MACROS_VA_SELECT_2(CHECK_OK, __VA_ARGS__)
 
 #define CHECK_OK_1(expr)                                                   \
   do {                                                                     \

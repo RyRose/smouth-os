@@ -24,7 +24,7 @@
   static void KernelMain##name()
 
 #define KERNEL_EXPECT(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT(KERNEL_EXPECT, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_2(KERNEL_EXPECT, __VA_ARGS__)
 
 #define KERNEL_EXPECT_1(expr)                                               \
   do {                                                                      \
@@ -53,7 +53,7 @@
   } while (0)
 
 #define KERNEL_EXPECT_OK(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT(KERNEL_EXPECT_OK, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_2(KERNEL_EXPECT_OK, __VA_ARGS__)
 
 #define KERNEL_EXPECT_OK_1(expr)                                             \
   do {                                                                       \
@@ -84,7 +84,7 @@
   } while (0)
 
 #define KERNEL_ASSERT(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT(KERNEL_ASSERT, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_2(KERNEL_ASSERT, __VA_ARGS__)
 
 #define KERNEL_ASSERT_1(expr)                                               \
   do {                                                                      \
@@ -115,7 +115,7 @@
   } while (0)
 
 #define KERNEL_ASSERT_OK(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT(KERNEL_ASSERT_OK, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_2(KERNEL_ASSERT_OK, __VA_ARGS__)
 
 #define KERNEL_ASSERT_OK_1(expr)                                             \
   do {                                                                       \

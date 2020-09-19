@@ -9,37 +9,37 @@ namespace util {
 namespace {
 
 util::Status eq(int a, int b) {
-  RET_CHECKF_EQ(a, b, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF_EQ(a, b, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
 util::Status ne(int a, int b) {
-  RET_CHECKF_NE(a, b, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF_NE(a, b, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
 util::Status lt(int a, int b) {
-  RET_CHECKF_LT(a, b, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF_LT(a, b, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
 util::Status le(int a, int b) {
-  RET_CHECKF_LE(a, b, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF_LE(a, b, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
 util::Status gt(int a, int b) {
-  RET_CHECKF_GT(a, b, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF_GT(a, b, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
 util::Status ge(int a, int b) {
-  RET_CHECKF_GE(a, b, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF_GE(a, b, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
 util::Status check(bool condition) {
-  RET_CHECKF(condition, "%d, %d, %d, %d, %d", 1, 2, 3, 4, 5);
+  RET_CHECKF(condition, "%d, %d, %d, %d, %d", 10, 20, 30, 40, 50);
   return {};
 }
 
@@ -85,8 +85,8 @@ TEST(RetCheckF, Equals) {
   const util::Status actual = eq(5, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:12: _lhs == _rhs: a (5) == b (10) not true: 1, "
-      "2, 3, 4, 5",
+      "util/ret_checkf_test.cc:12: _lhs == _rhs: a (5) == b (10) not true: 10, "
+      "20, 30, 40, 50",
       actual.Message());
 }
 
@@ -105,8 +105,9 @@ TEST(RetCheckF, NotEquals) {
   const util::Status actual = ne(10, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:17: _lhs != _rhs: a (10) != b (10) not true: 1, "
-      "2, 3, 4, 5",
+      "util/ret_checkf_test.cc:17: _lhs != _rhs: a (10) != b (10) not true: "
+      "10, "
+      "20, 30, 40, 50",
       actual.Message());
 }
 
@@ -125,8 +126,8 @@ TEST(RetCheckF, LessThan) {
   const util::Status actual = lt(15, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:22: _lhs < _rhs: a (15) < b (10) not true: 1, "
-      "2, 3, 4, 5",
+      "util/ret_checkf_test.cc:22: _lhs < _rhs: a (15) < b (10) not true: 10, "
+      "20, 30, 40, 50",
       actual.Message());
 }
 
@@ -146,8 +147,9 @@ TEST(RetCheckF, LessThanEquals) {
   const util::Status actual = le(15, 10);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:27: _lhs <= _rhs: a (15) <= b (10) not true: 1, "
-      "2, 3, 4, 5",
+      "util/ret_checkf_test.cc:27: _lhs <= _rhs: a (15) <= b (10) not true: "
+      "10, "
+      "20, 30, 40, 50",
       actual.Message());
 }
 
@@ -167,8 +169,8 @@ TEST(RetCheckF, GreaterThan) {
   const util::Status actual = gt(10, 15);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:32: _lhs > _rhs: a (10) > b (15) not true: 1, "
-      "2, 3, 4, 5",
+      "util/ret_checkf_test.cc:32: _lhs > _rhs: a (10) > b (15) not true: 10, "
+      "20, 30, 40, 50",
       actual.Message());
 }
 
@@ -188,8 +190,8 @@ TEST(RetCheckF, GreaterThanEquals) {
   const util::Status actual = ge(10, 15);
   ASSERT_NOT_OK(actual);
   EXPECT_STREQ(
-      "util/ret_checkf_test.cc:37: _lhs >= _rhs: a (10) >= b (15) not true: 1, "
-      "2, 3, 4, 5",
+      "util/ret_checkf_test.cc:37: _lhs >= _rhs: a (10) >= b (15) not true: "
+      "10, 20, 30, 40, 50",
       actual.Message());
 }
 
@@ -208,7 +210,7 @@ TEST(RetCheckF, Check) {
   EXPECT_OK(check(true));
   const util::Status actual = check(false);
   ASSERT_NOT_OK(actual);
-  EXPECT_STREQ("util/ret_checkf_test.cc:42: condition: 1, 2, 3, 4, 5",
+  EXPECT_STREQ("util/ret_checkf_test.cc:42: condition: 10, 20, 30, 40, 50",
                actual.Message());
 }
 
