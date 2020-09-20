@@ -79,6 +79,7 @@ def compiler_flags(name, workspace, target):
                             "-g",
                             "-MD",
                             "-lk",
+                            "-fstack-protector",
                             # TODO(RyRose): Remove flag when lock/mutex primitives can enforce local static guards.
                             "-fno-threadsafe-statics",
                             "-Wall",
