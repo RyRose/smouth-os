@@ -19,15 +19,14 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = select({
+    deps = [":new"] + select({
         "//tools/toolchain:i386": [
             ":atexit",
             ":memcpy",
             ":virtual",
-            ":new",
+            ":stack_smashing_protector",
         ],
         "//conditions:default": [
-            ":new",
         ],
     }),
 )
@@ -78,5 +77,18 @@ cc_library(
     ],
     hdrs = [
         "memcpy.h",
+    ],
+)
+
+cc_library(
+    name = "stack_smashing_protector",
+    srcs = [
+        "stack_smashing_protector.cc",
+    ],
+    hdrs = [
+        "stack_smashing_protector.h",
+    ],
+    deps = [
+        ":kernel",
     ],
 )

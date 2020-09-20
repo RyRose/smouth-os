@@ -1,11 +1,11 @@
 #ifndef CXX_NEW_H
 #define CXX_NEW_H
 
+#include <stddef.h>
+
 #if __STDC_HOSTED__
 #include <new>
 #else
-
-#include <stddef.h>
 
 namespace std {
 
