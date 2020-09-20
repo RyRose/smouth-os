@@ -13,7 +13,7 @@ struct nothrow_t {
   explicit nothrow_t() = default;
 };
 
-const nothrow_t nothrow;
+constexpr const nothrow_t nothrow;
 
 }  // namespace std
 

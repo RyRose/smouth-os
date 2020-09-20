@@ -19,12 +19,17 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        ":atexit",
-        ":memcpy",
-        ":new",
-        ":virtual",
-    ],
+    deps = select({
+        "//tools/toolchain:i386": [
+            ":atexit",
+            ":memcpy",
+            ":virtual",
+            ":new",
+        ],
+        "//conditions:default": [
+            ":new",
+        ],
+    }),
 )
 
 cc_library(

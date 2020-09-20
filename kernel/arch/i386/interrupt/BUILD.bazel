@@ -41,7 +41,6 @@ cc_library(
         "isrs.h",
     ],
     tags = [
-        "i386",
         "i386-only",
     ],
     deps = [

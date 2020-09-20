@@ -1,6 +1,6 @@
 load("//tools/go:builddefs.bzl", "qemu_test")
 
-def crt_file(name, filename, visibility = []):
+def crt_file(name, filename, **kwargs):
     """A CRT (C RunTime) file provided by the compiler used for the startup routines.
 
        CRT (C RunTime) files are the necessary startup routines for C binaries. Since
@@ -15,7 +15,6 @@ def crt_file(name, filename, visibility = []):
     """
     native.genrule(
         name = name,
-        visibility = visibility,
         outs = [
             "crtfiles/%s/%s" % (name, filename),
         ],
@@ -29,7 +28,8 @@ def crt_file(name, filename, visibility = []):
             "mkdir -p $$(dirname $@); " +
             "cp $$($(CC) $(CC_FLAGS) -print-file-name=$$(basename $@)) $@;"
         ),
-        tags = ["arch-only"],
+        tags = kwargs.pop("tags", []) + ["arch-only"],
+        **kwargs
     )
 
 def kernel_binary(name, **kwargs):
@@ -41,64 +41,56 @@ def kernel_binary(name, **kwargs):
     """
 
     crtbegin = "%s_crtbegin" % name
-    crt_file(crtbegin, "crtbegin.o", visibility = ["//visibility:private"])
+    crt_file(crtbegin, "crtbegin.o")
 
     crtend_file = "%s_crtend_file" % name
-    crt_file(crtend_file, "crtend.o", visibility = ["//visibility:private"])
+    crt_file(crtend_file, "crtend.o")
     crtend = "%s_crtend" % name
     native.cc_library(
         name = crtend,
         alwayslink = True,
-        tags = ["arch-only"],
         srcs = [crtend_file],
+        tags = ["arch-only"],
     )
 
     crtn = "%s_crtn" % name
     native.cc_library(
         name = crtn,
         alwayslink = True,
-        tags = ["arch-only"],
         srcs = ["//kernel/arch:crtn"],
+        tags = ["arch-only"],
     )
 
-    deps = kwargs.pop("deps", [])
-    deps.extend(["//cxx", "//kernel/arch:boot"])
-
-    # Add arch-specific linker file as input and use it.
-    additional_linker_inputs = kwargs.pop("additional_linker_inputs", [])
-    additional_linker_inputs.append("//kernel/arch:linker.ld")
-    linkopts = kwargs.pop("linkopts", [])
-    linkopts.append("-T $(location //kernel/arch:linker.ld)")
-
-    # # Add architecture tags to ensure it's properly captured in ... expansion.
-    tags = kwargs.pop("tags", [])
-    tags.extend(["arch-only", "i386"])
-
-    # crtbegin, crti, crtend, and crtn are specifically ordered such that the
-    # global constructors and destructors are called correctly. crti/crtbegin
-    # should be swapped and crtend/crtn should be swapped but for some reason
-    # it works.
-    # TODO(RyRose): Why does this work?
+    # Please note the srcs/deps are specifically ordered such that crti/crtbegin/crtend/crtn are as follows:
+    #
+    # START -> crti -> crtbegin -> ... srcs/deps ... -> crtend -> crtn -> END
+    #
+    # This ensures we adhere to one of the System V ABI's requirements.
+    #
     native.cc_binary(
         name = name,
-        srcs = [crtbegin, "//kernel/arch:crti"] + kwargs.pop("srcs", []),
-        deps = deps + [crtend, crtn],
-        additional_linker_inputs = additional_linker_inputs,
-        tags = tags,
-        linkopts = linkopts,
+        srcs = ["//kernel/arch:crti", crtbegin] + kwargs.pop("srcs", []),
+        deps = kwargs.pop("deps", []) + ["//cxx", "//kernel/arch:boot", crtend, crtn],
+        additional_linker_inputs = kwargs.pop("additional_linker_inputs", []) + ["//kernel/arch:linker.ld"],
+        linkopts = kwargs.pop("linkopts", []) + ["-T $(location //kernel/arch:linker.ld)"],
+        tags = kwargs.pop("tags", []) + ["arch-only", "i386"],
         **kwargs
     )
 
 def kernel_test(name, timeout = "short", **kwargs):
-    tags = kwargs.pop("tags", [])
-    tags.extend(["arch-only", "i386"])
+    """A wrapped qemu_test that boots a kernel test binary and verifies it passes."""
 
     kernel = "%s_kernel_binary" % name
     kernel_binary(
         name = kernel,
         srcs = kwargs.pop("srcs", []),
         deps = kwargs.pop("deps", []),
-        tags = tags,
+    )
+
+    qemu_test(
+        name = name,
+        kernel = kernel,
+        timeout = timeout,
+        tags = kwargs.pop("tags", []) + ["arch-only", "i386"],
         **kwargs
     )
-    qemu_test(name = name, kernel = kernel, tags = tags, timeout = timeout, **kwargs)

@@ -40,7 +40,6 @@ cc_library(
         "flush.h",
     ],
     tags = [
-        "i386",
         "i386-only",
     ],
     deps = [
