@@ -14,6 +14,8 @@ class SerialPort : public SerialPortInterface {
 
   void Write(uint8_t b) override;
 
+  virtual ~SerialPort() = default;
+
  protected:
   SerialPort(IoPort port, IoPort interrupt, IoPort fifo, IoPort line_control,
              IoPort modem_control, IoPort line_status)

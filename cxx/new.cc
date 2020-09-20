@@ -1,10 +1,10 @@
 #include "cxx/new.h"
 
+#if !(__STDC_HOSTED__)
+
 #include <stddef.h>
 
 #include "cxx/kernel.h"
-
-#if !(__STDC_HOSTED__)
 
 namespace {
 void panic(const char* message) {
@@ -17,64 +17,68 @@ void panic(const char* message) {
 }
 }  // namespace
 
-void* operator new(size_t size, const std::nothrow_t&) noexcept {
+void* operator new(size_t count, const std::nothrow_t&) noexcept {
   if (cxx::kernel_new == nullptr) {
     return nullptr;
   }
-  auto ptr_or = cxx::kernel_new(size);
+  auto ptr_or = cxx::kernel_new(count);
   if (!ptr_or.Ok()) {
     return nullptr;
   }
   return ptr_or.Value();
 }
 
-void* operator new[](size_t size, const std::nothrow_t&) noexcept {
+void* operator new[](size_t count, const std::nothrow_t&) noexcept {
   if (cxx::kernel_new == nullptr) {
     return nullptr;
   }
-  auto ptr_or = cxx::kernel_new(size);
+  auto ptr_or = cxx::kernel_new(count);
   if (!ptr_or.Ok()) {
     return nullptr;
   }
   return ptr_or.Value();
 }
 
-void* operator new(size_t size) {
+void* operator new(size_t count) {
   if (cxx::kernel_new == nullptr) {
     panic("kernel new unavailable for new* allocation");
   }
-  auto ptr_or = cxx::kernel_new(size);
+  auto ptr_or = cxx::kernel_new(count);
   if (!ptr_or.Ok()) {
     panic(ptr_or.AsStatus().Message());
   }
   return ptr_or.Value();
 }
 
-void* operator new[](size_t size) {
+void* operator new[](size_t count) {
   if (cxx::kernel_new == nullptr) {
     panic("kernel new unavailable for new[] allocation");
   }
-  auto ptr_or = cxx::kernel_new(size);
+  auto ptr_or = cxx::kernel_new(count);
   if (!ptr_or.Ok()) {
     panic(ptr_or.AsStatus().Message());
   }
   return ptr_or.Value();
 }
 
+// In-place new assumes that caller knows the memory address of ptr to be valid.
+void* operator new(size_t, void* ptr) noexcept { return ptr; }
+void* operator new[](size_t, void* ptr) noexcept { return ptr; }
+
 void operator delete(void*)noexcept {
-  panic("TODO(RyRose): kernel delete unavailable for delete* call");
+  panic("kernel delete unavailable for delete* call");
 }
 
 void operator delete[](void*) noexcept {
-  panic("TODO(RyRose): kernel delete unavailable for delete[] call");
+  panic("kernel delete unavailable for delete[] call");
 }
 
-// In-place new assumes that caller knows the memory address of p to be valid.
-void* operator new(size_t, void* p) noexcept { return p; }
-void* operator new[](size_t, void* p) noexcept { return p; }
-
 // Dummy implementations of delete here to ensure the linker doesn't complain.
-void operator delete(void*, size_t) throw() {}
-void operator delete[](void*, size_t) throw() {}
+void operator delete(void*, size_t) throw() {
+  panic("kernel delete unavailable for incomplete delete* call");
+}
+void operator delete[](void*, size_t) throw() {
+  panic("kernel delete unavailable for incomplete delete[] call");
+}
 
 #endif  // __STDC_HOSTED__

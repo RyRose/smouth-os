@@ -13,20 +13,6 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "local",
-    values = {
-        "cpu": "k8",
-    },
-)
-
-config_setting(
-    name = "darwin",
-    values = {
-        "cpu": "darwin",
-    },
-)
-
 toolchain(
     name = "cc-compiler-i686-elf-darwin",
     compiler = "g++",
@@ -40,7 +26,6 @@ cc_toolchain_suite(
     name = "darwin-premade",
     tags = ["manual"],
     toolchains = {
-        "darwin": "@bazel_tools//tools/cpp:cc-compiler-darwin",
         "i386|g++": ":cc-compiler-i686-elf-darwin",
     },
 )
@@ -58,7 +43,6 @@ cc_toolchain_suite(
     name = "linux-premade",
     tags = ["manual"],
     toolchains = {
-        "darwin": "@bazel_tools//tools/cpp:cc-compiler-darwin",
         "i386|g++": ":cc-compiler-i686-elf-linux",
     },
 )
@@ -76,7 +60,6 @@ cc_toolchain_suite(
     name = "toolchain",
     tags = ["manual"],
     toolchains = {
-        "darwin": "@bazel_tools//tools/cpp:cc-compiler-darwin",
         "i386|g++": ":cc-compiler-i686-elf",
     },
 )

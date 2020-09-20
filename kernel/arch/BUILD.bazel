@@ -1,7 +1,7 @@
 load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
 load("//kernel:templates.bzl", "kernel_test")
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//kernel:__subpackages__"])
 
 arch_library(
     name = "boot",

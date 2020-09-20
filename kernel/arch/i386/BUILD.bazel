@@ -45,7 +45,6 @@ cc_library(
         "//kernel/arch:init.h",
     ],
     tags = [
-        "i386",
         "i386-only",
     ],
     visibility = ["//kernel/arch:__pkg__"],
@@ -73,7 +72,6 @@ cc_library(
 cc_library(
     name = "boot",
     tags = [
-        "i386",
         "i386-only",
     ],
     visibility = ["//kernel/arch:__pkg__"],

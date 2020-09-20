@@ -6,7 +6,6 @@ cc_library(
         "boot.S",
     ],
     tags = [
-        "i386",
         "i386-only",
     ],
     deps = [
