@@ -1,11 +1,11 @@
 #ifndef CXX_NEW_H
 #define CXX_NEW_H
 
-#include <stddef.h>
-
 #if __STDC_HOSTED__
 #include <new>
 #else
+
+#include <stddef.h>
 
 namespace std {
 
@@ -20,17 +20,17 @@ constexpr const nothrow_t nothrow;
 void* operator new(size_t count, const std::nothrow_t& tag) noexcept;
 void* operator new[](size_t count, const std::nothrow_t& tag) noexcept;
 
-void* operator new(size_t);
-void* operator new[](size_t);
+void* operator new(size_t count);
+void* operator new[](size_t count);
 
-void* operator new(size_t, void*) noexcept;
-void* operator new[](size_t, void*) noexcept;
+void* operator new(size_t count, void* ptr) noexcept;
+void* operator new[](size_t count, void* ptr) noexcept;
 
-void operator delete(void* p) noexcept;
-void operator delete[](void* p) noexcept;
+void operator delete(void* ptr) noexcept;
+void operator delete[](void* ptr) noexcept;
 
-void operator delete(void* p, size_t size) throw();
-void operator delete[](void* p, size_t size) throw();
+void operator delete(void* ptr, size_t sz) throw();
+void operator delete[](void* ptr, size_t sz) throw();
 
 #endif
 
