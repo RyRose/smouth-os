@@ -1,4 +1,4 @@
-load("//tools/go:builddefs.bzl", "qemu_test")
+load("//tools/go:builddefs.bzl", "qemu_binaries", "qemu_test")
 
 def crt_file(name, filename, **kwargs):
     """A CRT (C RunTime) file provided by the compiler used for the startup routines.
@@ -85,6 +85,11 @@ def kernel_test(name, timeout = "short", **kwargs):
         name = kernel,
         srcs = kwargs.pop("srcs", []),
         deps = kwargs.pop("deps", []),
+    )
+
+    qemu_binaries(
+        name = name + "-",
+        kernel = kernel,
     )
 
     qemu_test(
