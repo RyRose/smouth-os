@@ -10,6 +10,13 @@ import (
 	"os/exec"
 )
 
+func restoreTerminal() error {
+	cmd := exec.Command("stty", "sane")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
 type VM struct {
 	CPU, Kernel, Workspace string
 }
@@ -39,8 +46,7 @@ func (v *VM) Serial(ctx context.Context) ([]byte, error) {
 		for scanner.Scan() {
 			output.Write(scanner.Bytes())
 			output.WriteByte('\n')
-			s := fmt.Sprintf("%q", scanner.Text())
-			log.Print(s[1 : len(s)-1])
+			log.Print(fmt.Sprintf("%q", scanner.Text()))
 		}
 	}()
 
@@ -55,13 +61,15 @@ func (v *VM) Serial(ctx context.Context) ([]byte, error) {
 }
 
 func (v *VM) GDB(ctx context.Context) error {
-	qemu := exec.CommandContext(ctx, v.qemu(), "-kernel", v.Kernel, "-S", "-s")
+
+	qemu := exec.CommandContext(ctx, v.qemu(), "-kernel", v.Kernel, "-S", "-s", "--no-reboot", "-nographic")
 	if err := qemu.Start(); err != nil {
 		return err
 	}
 	defer qemu.Wait()
 	defer qemu.Process.Kill()
-	gdb := exec.CommandContext(ctx, "sudo", "gdb",
+
+	gdb := exec.CommandContext(ctx, "gdb", "-q",
 		"-d", v.Workspace,
 		"-ex", fmt.Sprintf("file %s", v.Kernel),
 		"-ex", "target remote :1234",
@@ -70,5 +78,6 @@ func (v *VM) GDB(ctx context.Context) error {
 	gdb.Stdin = os.Stdin
 	gdb.Stdout = os.Stdout
 	gdb.Stderr = os.Stderr
+	defer restoreTerminal()
 	return gdb.Run()
 }

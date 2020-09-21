@@ -1,65 +1,15 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("//tools/go:builddefs.bzl", "qemu_binaries")
 
 go_library(
     name = "go_default_library",
     srcs = ["qemu.go"],
     importpath = "github.com/RyRose/smouth-os/tools/go/cmd/qemu",
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = ["//tools/go/qemu:go_default_library"],
 )
 
-go_binary(
-    name = "qemu",
-    args = [
-        "--cpu=$(TARGET_CPU)",
-        "--kernel=$(location //kernel)",
-        "--output=monitor",
-    ],
-    data = [
-        "//kernel",
-    ],
-    embed = [":go_default_library"],
-    tags = [
-        "arch-only",
-        "i386",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-go_binary(
-    name = "serial",
-    args = [
-        "--cpu=$(TARGET_CPU)",
-        "--kernel=$(location //kernel)",
-        "--output=serial",
-    ],
-    data = [
-        "//kernel",
-    ],
-    embed = [":go_default_library"],
-    tags = [
-        "arch-only",
-        "i386",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-go_binary(
-    name = "gdb",
-    args = [
-        "--cpu=$(TARGET_CPU)",
-        "--kernel=$(location //kernel)",
-        "--output=gdb",
-        "--workspace_file=$(location //:workspace_name)",
-    ],
-    data = [
-        "//:workspace_name",
-        "//kernel",
-    ],
-    embed = [":go_default_library"],
-    tags = [
-        "arch-only",
-        "i386",
-    ],
-    visibility = ["//visibility:public"],
+qemu_binaries(
+    name = "",
+    kernel = "//kernel",
 )
