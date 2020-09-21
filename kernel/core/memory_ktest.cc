@@ -9,7 +9,7 @@ namespace {
 kernel::BumpAllocator<100> allocator;
 }  // namespace
 
-KERNEL_TEST(CoreMemory) {
+KERNEL_TEST(TestCoreMemory) {
   KERNEL_ASSERT_OK_AND_ASSIGN(const auto& boot, arch::Initialize());
   libc::puts("Memory Regions: [");
   for (size_t i = 0; i < boot.memory_regions.Size(); i++) {

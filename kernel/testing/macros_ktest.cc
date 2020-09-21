@@ -6,7 +6,7 @@ static util::Status Success() { return {}; }
 
 static util::StatusOr<int> SuccessInt() { return 10; }
 
-KERNEL_TEST(Empty) {
+KERNEL_TEST(TestMacros) {
   KERNEL_EXPECT(true);
   KERNEL_EXPECT(true, "must be true");
   KERNEL_EXPECT_OK(Success());

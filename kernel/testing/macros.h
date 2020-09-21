@@ -11,17 +11,17 @@
 
 // KERNEL_TEST defined a kernel test function for use in integration testing.
 #define KERNEL_TEST(name)                         \
-  static void KernelMain##name();                 \
+  static void name();                             \
   namespace {                                     \
   extern "C" void KernelMain() {                  \
     libc::puts("<< TEST " #name " STARTED >>");   \
-    KernelMain##name();                           \
+    name();                                       \
     libc::puts("<< TEST " #name " COMPLETED >>"); \
     libc::puts("<<KERNEL TEST COMPLETE>>");       \
     libc::abort();                                \
   }                                               \
   }                                               \
-  static void KernelMain##name()
+  static void name()
 
 #define KERNEL_EXPECT(...) \
   UTIL_OVERLOAD_MACROS_VA_SELECT_2(KERNEL_EXPECT, __VA_ARGS__)
