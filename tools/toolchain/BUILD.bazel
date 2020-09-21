@@ -13,6 +13,14 @@ config_setting(
     },
 )
 
+cc_toolchain_suite(
+    name = "darwin-premade",
+    tags = ["manual"],
+    toolchains = {
+        "i386|g++": ":cc-compiler-i686-elf-darwin",
+    },
+)
+
 toolchain(
     name = "cc-compiler-i686-elf-darwin",
     compiler = "g++",
@@ -23,10 +31,10 @@ toolchain(
 )
 
 cc_toolchain_suite(
-    name = "darwin-premade",
+    name = "linux-premade",
     tags = ["manual"],
     toolchains = {
-        "i386|g++": ":cc-compiler-i686-elf-darwin",
+        "i386|g++": ":cc-compiler-i686-elf-linux",
     },
 )
 
@@ -40,10 +48,10 @@ toolchain(
 )
 
 cc_toolchain_suite(
-    name = "linux-premade",
+    name = "toolchain",
     tags = ["manual"],
     toolchains = {
-        "i386|g++": ":cc-compiler-i686-elf-linux",
+        "i386|g++": ":cc-compiler-i686-elf",
     },
 )
 
@@ -54,12 +62,4 @@ toolchain(
     target = "i686-elf",
     target_cpu = "i386",
     workspace = "toolchain-i686-elf",
-)
-
-cc_toolchain_suite(
-    name = "toolchain",
-    tags = ["manual"],
-    toolchains = {
-        "i386|g++": ":cc-compiler-i686-elf",
-    },
 )

@@ -57,7 +57,7 @@ def all_flags(name):
         ],
     )
 
-def compiler_flags(name, workspace, target):
+def compiler_flags(name, workspace, target, gcc_version):
     return feature(
         name = name,
         enabled = True,
@@ -104,9 +104,9 @@ def compiler_flags(name, workspace, target):
                             "-Wuseless-cast",
                             "-fdiagnostics-color=always",
                             "-isystem",
-                            "external/%s/lib/gcc/%s/7.2.0/include" % (workspace, target),
+                            "external/%s/lib/gcc/%s/%s/include" % (workspace, target, gcc_version),
                             "-isystem",
-                            "external/%s/lib/gcc/%s/7.2.0/include-fixed" % (workspace, target),
+                            "external/%s/lib/gcc/%s/%s/include-fixed" % (workspace, target, gcc_version),
                         ],
                     ),
                 ],
@@ -128,7 +128,7 @@ def _impl(ctx):
         tool_paths = tool_paths(ctx.attr.workspace, ctx.attr.target),
         features = [
             all_flags("all_flags"),
-            compiler_flags("compiler_flags", ctx.attr.workspace, ctx.attr.target),
+            compiler_flags("compiler_flags", ctx.attr.workspace, ctx.attr.target, ctx.attr.gcc_version),
         ],
     )
 
@@ -139,6 +139,7 @@ toolchain_config = rule(
         "workspace": attr.string(mandatory = True),
         "target_cpu": attr.string(mandatory = True),
         "compiler": attr.string(mandatory = True),
+        "gcc_version": attr.string(default = "7.2.0"),
     },
     provides = [CcToolchainConfigInfo],
 )
