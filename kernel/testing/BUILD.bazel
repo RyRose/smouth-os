@@ -9,6 +9,7 @@ cc_library(
     deps = [
         "//libc:stdio",
         "//libc:stdlib",
+        "//util:check",
         "//util:overload_macros",
         "//util:status",
     ],

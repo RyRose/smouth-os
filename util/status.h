@@ -2,6 +2,7 @@
 #define KERNEL_UTIL_STATUS_H
 
 #include "util/either.h"
+#include "util/meta_macros.h"
 #include "util/overload_macros.h"
 
 namespace util {
@@ -72,48 +73,42 @@ class StatusOr : public Either<util::Status, V> {
   const V& Value() const { return this->right; }
 };
 
-#define RETURN_IF_ERROR(expr)         \
-  do {                                \
-    auto _expr_result = (expr);       \
-    if (!_expr_result.Ok()) {         \
-      return _expr_result.AsStatus(); \
-    }                                 \
+#define RETURN_IF_ERROR(expr) _RETURN_IF_ERROR(expr, MAKE_UNIQUE(expr_result_))
+#define _RETURN_IF_ERROR(expr, expr_result_) \
+  do {                                       \
+    auto expr_result_ = (expr);              \
+    if (expr_result_.Ok()) {                 \
+      break;                                 \
+    }                                        \
+    return expr_result_.AsStatus();          \
   } while (0)
 
-#define _ASSIGN_OR_RETURN_INTERNAL(status_or, lhs, expr) \
-  auto status_or = (expr);                               \
-  if (!status_or.Ok()) return status_or.AsStatus();      \
-  lhs = status_or.Value();
-
-#define _ASSIGN_OR_RETURN_JOIN_INTERNAL(left, right) left##right
-#define _ASSIGN_OR_RETURN_JOIN(left, right) \
-  _ASSIGN_OR_RETURN_JOIN_INTERNAL(left, right)
-
-#define ASSIGN_OR_RETURN(lhs, expr)                                          \
-  _ASSIGN_OR_RETURN_INTERNAL(_ASSIGN_OR_RETURN_JOIN(status_or, __COUNTER__), \
-                             lhs, expr)
-
-#define _RET_CHECK_STRINGIZE_(x) #x
-#define _RET_CHECK_STRINGIZE(x) _RET_CHECK_STRINGIZE_(x)
+#define ASSIGN_OR_RETURN(lhs, expr) \
+  _ASSIGN_OR_RETURN(lhs, expr, MAKE_UNIQUE(status_or_))
+#define _ASSIGN_OR_RETURN(lhs, expr, status_or_)      \
+  auto status_or_ = (expr);                           \
+  if (!status_or_.Ok()) return status_or_.AsStatus(); \
+  lhs = status_or_.Value();
 
 #define RET_CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT_2(RET_CHECK, __VA_ARGS__)
 
-#define RET_CHECK_1(expr)                                                   \
-  do {                                                                      \
-    if (!(expr)) {                                                          \
-      return util::Status(util::ErrorCode::INTERNAL, __FILE__               \
-                          ":" _RET_CHECK_STRINGIZE(__LINE__) ": '" #expr    \
-                                                             "' not true"); \
-    }                                                                       \
+#define RET_CHECK_1(expr)                                                  \
+  do {                                                                     \
+    if ((expr)) {                                                          \
+      break;                                                               \
+    }                                                                      \
+    return util::Status(util::ErrorCode::INTERNAL, __FILE__                \
+                        ":" STRINGIZE(__LINE__) ": '" #expr "' not true"); \
   } while (0)
 
-#define RET_CHECK_2(expr, message)                                           \
-  do {                                                                       \
-    if (!(expr)) {                                                           \
-      return util::Status(util::ErrorCode::INTERNAL,                         \
-                          __FILE__ ":" _RET_CHECK_STRINGIZE(                 \
-                              __LINE__) ": '" #expr "' not true: " message); \
-    }                                                                        \
+#define RET_CHECK_2(expr, message)                                       \
+  do {                                                                   \
+    if ((expr)) {                                                        \
+      break;                                                             \
+    }                                                                    \
+    return util::Status(util::ErrorCode::INTERNAL, __FILE__              \
+                        ":" STRINGIZE(__LINE__) ": '" #expr              \
+                                                "' not true: " message); \
   } while (0)
 
 }  // namespace util
