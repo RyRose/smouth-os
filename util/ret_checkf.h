@@ -6,8 +6,7 @@
 #include "util/status.h"
 
 namespace util {
-// Statically-allocated array of chars for RET_CHECKF to fall back to use if
-// unable to allocate the message on the heap.
+// Statically-allocated array of chars for RET_CHECKF to use to store messages.
 extern char kRetCheckfMessage[1024];
 }  // namespace util
 
@@ -18,83 +17,38 @@ extern char kRetCheckfMessage[1024];
 
 #define RET_CHECKF_2(expr, message) RET_CHECK_2(expr, message)
 
-#define RET_CHECKF_N(expr, format, ...)                                       \
-  _RET_CHECKF_N(expr, format, MAKE_UNIQUE(_asprintf_message),                 \
-                MAKE_UNIQUE(_asprintf_result), MAKE_UNIQUE(_snprintf_result), \
-                __VA_ARGS__)
-#define _RET_CHECKF_N(expr, format, _asprintf_message, _asprintf_result,       \
-                      _snprintf_result, ...)                                   \
+#define RET_CHECKF_N(expr, format, ...) \
+  _RET_CHECKF_N(expr, format, STRINGIZE(expr), UNIQUE_VARIABLE, __VA_ARGS__)
+#define _RET_CHECKF_N(expr, format, expr_string, snprintf_result, ...)         \
   do {                                                                         \
     if ((expr)) {                                                              \
       break;                                                                   \
     }                                                                          \
-    char* _asprintf_message;                                                   \
-    auto _asprintf_result =                                                    \
-        libc::asprintf(&_asprintf_message, "%s:%d: %s: " format, __FILE__,     \
-                       __LINE__, #expr, __VA_ARGS__);                          \
-    if (_asprintf_result.Ok()) {                                               \
-      return util::Status(util::ErrorCode::INTERNAL, _asprintf_message);       \
-    }                                                                          \
-    auto _snprintf_result = libc::snprintf(                                    \
+    const auto snprintf_result = libc::snprintf(                               \
         util::kRetCheckfMessage, sizeof(util::kRetCheckfMessage),              \
-        "%s:%d: %s: " format, __FILE__, __LINE__, #expr, __VA_ARGS__);         \
-    if (_snprintf_result.Ok()) {                                               \
-      return util::Status(util::ErrorCode::INTERNAL, util::kRetCheckfMessage); \
-    }                                                                          \
-    return util::Status(util::ErrorCode::INTERNAL, format);                    \
-  } while (0)
-
-#define _RET_CHECKF_N_NOEXPR(expr, format, ...)                       \
-  __RET_CHECKF_N_NOEXPR(expr, format, MAKE_UNIQUE(_asprintf_message), \
-                        MAKE_UNIQUE(_asprintf_result),                \
-                        MAKE_UNIQUE(_snprintf_result), __VA_ARGS__)
-#define __RET_CHECKF_N_NOEXPR(expr, format, _asprintf_message,                 \
-                              _asprintf_result, _snprintf_result, ...)         \
-  do {                                                                         \
-    if ((expr)) {                                                              \
-      break;                                                                   \
-    }                                                                          \
-    char* _asprintf_message;                                                   \
-    auto _asprintf_result =                                                    \
-        libc::asprintf(&_asprintf_message, "%s:%d: " format, __FILE__,         \
-                       __LINE__, __VA_ARGS__);                                 \
-    if (_asprintf_result.Ok()) {                                               \
-      return util::Status(util::ErrorCode::INTERNAL, _asprintf_message);       \
-    }                                                                          \
-    auto _snprintf_result = libc::snprintf(                                    \
-        util::kRetCheckfMessage, sizeof(util::kRetCheckfMessage),              \
-        "%s:%d: " format, __FILE__, __LINE__, __VA_ARGS__);                    \
-    if (_snprintf_result.Ok()) {                                               \
+        "%s:%d: %s: " format, __FILE__, __LINE__, expr_string, __VA_ARGS__);   \
+    if (snprintf_result.Ok()) {                                                \
       return util::Status(util::ErrorCode::INTERNAL, util::kRetCheckfMessage); \
     }                                                                          \
     return util::Status(util::ErrorCode::INTERNAL, format);                    \
   } while (0)
 
 #define _RET_CHECKF_OP(lhs, rhs, op) \
-  _RET_CHECKF_OP_MESSAGE(lhs, rhs, op, "INTERNAL")
+  _RET_CHECKF_OP_FORMAT(lhs, rhs, op, "%s", "INTERNAL")
 
-#define _RET_CHECKF_OP_MESSAGE(lhs, rhs, op, message)               \
-  __RET_CHECKF_OP_MESSAGE(lhs, rhs, op, message, MAKE_UNIQUE(lhs_), \
-                          MAKE_UNIQUE(rhs_))
-#define __RET_CHECKF_OP_MESSAGE(lhs, rhs, op, message, lhs_, rhs_)           \
-  do {                                                                       \
-    auto lhs_ = (lhs);                                                       \
-    auto rhs_ = (rhs);                                                       \
-    _RET_CHECKF_N_NOEXPR(                                                    \
-        lhs_ op rhs_, #lhs " (%v) " #op " " #rhs " (%v) not true: " message, \
-        lhs_, rhs_);                                                         \
-  } while (0)
+#define _RET_CHECKF_OP_MESSAGE(lhs, rhs, op, message) \
+  _RET_CHECKF_OP_FORMAT(lhs, rhs, op, "%s", message)
 
-#define _RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, ...)          \
-  __RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, MAKE_UNIQUE(lhs_), \
-                         MAKE_UNIQUE(rhs_), __VA_ARGS__)
-#define __RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, lhs_, rhs_, ...)          \
-  do {                                                                         \
-    auto lhs_ = (lhs);                                                         \
-    auto rhs_ = (rhs);                                                         \
-    _RET_CHECKF_N_NOEXPR(lhs_ op rhs_,                                         \
-                         #lhs " (%v) " #op " " #rhs " (%v) not true: " format, \
-                         lhs_, rhs_, __VA_ARGS__);                             \
+#define _RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, ...)        \
+  __RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, UNIQUE_VARIABLE, \
+                         UNIQUE_VARIABLE, __VA_ARGS__)
+#define __RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, lhs_, rhs_, ...) \
+  do {                                                                \
+    const auto lhs_ = (lhs);                                          \
+    const auto rhs_ = (rhs);                                          \
+    _RET_CHECKF_N(lhs_ op rhs_, "'%v " #op " %v' not true: " format,  \
+                  STRINGIZE(lhs op rhs), UNIQUE_VARIABLE, lhs_, rhs_, \
+                  __VA_ARGS__);                                       \
   } while (0)
 
 #define RET_CHECKF_EQ(...) \

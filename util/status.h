@@ -27,7 +27,6 @@ class Status {
   template <class T>
   Status(StatusOr<T> status_or) : Status(status_or.AsStatus()) {}
   explicit Status(ErrorCode code) : Status(code, "") {}
-  // TODO(RyRose): Free the memory from strings passed in this way.
   explicit Status(char* message) : Status(const_cast<const char*>(message)) {}
   explicit Status(const char* message) : Status(ErrorCode::UNKNOWN, message) {}
 
@@ -73,22 +72,22 @@ class StatusOr : public Either<util::Status, V> {
   const V& Value() const { return this->right; }
 };
 
-#define RETURN_IF_ERROR(expr) _RETURN_IF_ERROR(expr, MAKE_UNIQUE(expr_result_))
-#define _RETURN_IF_ERROR(expr, expr_result_) \
-  do {                                       \
-    auto expr_result_ = (expr);              \
-    if (expr_result_.Ok()) {                 \
-      break;                                 \
-    }                                        \
-    return expr_result_.AsStatus();          \
+#define RETURN_IF_ERROR(expr) _RETURN_IF_ERROR(expr, UNIQUE_VARIABLE)
+#define _RETURN_IF_ERROR(expr, expr_result) \
+  do {                                      \
+    auto expr_result = (expr);              \
+    if (expr_result.Ok()) {                 \
+      break;                                \
+    }                                       \
+    return expr_result.AsStatus();          \
   } while (0)
 
 #define ASSIGN_OR_RETURN(lhs, expr) \
-  _ASSIGN_OR_RETURN(lhs, expr, MAKE_UNIQUE(status_or_))
-#define _ASSIGN_OR_RETURN(lhs, expr, status_or_)      \
-  auto status_or_ = (expr);                           \
-  if (!status_or_.Ok()) return status_or_.AsStatus(); \
-  lhs = status_or_.Value();
+  _ASSIGN_OR_RETURN(lhs, expr, UNIQUE_VARIABLE)
+#define _ASSIGN_OR_RETURN(lhs, expr, status_or)     \
+  auto status_or = (expr);                          \
+  if (!status_or.Ok()) return status_or.AsStatus(); \
+  lhs = status_or.Value();
 
 #define RET_CHECK(...) UTIL_OVERLOAD_MACROS_VA_SELECT_2(RET_CHECK, __VA_ARGS__)
 

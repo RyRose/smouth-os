@@ -10,7 +10,7 @@
 #define CONCATENATE(lhs, rhs) _CONCATENATE(lhs, rhs)
 #define _CONCATENATE(lhs, rhs) lhs##rhs
 
-// MAKE_UNIQUE returns the expression such that it can be uniquely identified.
-#define MAKE_UNIQUE(expr) CONCATENATE(expr, __COUNTER__)
+// UNIQUE_VARIABLE is an expression that can be used as a unique variable name.
+#define UNIQUE_VARIABLE CONCATENATE(variable_, __COUNTER__)
 
 #endif  // UTIL_META_MACROS_H

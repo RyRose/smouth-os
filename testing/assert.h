@@ -3,6 +3,7 @@
 
 #include <ostream>
 
+#include "util/meta_macros.h"
 #include "util/status.h"
 
 namespace util {
@@ -48,22 +49,16 @@ namespace testing {
         << _TESTING_FORMAT_INTERNAL(#expr, expr_result_.AsStatus()); \
   } while (0)
 
-#define _ASSERT_OK_AND_ASSIGN_INTERNAL(status_or, lhs, expr)      \
+#define ASSERT_OK_AND_ASSIGN(lhs, expr) \
+  _ASSERT_OK_AND_ASSIGN(lhs, expr, UNIQUE_VARIABLE)
+
+#define _ASSERT_OK_AND_ASSIGN(lhs, expr, status_or)               \
   auto status_or = (expr);                                        \
   do {                                                            \
     ASSERT_TRUE(status_or.Ok())                                   \
         << _TESTING_FORMAT_INTERNAL(#expr, status_or.AsStatus()); \
   } while (0);                                                    \
-  lhs = status_or.Value();
-
-#define _ASSERT_OK_AND_ASSIGN_JOIN_INTERNAL(left, right) left##right
-
-#define _ASSERT_OK_AND_ASSIGN_JOIN(left, right) \
-  _ASSERT_OK_AND_ASSIGN_JOIN_INTERNAL(left, right)
-
-#define ASSERT_OK_AND_ASSIGN(lhs, expr) \
-  _ASSERT_OK_AND_ASSIGN_INTERNAL(       \
-      _ASSERT_OK_AND_ASSIGN_JOIN(status_or, __COUNTER__), lhs, expr)
+  lhs = status_or.Value()
 
 }  // namespace testing
 
