@@ -1,3 +1,5 @@
+load("//kernel:templates.bzl", "kernel_test")
+
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 cc_library(
@@ -46,5 +48,19 @@ cc_library(
     deps = [
         "//libc:stdio",
         "//libc:stdlib",
+    ],
+)
+
+kernel_test(
+    name = "interrupt_ktest",
+    srcs = [
+        "interrupt_ktest.cc",
+    ],
+    deps = [
+        ":isrs",
+        ":table",
+        "//kernel/arch/i386/instructions",
+        "//kernel/testing:macros",
+        "//libc:stdio",
     ],
 )
