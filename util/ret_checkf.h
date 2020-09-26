@@ -6,112 +6,103 @@
 #include "util/status.h"
 
 namespace util {
-// Statically-allocated array of chars for RET_CHECKF to fall back to use if
-// unable to allocate the message on the heap.
+// Statically-allocated array of chars for RET_CHECKF to use to store messages.
 extern char kRetCheckfMessage[1024];
 }  // namespace util
 
 #define RET_CHECKF(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_3(_RET_CHECKF, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_2(RET_CHECKF, __VA_ARGS__)
 
-#define _RET_CHECKF_1(expr) RET_CHECK(expr)
+#define RET_CHECKF_1(expr) RET_CHECK_1(expr)
 
-#define _RET_CHECKF_2(expr, message) RET_CHECK(expr, message)
+#define RET_CHECKF_2(expr, message) RET_CHECK_2(expr, message)
 
-#define _RET_CHECKF_3(expr, format, ...)                                       \
+#define RET_CHECKF_N(expr, format, ...) \
+  _RET_CHECKF_N(expr, format, STRINGIZE(expr), UNIQUE_VARIABLE, __VA_ARGS__)
+#define _RET_CHECKF_N(expr, format, expr_string, snprintf_result, ...)         \
   do {                                                                         \
     if ((expr)) {                                                              \
       break;                                                                   \
     }                                                                          \
-    char* _asprintf_message;                                                   \
-    auto _asprintf_result =                                                    \
-        libc::asprintf(&_asprintf_message, "%s:%d: %s: " format, __FILE__,     \
-                       __LINE__, #expr, __VA_ARGS__);                          \
-    if (_asprintf_result.Ok()) {                                               \
-      return util::Status(util::ErrorCode::INTERNAL, _asprintf_message);       \
-    }                                                                          \
-    auto _snprintf_result = libc::snprintf(                                    \
+    const auto snprintf_result = libc::snprintf(                               \
         util::kRetCheckfMessage, sizeof(util::kRetCheckfMessage),              \
-        "%s:%d: %s: " format, __FILE__, __LINE__, #expr, __VA_ARGS__);         \
-    if (_snprintf_result.Ok()) {                                               \
+        "%s:%d: %s: " format, __FILE__, __LINE__, expr_string, __VA_ARGS__);   \
+    if (snprintf_result.Ok()) {                                                \
       return util::Status(util::ErrorCode::INTERNAL, util::kRetCheckfMessage); \
     }                                                                          \
     return util::Status(util::ErrorCode::INTERNAL, format);                    \
   } while (0)
 
 #define _RET_CHECKF_OP(lhs, rhs, op) \
-  _RET_CHECKF_OP_MESSAGE(lhs, rhs, op, "INTERNAL")
+  _RET_CHECKF_OP_FORMAT(lhs, rhs, op, "%s", "INTERNAL")
 
-#define _RET_CHECKF_OP_MESSAGE(lhs, rhs, op, message)                       \
-  do {                                                                      \
-    auto _lhs = (lhs);                                                      \
-    auto _rhs = (rhs);                                                      \
-    RET_CHECKF(_lhs op _rhs,                                                \
-               #lhs " (%v) " #op " " #rhs " (%v) not true: " message, _lhs, \
-               _rhs);                                                       \
-  } while (0)
+#define _RET_CHECKF_OP_MESSAGE(lhs, rhs, op, message) \
+  _RET_CHECKF_OP_FORMAT(lhs, rhs, op, "%s", message)
 
-#define _RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, ...)                   \
-  do {                                                                     \
-    auto _lhs = (lhs);                                                     \
-    auto _rhs = (rhs);                                                     \
-    RET_CHECKF(_lhs op _rhs,                                               \
-               #lhs " (%v) " #op " " #rhs " (%v) not true: " format, _lhs, \
-               _rhs, __VA_ARGS__);                                         \
+#define _RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, ...)        \
+  __RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, UNIQUE_VARIABLE, \
+                         UNIQUE_VARIABLE, __VA_ARGS__)
+#define __RET_CHECKF_OP_FORMAT(lhs, rhs, op, format, lhs_, rhs_, ...) \
+  do {                                                                \
+    const auto lhs_ = (lhs);                                          \
+    const auto rhs_ = (rhs);                                          \
+    _RET_CHECKF_N(lhs_ op rhs_, "'%v " #op " %v' not true: " format,  \
+                  STRINGIZE(lhs op rhs), UNIQUE_VARIABLE, lhs_, rhs_, \
+                  __VA_ARGS__);                                       \
   } while (0)
 
 #define RET_CHECKF_EQ(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_4(_RET_CHECKF_EQ, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_3(RET_CHECKF_EQ, __VA_ARGS__)
 
-#define _RET_CHECKF_EQ_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, ==)
-#define _RET_CHECKF_EQ_3(lhs, rhs, message) \
+#define RET_CHECKF_EQ_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, ==)
+#define RET_CHECKF_EQ_3(lhs, rhs, message) \
   _RET_CHECKF_OP_MESSAGE(lhs, rhs, ==, message)
-#define _RET_CHECKF_EQ_4(lhs, rhs, ...) \
+#define RET_CHECKF_EQ_N(lhs, rhs, ...) \
   _RET_CHECKF_OP_FORMAT(lhs, rhs, ==, __VA_ARGS__)
 
 #define RET_CHECKF_NE(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_4(_RET_CHECKF_NE, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_3(RET_CHECKF_NE, __VA_ARGS__)
 
-#define _RET_CHECKF_NE_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, !=)
-#define _RET_CHECKF_NE_3(lhs, rhs, message) \
+#define RET_CHECKF_NE_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, !=)
+#define RET_CHECKF_NE_3(lhs, rhs, message) \
   _RET_CHECKF_OP_MESSAGE(lhs, rhs, !=, message)
-#define _RET_CHECKF_NE_4(lhs, rhs, ...) \
+#define RET_CHECKF_NE_N(lhs, rhs, ...) \
   _RET_CHECKF_OP_FORMAT(lhs, rhs, !=, __VA_ARGS__)
 
 #define RET_CHECKF_LE(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_4(_RET_CHECKF_LE, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_3(RET_CHECKF_LE, __VA_ARGS__)
 
-#define _RET_CHECKF_LE_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, <=)
-#define _RET_CHECKF_LE_3(lhs, rhs, message) \
+#define RET_CHECKF_LE_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, <=)
+#define RET_CHECKF_LE_3(lhs, rhs, message) \
   _RET_CHECKF_OP_MESSAGE(lhs, rhs, <=, message)
-#define _RET_CHECKF_LE_4(lhs, rhs, ...) \
+#define RET_CHECKF_LE_N(lhs, rhs, ...) \
   _RET_CHECKF_OP_FORMAT(lhs, rhs, <=, __VA_ARGS__)
 
 #define RET_CHECKF_LT(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_4(_RET_CHECKF_LT, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_3(RET_CHECKF_LT, __VA_ARGS__)
 
-#define _RET_CHECKF_LT_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, <)
-#define _RET_CHECKF_LT_3(lhs, rhs, message) \
+#define RET_CHECKF_LT_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, <)
+#define RET_CHECKF_LT_3(lhs, rhs, message) \
   _RET_CHECKF_OP_MESSAGE(lhs, rhs, <, message)
-#define _RET_CHECKF_LT_4(lhs, rhs, ...) \
+#define RET_CHECKF_LT_N(lhs, rhs, ...) \
   _RET_CHECKF_OP_FORMAT(lhs, rhs, <, __VA_ARGS__)
 
 #define RET_CHECKF_GE(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_4(_RET_CHECKF_GE, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_3(RET_CHECKF_GE, __VA_ARGS__)
 
-#define _RET_CHECKF_GE_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, >=)
-#define _RET_CHECKF_GE_3(lhs, rhs, message) \
+#define RET_CHECKF_GE_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, >=)
+#define RET_CHECKF_GE_3(lhs, rhs, message) \
   _RET_CHECKF_OP_MESSAGE(lhs, rhs, >=, message)
-#define _RET_CHECKF_GE_4(lhs, rhs, ...) \
+#define RET_CHECKF_GE_N(lhs, rhs, ...) \
   _RET_CHECKF_OP_FORMAT(lhs, rhs, >=, __VA_ARGS__)
 
 #define RET_CHECKF_GT(...) \
-  UTIL_OVERLOAD_MACROS_VA_SELECT_4(_RET_CHECKF_GT, __VA_ARGS__)
+  UTIL_OVERLOAD_MACROS_VA_SELECT_3(RET_CHECKF_GT, __VA_ARGS__)
 
-#define _RET_CHECKF_GT_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, >)
-#define _RET_CHECKF_GT_3(lhs, rhs, message) \
+#define RET_CHECKF_GT_2(lhs, rhs) _RET_CHECKF_OP(lhs, rhs, >)
+#define RET_CHECKF_GT_3(lhs, rhs, message) \
   _RET_CHECKF_OP_MESSAGE(lhs, rhs, >, message)
-#define _RET_CHECKF_GT_4(lhs, rhs, ...) \
+#define RET_CHECKF_GT_N(lhs, rhs, ...) \
   _RET_CHECKF_OP_FORMAT(lhs, rhs, >, __VA_ARGS__)
 
 #endif  // UTIL_RET_CHECKF_H

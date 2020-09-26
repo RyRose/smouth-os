@@ -10,6 +10,7 @@ cc_library(
     ],
     deps = [
         ":either",
+        ":meta_macros",
         ":overload_macros",
     ],
 )
@@ -129,5 +130,13 @@ cc_library(
         "overload_macros.h",
     ],
     deps = [
+        ":meta_macros",
+    ],
+)
+
+cc_library(
+    name = "meta_macros",
+    hdrs = [
+        "meta_macros.h",
     ],
 )

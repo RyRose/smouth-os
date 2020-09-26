@@ -6,7 +6,6 @@
 build \
   --build_tag_filters -i386-only,-arch-only \
   --test_tag_filters -i386-only,-arch-only \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
   --verbose_failures \
   --strip=never
 
@@ -23,6 +22,7 @@ build:i386 \
   --build_tag_filters i386,i386-only,arch-only \
   --test_tag_filters i386,i386-only,arch-only \
   --crosstool_top=//tools/toolchain \
+  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
   --cpu=i386 \
   --compiler=g++ \
   --action_env=WORKSPACE=toolchain-i686-elf \
