@@ -152,7 +152,7 @@ util::StatusOr<const char*> MultibootMmapEntryTypeName(
 }
 
 util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
-  RET_CHECK(multiboot_ptr);
+  RET_CHECK(multiboot_ptr != nullptr);
   libc::puts("Multiboot Info: {");
   libc::printf("  flags: 0x%x\n", multiboot_ptr->flags);
   libc::printf("  mem_lower: %d KiB\n", multiboot_ptr->mem_lower);

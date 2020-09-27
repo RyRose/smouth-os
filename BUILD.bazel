@@ -2,11 +2,12 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # Calling bazel info in an output directory returns the following error string:
 # ERROR: bazel should not be called from a bazel output directory. The pertinent workspace directory is: '/foo/bar/baz/smouth-os'
-# We parse this by grabbing the last space-separated value in the string.
+# We parse this by grabbing the last space-separated value in the string. Yes, this is a terrible hack and it would be
+# nice if there was a way (or I knew of a way) to get this in a less hacky manner.
 genrule(
     name = "workspace_name",
-    cmd = "bazel info workspace 2>&1 | grep -o \"/[^']*\" &> $@ || true",
     outs = ["name.txt"],
+    cmd = "bazel info workspace 2>&1 | grep -o \"/[^']*\" &> $@ || true",
     tags = ["local"],
     visibility = ["//visibility:public"],
 )
