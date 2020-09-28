@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include "libc/string.h"
+#include "util/ret_checkf.h"
 #include "util/status.h"
 
 namespace util {
@@ -11,24 +12,31 @@ template <class V, size_t N>
 class List {
  public:
   util::Status Add(const V& value) {
-    RET_CHECK(size_ < N);
+    RET_CHECKF_LT(size_, N);
+
     array_[size_] = value;
     size_++;
     return {};
   }
 
   util::StatusOr<V*> At(size_t index) {
-    RET_CHECK(0 <= index && index < size_);
+    RET_CHECKF_LE(0, index);
+    RET_CHECKF_LT(index, size_);
+
     return &array_[index];
   }
 
-  util::StatusOr<V*> At(size_t index) const {
-    RET_CHECK(0 <= index && index < size_);
+  util::StatusOr<const V*> At(size_t index) const {
+    RET_CHECKF_LE(0, index);
+    RET_CHECKF_LT(index, size_);
+
     return const_cast<V*>(&array_[index]);
   }
 
   util::Status Set(size_t index, const V& value) {
-    RET_CHECK(0 <= index && index < N);
+    RET_CHECKF_LE(0, index);
+    RET_CHECKF_LT(index, N);
+
     array_[index] = value;
     if (index >= size_) {
       size_ = index + 1;
@@ -37,7 +45,10 @@ class List {
   }
 
   util::Status Insert(size_t index, const V& value) {
-    RET_CHECK(0 <= index && index < N && size_ < N);
+    RET_CHECKF_LE(0, index);
+    RET_CHECKF_LT(index, N);
+    RET_CHECKF_LT(size_, N);
+
     if (index >= size_) {
       array_[index] = value;
       size_ = index + 1;

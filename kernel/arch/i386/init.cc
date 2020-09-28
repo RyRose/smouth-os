@@ -22,14 +22,6 @@ InterruptDescriptorTable<256> idt;
 
 util::Status InitializeInterrupts() {
   ASSIGN_OR_RETURN(
-      const auto& dummy_handler,
-      GateDescriptor::Create(
-          /*offset=*/reinterpret_cast<uintptr_t>(isrs::dummy_handler),
-          /*segment_selector=*/0x8, /*gate_type=*/GateType::INTERRUPT_32BIT,
-          /*dpl=*/0));
-  RETURN_IF_ERROR(idt.Register(0x80, dummy_handler));
-
-  ASSIGN_OR_RETURN(
       const auto& double_fault,
       GateDescriptor::Create(
           /*offset=*/reinterpret_cast<uintptr_t>(isrs::double_fault),
@@ -39,8 +31,6 @@ util::Status InitializeInterrupts() {
 
   libc::printf("Loading IDT with IDTR 0x%x.\n", idt.IDTR());
   RETURN_IF_ERROR(instructions::LIDT(idt.IDTR()));
-  libc::puts("Triggering interrupt handler 0x80.");
-  instructions::INT<0x80>();
   return {};
 }
 
@@ -93,15 +83,15 @@ util::StatusOr<util::List<MemoryRegion, 100>> InitializeMemoryRegions(
   const size_t mmap_entry_count =
       multiboot_ptr->mmap_length / sizeof(multiboot_mmap_entry);
   for (size_t i = 0; i < mmap_entry_count; i++) {
-    MemoryRegion region;
-    region.address = mmap_entries[i].addr;
-    region.length = mmap_entries[i].len;
+    MemoryRegionType type;
     if (mmap_entries[i].type == MULTIBOOT_MEMORY_AVAILABLE) {
-      region.type = MemoryRegionType::AVAILABLE;
+      type = MemoryRegionType::AVAILABLE;
     } else {
-      region.type = MemoryRegionType::RESERVED;
+      type = MemoryRegionType::RESERVED;
     }
-    RETURN_IF_ERROR(entries.Add(region));
+    RETURN_IF_ERROR(entries.Add(MemoryRegion(
+        /*address=*/mmap_entries[i].addr, /*length=*/mmap_entries[i].len,
+        /*type=*/type)));
   }
 
   // Reserve memory for kernel data.
@@ -162,7 +152,7 @@ util::StatusOr<const char*> MultibootMmapEntryTypeName(
 }
 
 util::Status PrintMultibootInfo(multiboot_info* multiboot_ptr) {
-  RET_CHECK(multiboot_ptr);
+  RET_CHECK(multiboot_ptr != nullptr);
   libc::puts("Multiboot Info: {");
   libc::printf("  flags: 0x%x\n", multiboot_ptr->flags);
   libc::printf("  mem_lower: %d KiB\n", multiboot_ptr->mem_lower);
