@@ -8,8 +8,6 @@ case "${OS}" in
     brew install qemu
     ;;
   linux)
-    LD_LIBRARY_PATH=/usr/local/lib64/:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt-get update
     sudo apt-get install -y libstdc++6 gcc-7 g++-7 qemu
