@@ -5,18 +5,17 @@ DEPS = [
     "makeinfo",
     "sh",
     "pwd",
-    "python",
+    "python3",
 ]
 
 def _report_progress(ctx, state, status):
     ctx.report_progress("step %d of %d: %s" % (state["step"], state["num_steps"], status))
     state["step"] += 1
 
-def _check_dependencies(ctx, state):
-    _report_progress(ctx, state, "checking dependencies")
+def _check_dependencies(ctx):
     nondeps = []
     for dep in DEPS:
-        if ctx.which(dep) == None:
+        if not ctx.which(dep):
             nondeps.append(dep)
     if nondeps:
         fail("%s requires %s as dependencies. Please check your PATH." % (ctx.name, nondeps))
@@ -106,16 +105,16 @@ def _build_gcc(ctx, state):
     _execute(ctx, "rm -rf build-gcc")
 
 def _toolchain_impl(ctx):
+    _check_dependencies(ctx)
     state = {
         "step": 1,
-        "num_steps": 12,
+        "num_steps": 11,
         "cpu_count": int(_execute(
             ctx,
-            "python -c 'import multiprocessing; print(multiprocessing.cpu_count())'",
+            "python3 -c 'import multiprocessing; print(multiprocessing.cpu_count())'",
         ).stdout.strip()),
         "prefix": _execute(ctx, "pwd").stdout.strip(),
     }
-    _check_dependencies(ctx, state)
     _build_binutils(ctx, state)
     _build_gcc(ctx, state)
     ctx.symlink(ctx.attr.build_file, "BUILD")
