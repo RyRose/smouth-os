@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 func restoreTerminal() error {
@@ -43,12 +44,15 @@ func (v *VM) Serial(ctx context.Context) ([]byte, error) {
 	}
 	var output bytes.Buffer
 	scanner := bufio.NewScanner(cmdReader)
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		for scanner.Scan() {
 			output.Write(scanner.Bytes())
 			output.WriteByte('\n')
 			log.Print(fmt.Sprintf("%q", scanner.Text()))
 		}
+		wg.Done()
 	}()
 
 	var stderr bytes.Buffer
@@ -58,6 +62,7 @@ func (v *VM) Serial(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		err = fmt.Errorf("failed to run QEMU: %w:\n%v", err, stderr.String())
 	}
+	wg.Wait()
 	return output.Bytes(), err
 }
 
