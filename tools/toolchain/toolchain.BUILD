@@ -50,7 +50,6 @@ filegroup(
     srcs = glob([
         "libexec/**",
         "lib/gcc/**/**",
-        "include/**",
         "lib/gcc/**/**/include/*.h",
         "**/**",
     ]),

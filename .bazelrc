@@ -9,6 +9,20 @@ build \
   --verbose_failures \
   --strip=never
 
+# https://github.com/bazelbuild/bazel/issues/8195
+build --incompatible_disallow_empty_glob
+
+# https://github.com/bazelbuild/bazel/issues/10225
+build --incompatible_no_implicit_file_export
+
+# https://github.com/bazelbuild/bazel/issues/8622
+# TODO: Enable once dependencies allow.
+# build --incompatible_use_platforms_repo_for_constraints
+
+# https://github.com/bazelbuild/bazel/issues/7260
+# TODO: Enable once I have time.
+# # build --incompatible_enable_cc_toolchain_resolution
+
 test \
   --test_output=errors \
   --test_verbose_timeout_warnings
