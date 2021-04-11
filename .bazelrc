@@ -4,6 +4,7 @@
 #######################################
 
 build \
+  --noincompatible_use_specific_tool_files \
   --build_tag_filters -i386-only,-arch-only \
   --test_tag_filters -i386-only,-arch-only \
   --verbose_failures \
