@@ -34,6 +34,6 @@ esac
 
 # Install Bazel.
 chmod +x "${installer}"
-"${installer}" --user
+"./${installer}" --user
 rm "${installer}"
 
