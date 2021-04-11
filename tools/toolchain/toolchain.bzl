@@ -55,6 +55,7 @@ def toolchain(name, workspace, target, target_cpu, compiler, **kwargs):
             binary_mapping["g++"],
             binary_mapping["gcc"],
             binary_mapping["ld"],
+            "@%s//:compiler_pieces" % workspace,
         ],
         **kwargs
     )
@@ -82,6 +83,8 @@ def toolchain(name, workspace, target, target_cpu, compiler, **kwargs):
         all_files = all_files,
         compiler_files = compiler_files,
         dwp_files = empty,
+        as_files = binary_mapping["as"],
+        ar_files = binary_mapping["ar"],
         linker_files = linker_files,
         objcopy_files = binary_mapping["objcopy"],
         strip_files = binary_mapping["strip"],

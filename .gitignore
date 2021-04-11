@@ -2,7 +2,6 @@
 *~
 *#
 /bazel-*
-bazel-*
 *.swp
 .clwb/
 .ijwb/

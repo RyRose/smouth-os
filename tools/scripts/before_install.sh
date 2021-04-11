@@ -18,13 +18,14 @@ case "${OS}" in
 esac
 
 # Download Bazel install script and verify matches checksum.
-wget -O install.sh "https://github.com/bazelbuild/bazel/releases/download/${V}/bazel-${V}-installer-${OS}-x86_64.sh"
+installer="bazel-${V}-installer-${OS}-x86_64.sh"
+wget "https://github.com/bazelbuild/bazel/releases/download/${V}/${installer}"
 case "${OS}" in
   darwin)
-    shasum -a 256 -c "tools/checksums/bazel-${V}-installer-${OS}-x86_64"
+    shasum -a 256 -c "tools/checksums/${installer}.sha256"
     ;;
   linux)
-    sha256sum --check "tools/checksums/bazel-${V}-installer-${OS}-x86_64"
+    sha256sum --check "tools/checksums/${installer}.sha256"
     ;;
   *)
     echo "${OS} is not a supported OS."
@@ -32,7 +33,7 @@ case "${OS}" in
 esac
 
 # Install Bazel.
-chmod +x install.sh
-./install.sh --user
-rm install.sh
+chmod +x "${installer}"
+"./${installer}" --user
+rm "${installer}"
 

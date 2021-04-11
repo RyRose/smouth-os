@@ -7,7 +7,7 @@ os:
   - osx
 
 env:
-  - V=0.29.0
+  - V=4.0.0
 
 addons:
   apt:

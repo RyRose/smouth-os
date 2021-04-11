@@ -3,6 +3,8 @@ load("//kernel:templates.bzl", "kernel_test")
 
 package(default_visibility = ["//kernel:__subpackages__"])
 
+exports_files(["init.h"])
+
 arch_library(
     name = "boot",
     hdrs = [],
