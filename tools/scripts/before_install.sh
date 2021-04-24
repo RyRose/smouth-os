@@ -8,9 +8,7 @@ case "${OS}" in
     brew install qemu
     ;;
   linux)
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    sudo apt-get update
-    sudo apt-get install -y libstdc++6 gcc-7 g++-7 qemu
+    sudo apt-get install -y qemu
     ;;
   *)
     echo "${OS} is not a supported OS."
