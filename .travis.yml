@@ -18,7 +18,10 @@ matrix:
             - g++-7
             - qemu
       env:
-        - BAZEL_OS=linux
+        - BAZEL_OS=linux ARCH_CONFIG=i386
+        - BAZEL_OS=linux ARCH_CONFIG=i386-linux-premade
+        global:
+          - SHA256SUM="sha256sum --check"
     - os: osx
       osx_image: xcode12
       addons:
@@ -26,12 +29,16 @@ matrix:
           packages:
             - qemu
       env:
-        - BAZEL_OS=darwin
+        - BAZEL_OS=darwin ARCH_CONFIG=i386
+        - BAZEL_OS=darwin ARCH_CONFIG=i386-darwin-premade
+        global:
+          - SHA256SUM="shasum -a 256 -c"
 
 before_install:
-  - tools/scripts/before_install.sh
+  - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}" "${SHA256SUM}"
 
 script:
-  - tools/scripts/continuous.sh
+  - tools/scripts/continuous.sh "${ARCH_CONFIG}"
+
 notifications:
   email: false
