@@ -1,12 +1,8 @@
 #!/bin/sh
 
-if [ -z "${BAZEL_OS}" ]; then
-  I386_PREMADE_CONFIG_FLAG=""
-else
-  I386_PREMADE_CONFIG_FLAG="--config i386-${BAZEL_OS}-premade"
-fi
-
 set -eux;
+
+CROSS_COMPILE_CONFIG="${1:-i386}"
 
 bazel test \
   --config ci \
@@ -14,6 +10,5 @@ bazel test \
 
 bazel test \
   --config ci \
-  --config i386 \
-  ${I386_PREMADE_CONFIG_FLAG} \
+  --config "${CROSS_COMPILE_CONFIG}" \
   -- //...
