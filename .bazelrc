@@ -1,13 +1,39 @@
 
-#######################################
-## Options used across builds/tests. ##
-#######################################
+###################################################
+## Default options used across all builds/tests. ##
+###################################################
 
-build \
-  --build_tag_filters -i386-only,-arch-only \
-  --test_tag_filters -i386-only,-arch-only \
-  --verbose_failures \
-  --strip=never
+# By default, only build rules that can run natively.
+build --build_tag_filters -i386-only,-arch-only
+build --test_tag_filters -i386-only,-arch-only
+
+# Build with C++17.
+build --cxxopt="-std=c++17"
+
+# Add a whole host of useful warnings.
+build --cxxopt="-Wall"
+build --cxxopt="-Wcast-align"
+build --cxxopt="-Wextra"
+build --cxxopt="-Wformat-nonliteral"
+build --cxxopt="-Wformat=2"
+build --cxxopt="-Winvalid-pch"
+build --cxxopt="-Wlogical-op"
+build --cxxopt="-Wmissing-declarations"
+build --cxxopt="-Wmissing-format-attribute"
+build --cxxopt="-Wno-free-nonheap-object"  # has false positives
+build --cxxopt="-Wodr"
+build --cxxopt="-Wold-style-cast"
+build --cxxopt="-Wpedantic"
+build --cxxopt="-Wredundant-decls"
+build --cxxopt="-Wrestrict"
+build --cxxopt="-Wshadow"
+build --cxxopt="-Wswitch-default"
+build --cxxopt="-Wswitch"
+build --cxxopt="-Wunused-but-set-parameter"
+build --cxxopt="-Wuseless-cast"
+
+# Colorize compilation output to make it easier to read.
+build --cxxopt="-fdiagnostics-color=always"
 
 # https://github.com/bazelbuild/bazel/issues/8195
 build --incompatible_disallow_empty_glob
@@ -17,46 +43,52 @@ build --incompatible_no_implicit_file_export
 
 # https://github.com/bazelbuild/bazel/issues/8622
 # TODO: Enable once dependencies allow.
-# build --incompatible_use_platforms_repo_for_constraints
+build --noincompatible_use_platforms_repo_for_constraints
 
 # https://github.com/bazelbuild/bazel/issues/7260
 # TODO: Enable once I have time.
-# # build --incompatible_enable_cc_toolchain_resolution
+build --noincompatible_enable_cc_toolchain_resolution
 
-test \
-  --test_output=errors \
-  --test_verbose_timeout_warnings
+########################################
+## Configs for customizing any build. ##
+########################################
+
+# Config for compiling debug builds.
+build:dbg -c dbg
+build:dbg --cxxopt="-g"
+
+# Configs for compiling optimized builds.
+build:opt -c opt
 
 ####################################################################
-## Options for cross-compiling SmouthOS on the i386 architecture. ##
+## Configs for cross-compiling SmouthOS on the i386 architecture. ##
 ####################################################################
 
 # Build and use local toolchain.
-build:i386 \
-  --build_tag_filters i386,i386-only,arch-only \
-  --test_tag_filters i386,i386-only,arch-only \
-  --crosstool_top=//tools/toolchain \
-  --host_crosstool_top=@bazel_tools//tools/cpp:toolchain \
-  --cpu=i386 \
-  --compiler=g++ \
-  --action_env=WORKSPACE=toolchain-i686-elf \
-  --action_env=TARGET=i686-elf
+build:i386 --build_tag_filters i386,i386-only,arch-only
+build:i386 --test_tag_filters i386,i386-only,arch-only
+build:i386 --crosstool_top=//tools/toolchain
+build:i386 --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:i386 --cpu=i386
+build:i386 --compiler=g++
+build:i386 --action_env=WORKSPACE=toolchain-i686-elf
+build:i386 --action_env=TARGET=i686-elf
 
 # Use pre-built Linux toolchain. For use in CI.
-build:i386-linux-premade \
-  --crosstool_top=//tools/toolchain:linux-premade \
-  --action_env=WORKSPACE=toolchain-i686-elf-linux \
+build:i386-linux-premade --crosstool_top=//tools/toolchain:linux-premade
+build:i386-linux-premade --action_env=WORKSPACE=toolchain-i686-elf-linux
 
 # Use pre-built MacOS toolchain. For use in CI.
-build:i386-darwin-premade \
-  --crosstool_top=//tools/toolchain:darwin-premade \
-  --action_env=WORKSPACE=toolchain-i686-elf-darwin
+build:i386-darwin-premade --crosstool_top=//tools/toolchain:darwin-premade
+build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
 ############################################################################
 ## Continuous Integration (ci) options for running SmouthOS on Travis CI. ##
 ############################################################################
 
-build:ci \
-  --noshow_progress \
-  --noshow_loading_progress \
-  --color=no
+# Disable progress monitor to ensure that hangs surface as timeouts on reading output.
+build:ci --noshow_progress
+build:ci --noshow_loading_progress
+
+# Enable -Werror on all builds except for external libraries like gtest.
+build:ci --per_file_copt=.*\.(cc|cpp),-gtest/.*@-Werror
