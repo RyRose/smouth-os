@@ -75,12 +75,12 @@ build:i386 --action_env=WORKSPACE=toolchain-i686-elf
 build:i386 --action_env=TARGET=i686-elf
 
 # Use pre-built Linux toolchain. For use in CI.
-build:i386-linux-premade --config i386
+build:i386-linux-premade --config=i386
 build:i386-linux-premade --crosstool_top=//tools/toolchain:linux-premade
 build:i386-linux-premade --action_env=WORKSPACE=toolchain-i686-elf-linux
 
 # Use pre-built MacOS toolchain. For use in CI.
-build:i386-darwin-premade --config i386
+build:i386-darwin-premade --config=i386
 build:i386-darwin-premade --crosstool_top=//tools/toolchain:darwin-premade
 build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
