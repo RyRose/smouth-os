@@ -2,13 +2,9 @@
 
 set -eux;
 
-CROSS_COMPILE_CONFIG="${1:-i386}"
+CONFIG="${1}"
 
 bazel test \
   --config ci \
+  --config "${CONFIG}" \
   --  //...
-
-bazel test \
-  --config ci \
-  --config "${CROSS_COMPILE_CONFIG}" \
-  -- //...

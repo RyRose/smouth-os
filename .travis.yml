@@ -16,12 +16,24 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+      env:
+        - BAZEL_OS=linux CONFIG=ci
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
             - qemu
       env:
-        - BAZEL_OS=linux ARCH_CONFIG=i386
-        - BAZEL_OS=linux ARCH_CONFIG=i386-linux-premade
-        global:
-          - SHA256SUM="sha256sum --check"
+        - BAZEL_OS=linux CONFIG=i386
+        - BAZEL_OS=linux CONFIG=i386-linux-premade
+    - os: osx
+      osx_image: xcode12
+      env:
+        - BAZEL_OS=darwin CONFIG=ci
     - os: osx
       osx_image: xcode12
       addons:
@@ -29,16 +41,14 @@ matrix:
           packages:
             - qemu
       env:
-        - BAZEL_OS=darwin ARCH_CONFIG=i386
-        - BAZEL_OS=darwin ARCH_CONFIG=i386-darwin-premade
-        global:
-          - SHA256SUM="shasum -a 256 -c"
+        - BAZEL_OS=darwin CONFIG=i386
+        - BAZEL_OS=darwin CONFIG=i386-darwin-premade
 
 before_install:
-  - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}" "${SHA256SUM}"
+  - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
 
 script:
-  - tools/scripts/continuous.sh "${ARCH_CONFIG}"
+  - tools/scripts/continuous.sh "${CONFIG}"
 
 notifications:
   email: false
