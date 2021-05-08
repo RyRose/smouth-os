@@ -1,31 +1,33 @@
-dist: trusty
 language: cpp
-osx_image: xcode12
 
-os:
-  - linux
-  - osx
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - qemu
+      env:
+        - BAZEL_OS="linux"
+    - os: osx
+      osx_image: xcode12
+      addons:
+        homebrew:
+          packages:
+            - qemu
+      env:
+        - BAZEL_OS="darwin"
 
 env:
-  - V=4.0.0
-
-addons:
-  apt:
-    update: true
+  - BAZEL_VERSION="4.0.0"
+  - CC="gcc-7"
+  - CXX="g++-7"
 
 before_install:
-  - |
-    case "${TRAVIS_OS_NAME}" in
-      osx)
-        export OS=darwin
-        ;;
-      linux)
-        export OS=linux
-        ;;
-      *)
-        echo "${TRAVIS_OS_NAME} is not a supported OS."
-        exit 1
-    esac
   - tools/scripts/before_install.sh
 
 script:
