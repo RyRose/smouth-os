@@ -28,6 +28,7 @@ jobs:
           packages:
             - g++-7
             - qemu
+            - texinfo
       env:
         - BAZEL_OS=linux
         - CONFIG=i386
