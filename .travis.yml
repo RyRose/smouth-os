@@ -26,7 +26,13 @@ jobs:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - bison
+            - build-essential
+            - flex
             - g++-7
+            - libgmp3-dev
+            - libmpc-dev
+            - libmpfr-dev
             - qemu
             - texinfo
       env:
