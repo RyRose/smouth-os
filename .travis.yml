@@ -1,5 +1,11 @@
 language: cpp
 
+env:
+  global:
+    - BAZEL_VERSION=4.0.0
+    - CC=gcc-7
+    - CXX=g++-7
+
 matrix:
   include:
     - os: linux
@@ -12,7 +18,7 @@ matrix:
             - g++-7
             - qemu
       env:
-        - MATRIX_EVAL="BAZEL_OS=linux && CC=gcc-7 && CXX=g++-7"
+        - BAZEL_OS=linux
     - os: osx
       osx_image: xcode12
       addons:
@@ -20,10 +26,9 @@ matrix:
           packages:
             - qemu
       env:
-        - MATRIX_EVAL="BAZEL_OS=darwin && CC=gcc-7 && CXX=g++-7"
+        - BAZEL_OS=darwin
 
 before_install:
-  - eval "${MATRIX_EVAL}"
   - tools/scripts/before_install.sh
 
 script:
