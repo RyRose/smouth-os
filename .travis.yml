@@ -6,7 +6,7 @@ env:
     - CC=gcc-7
     - CXX=g++-7
 
-matrix:
+jobs:
   include:
     - os: linux
       dist: trusty
@@ -17,7 +17,8 @@ matrix:
           packages:
             - g++-7
       env:
-        - BAZEL_OS=linux CONFIG=ci
+        - BAZEL_OS=linux
+        - CONFIG=ci
     - os: linux
       dist: trusty
       addons:
@@ -28,12 +29,25 @@ matrix:
             - g++-7
             - qemu
       env:
-        - BAZEL_OS=linux CONFIG=i386
-        - BAZEL_OS=linux CONFIG=i386-linux-premade
+        - BAZEL_OS=linux
+        - CONFIG=i386
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - qemu
+      env:
+        - BAZEL_OS=linux
+        - CONFIG=i386-linux-premade
     - os: osx
       osx_image: xcode12
       env:
-        - BAZEL_OS=darwin CONFIG=ci
+        - BAZEL_OS=darwin
+        - CONFIG=ci
     - os: osx
       osx_image: xcode12
       addons:
@@ -41,8 +55,17 @@ matrix:
           packages:
             - qemu
       env:
-        - BAZEL_OS=darwin CONFIG=i386
-        - BAZEL_OS=darwin CONFIG=i386-darwin-premade
+        - BAZEL_OS=darwin
+        - CONFIG=i386
+    - os: osx
+      osx_image: xcode12
+      addons:
+        homebrew:
+          packages:
+            - qemu
+      env:
+        - BAZEL_OS=darwin
+        - CONFIG=i386-darwin-premade
 
 before_install:
   - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
