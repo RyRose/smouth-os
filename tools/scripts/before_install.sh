@@ -2,23 +2,10 @@
 
 set -eux
 
-# Install OS-specific dependencies.
-case "${OS}" in
-  darwin)
-    brew install qemu
-    ;;
-  linux)
-    sudo apt-get install -y qemu
-    ;;
-  *)
-    echo "${OS} is not a supported OS."
-    exit 1
-esac
-
 # Download Bazel install script and verify matches checksum.
-installer="bazel-${V}-installer-${OS}-x86_64.sh"
-wget "https://github.com/bazelbuild/bazel/releases/download/${V}/${installer}"
-case "${OS}" in
+installer="bazel-${BAZEL_VERSION}-installer-${BAZEL_OS}-x86_64.sh"
+wget "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/${installer}"
+case "${BAZEL_OS}" in
   darwin)
     shasum -a 256 -c "tools/checksums/${installer}.sha256"
     ;;
@@ -26,7 +13,7 @@ case "${OS}" in
     sha256sum --check "tools/checksums/${installer}.sha256"
     ;;
   *)
-    echo "${OS} is not a supported OS."
+    echo "${BAZEL_OS} is not a supported OS."
     exit 1
 esac
 
