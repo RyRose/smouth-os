@@ -23,9 +23,6 @@ env:
     - CC=gcc-7
     - CXX=g++-7
     - CACHE=true
-  jobs:
-    - ACTION=test
-
 
 cache:
   directories:

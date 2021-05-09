@@ -13,6 +13,7 @@ build --cxxopt="-std=c++17"
 # Add a whole host of useful warnings.
 build --cxxopt="-Wall"
 build --cxxopt="-Wextra"
+build --cxxopt="-Wpedantic"
 build --cxxopt="-Wformat-nonliteral"
 build --cxxopt="-Wformat=2"
 build --cxxopt="-Winvalid-pch"
@@ -20,11 +21,10 @@ build --cxxopt="-Wmissing-declarations"
 build --cxxopt="-Wmissing-format-attribute"
 build --cxxopt="-Wodr"
 build --cxxopt="-Wold-style-cast"
-build --cxxopt="-Wpedantic"
 build --cxxopt="-Wredundant-decls"
 build --cxxopt="-Wshadow"
-build --cxxopt="-Wswitch-default"
 build --cxxopt="-Wswitch"
+build --cxxopt="-Wswitch-default"
 
 # Colorize compilation output to make it easier to read.
 build --cxxopt="-fdiagnostics-color=always"
@@ -84,6 +84,3 @@ build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
 # Slow progress monitor to reduce progress spam.
 build:ci --show_progress_rate_limit=10
-
-# Enable -Werror on all builds except for external libraries like gtest.
-build:ci --per_file_copt=.*\.(cc|cpp),-gtest/.*@-Werror
