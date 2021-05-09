@@ -17,12 +17,6 @@ _env:
     - &config_i386_linux_premade
         CONFIG=i386-linux-premade
 
-  _bazel_oses:
-    - &bazel_os_linux
-        BAZEL_OS=linux
-    - &bazel_os_darwin
-        BAZEL_OS=darwin
-
 env:
   global:
     - BAZEL_VERSION=4.0.0
@@ -58,12 +52,10 @@ jobs:
   include:
     - <<: *linux
       env:
-        - *bazel_os_linux
         - *action_test
         - *config_ci
     - <<: *osx
       env:
-        - *bazel_os_darwin
         - *action_test
         - *config_ci
 
@@ -81,7 +73,6 @@ jobs:
             - libmpfr-dev
             - texinfo
       env:
-        - *bazel_os_linux
         - *action_build
         - *config_i386
     - <<: *linux
@@ -99,7 +90,6 @@ jobs:
             - libmpfr-dev
             - texinfo
       env:
-        - *bazel_os_linux
         - *action_test
         - *config_i386
     - <<: *linux
@@ -110,13 +100,11 @@ jobs:
             - g++-7
             - qemu
       env:
-        - *bazel_os_linux
         - *action_test
         - *config_i386_linux_premade
 
     - <<: *osx
       env:
-        - *bazel_os_darwin
         - *action_build
         - *config_i386
     - <<: *osx
@@ -125,7 +113,6 @@ jobs:
           packages:
             - qemu
       env:
-        - *bazel_os_darwin
         - *action_test
         - *config_i386
     - <<: *osx
@@ -134,11 +121,19 @@ jobs:
           packages:
             - qemu
       env:
-        - *bazel_os_darwin
         - *action_test
         - *config_i386_darwin_premade
 
 before_install:
+  - |
+    case ${TRAVIS_OS_NAME} in
+      osx)
+        BAZEL_OS=osx
+        ;;
+      linux)
+        BAZEL_OS=linux
+        ;;
+    esac
   - tools/scripts/install_bazel.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
 
 script:

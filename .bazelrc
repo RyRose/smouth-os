@@ -88,8 +88,8 @@ build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 ## Continuous Integration (ci) options for running SmouthOS on Travis CI. ##
 ############################################################################
 
-# Disable progress monitor to ensure that hangs surface as timeouts on reading output.
-build:ci --noshow_progress
+# Slow progress monitor to reduce progress spam.
+build:ci --show_progress_rate_limit=10
 
 # Enable -Werror on all builds except for external libraries like gtest.
 build:ci --per_file_copt=.*\.(cc|cpp),-gtest/.*@-Werror
