@@ -104,6 +104,15 @@ jobs:
         - *config_i386_linux_premade
 
     - <<: *osx
+      addons:
+        homebrew:
+          packages:
+            - bison
+            - flex
+            - gmp
+            - libmpc
+            - mpfr
+            - texinfo
       env:
         - *action_build
         - *config_i386
@@ -112,6 +121,12 @@ jobs:
         homebrew:
           packages:
             - qemu
+            - bison
+            - flex
+            - gmp
+            - libmpc
+            - mpfr
+            - texinfo
       env:
         - *action_test
         - *config_i386
