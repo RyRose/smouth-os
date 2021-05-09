@@ -42,32 +42,15 @@ _jobs:
     os: linux
     dist: trusty
     addons:
-      apt:
+      apt: &linux_apt
         sources:
           - ubuntu-toolchain-r-test
         packages:
           - g++-7
-    env:
-      - *bazel_os_linux
-
-  _linux_native: &linux_native
-    <<: *linux
-    addons:
-      apt:
-        packages:
-          - bison
-          - build-essential
-          - flex
-          - libgmp3-dev
-          - libmpc-dev
-          - libmpfr-dev
-          - texinfo
 
   _osx: &osx
     os: osx
     osx_image: xcode12
-    env:
-      - *bazel_os_darwin
 
 
 jobs:
@@ -79,20 +62,41 @@ jobs:
         - *config_ci
     - <<: *osx
       env:
-        - *bazel_os_linux
+        - *bazel_os_darwin
         - *action_test
         - *config_ci
 
-    - <<: *linux_native
+    - <<: *linux
+      addons:
+        apt:
+          <<: *linux_apt
+          packages:
+            - g++-7
+            - bison
+            - build-essential
+            - flex
+            - libgmp3-dev
+            - libmpc-dev
+            - libmpfr-dev
+            - texinfo
       env:
         - *bazel_os_linux
         - *action_build
         - *config_i386
-    - <<: *linux_native
+    - <<: *linux
       addons:
         apt:
+          <<: *linux_apt
           packages:
+            - g++-7
             - qemu
+            - bison
+            - build-essential
+            - flex
+            - libgmp3-dev
+            - libmpc-dev
+            - libmpfr-dev
+            - texinfo
       env:
         - *bazel_os_linux
         - *action_test
@@ -100,13 +104,15 @@ jobs:
     - <<: *linux
       addons:
         apt:
+          <<: *linux_apt
           packages:
+            - g++-7
             - qemu
       env:
         - *bazel_os_linux
         - *action_test
-        - CONFIG=i386-linux-premade
-        -
+        - *config_i386_linux_premade
+
     - <<: *osx
       env:
         - *bazel_os_darwin
@@ -129,7 +135,7 @@ jobs:
       env:
         - *bazel_os_darwin
         - *action_test
-        - CONFIG=i386-darwin-premade
+        - *config_i386_darwin_premade
 
 before_install:
   - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
