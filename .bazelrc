@@ -12,25 +12,19 @@ build --cxxopt="-std=c++17"
 
 # Add a whole host of useful warnings.
 build --cxxopt="-Wall"
-build --cxxopt="-Wcast-align"
 build --cxxopt="-Wextra"
 build --cxxopt="-Wformat-nonliteral"
 build --cxxopt="-Wformat=2"
 build --cxxopt="-Winvalid-pch"
-build --cxxopt="-Wlogical-op"
 build --cxxopt="-Wmissing-declarations"
 build --cxxopt="-Wmissing-format-attribute"
-build --cxxopt="-Wno-free-nonheap-object"  # has false positives
 build --cxxopt="-Wodr"
 build --cxxopt="-Wold-style-cast"
 build --cxxopt="-Wpedantic"
 build --cxxopt="-Wredundant-decls"
-build --cxxopt="-Wrestrict"
 build --cxxopt="-Wshadow"
 build --cxxopt="-Wswitch-default"
 build --cxxopt="-Wswitch"
-build --cxxopt="-Wunused-but-set-parameter"
-build --cxxopt="-Wuseless-cast"
 
 # Colorize compilation output to make it easier to read.
 build --cxxopt="-fdiagnostics-color=always"
