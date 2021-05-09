@@ -6,7 +6,7 @@ ACTION="${1:-test}"
 CONFIG="${2:-i386}"
 CACHE="${3:-false}"
 
-if [ "${CACHE}" == "true" ]; then
+if [ "${CACHE}" = "true" ]; then
   bazel \
     --output_base "${HOME}/.cache/bazel/output" \
     "${ACTION}" \

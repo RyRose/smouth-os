@@ -128,7 +128,7 @@ before_install:
   - |
     case ${TRAVIS_OS_NAME} in
       osx)
-        BAZEL_OS=osx
+        BAZEL_OS=darwin
         ;;
       linux)
         BAZEL_OS=linux
