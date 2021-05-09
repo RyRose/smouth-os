@@ -29,8 +29,8 @@ env:
 
 cache:
   directories:
-    - $HOME/.bazel_repository_cache
-    - $HOME/.cache/bazel/output
+    - ${HOME}/${TRAVIS_OS_NAME}/.bazel_repository_cache
+    - ${HOME}/${TRAVIS_OS_NAME}/.cache/bazel/output
 
 _jobs:
   _linux: &linux
@@ -123,7 +123,6 @@ jobs:
             - qemu
             - bison
             - flex
-            - gmp
             - libmpc
             - mpfr
             - texinfo
