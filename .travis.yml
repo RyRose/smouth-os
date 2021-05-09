@@ -17,6 +17,11 @@ _env:
     - &config_i386_linux_premade
         CONFIG=i386-linux-premade
 
+  _bazel_oses:
+    - &bazel_os_linux
+        BAZEL_OS=linux
+    - &bazel_os_darwin
+        BAZEL_OS=darwin
 
 env:
   global:
@@ -43,7 +48,7 @@ _jobs:
         packages:
           - g++-7
     env:
-      - BAZEL_OS=linux
+      - *bazel_os_linux
 
   _linux_native: &linux_native
     <<: *linux
@@ -62,22 +67,25 @@ _jobs:
     os: osx
     osx_image: xcode12
     env:
-      - BAZEL_OS=darwin
+      - *bazel_os_darwin
 
 
 jobs:
   include:
     - <<: *linux
       env:
+        - *bazel_os_linux
         - *action_test
         - *config_ci
     - <<: *osx
       env:
+        - *bazel_os_linux
         - *action_test
         - *config_ci
 
     - <<: *linux_native
       env:
+        - *bazel_os_linux
         - *action_build
         - *config_i386
     - <<: *linux_native
@@ -86,6 +94,7 @@ jobs:
           packages:
             - qemu
       env:
+        - *bazel_os_linux
         - *action_test
         - *config_i386
     - <<: *linux
@@ -94,11 +103,13 @@ jobs:
           packages:
             - qemu
       env:
+        - *bazel_os_linux
         - *action_test
         - CONFIG=i386-linux-premade
         -
     - <<: *osx
       env:
+        - *bazel_os_darwin
         - *action_build
         - *config_i386
     - <<: *osx
@@ -107,6 +118,7 @@ jobs:
           packages:
             - qemu
       env:
+        - *bazel_os_darwin
         - *action_test
         - *config_i386
     - <<: *osx
@@ -115,6 +127,7 @@ jobs:
           packages:
             - qemu
       env:
+        - *bazel_os_darwin
         - *action_test
         - CONFIG=i386-darwin-premade
 
