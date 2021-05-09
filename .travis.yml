@@ -28,6 +28,7 @@ env:
     - BAZEL_VERSION=4.0.0
     - CC=gcc-7
     - CXX=g++-7
+    - CACHE=true
   jobs:
     - ACTION=test
 
@@ -141,7 +142,7 @@ before_install:
   - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
 
 script:
-  - tools/scripts/continuous.sh "${ACTION}" "${CONFIG}"
+  - tools/scripts/continuous.sh "${ACTION}" "${CONFIG}" "${CACHE}"
 
 notifications:
   email: false
