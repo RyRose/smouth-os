@@ -139,10 +139,10 @@ jobs:
         - *config_i386_darwin_premade
 
 before_install:
-  - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
+  - tools/scripts/install_bazel.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
 
 script:
-  - tools/scripts/continuous.sh "${ACTION}" "${CONFIG}" "${CACHE}"
+  - tools/scripts/run_bazel.sh "${ACTION}" "${CONFIG}" "${CACHE}"
 
 notifications:
   email: false
