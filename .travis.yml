@@ -106,7 +106,9 @@ jobs:
           packages:
             - bison
             - flex
+            - gcc
             - gmp
+            - glibc
             - libmpc
             - mpfr
             - texinfo
@@ -120,6 +122,9 @@ jobs:
             - qemu
             - bison
             - flex
+            - gcc
+            - gmp
+            - glibc
             - libmpc
             - mpfr
             - texinfo
