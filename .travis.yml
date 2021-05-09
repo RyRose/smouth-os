@@ -1,84 +1,128 @@
 language: cpp
 
+_env:
+  _actions:
+    - &action_build
+        ACTION=build
+    - &action_test
+        ACTION=test
+
+  _configs:
+    - &config_ci
+        CONFIG=ci
+    - &config_i386
+        CONFIG=i386
+    - &config_i386_darwin_premade
+        CONFIG=i386-darwin-premade
+    - &config_i386_linux_premade
+        CONFIG=i386-linux-premade
+
+
 env:
   global:
     - BAZEL_VERSION=4.0.0
     - CC=gcc-7
     - CXX=g++-7
+  jobs:
+    - ACTION=test
+
+
+cache:
+  directories:
+    - $HOME/.bazel_repository_cache
+    - $HOME/.cache/bazel/output
+
+_jobs:
+  _linux: &linux
+    os: linux
+    dist: trusty
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-7
+    env:
+      - BAZEL_OS=linux
+
+  _linux_native: &linux_native
+    <<: *linux
+    addons:
+      apt:
+        packages:
+          - bison
+          - build-essential
+          - flex
+          - libgmp3-dev
+          - libmpc-dev
+          - libmpfr-dev
+          - texinfo
+
+  _osx: &osx
+    os: osx
+    osx_image: xcode12
+    env:
+      - BAZEL_OS=darwin
+
 
 jobs:
   include:
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
+    - <<: *linux
       env:
-        - BAZEL_OS=linux
-        - CONFIG=ci
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - bison
-            - build-essential
-            - flex
-            - g++-7
-            - libgmp3-dev
-            - libmpc-dev
-            - libmpfr-dev
-            - qemu
-            - texinfo
+        - *action_test
+        - *config_ci
+    - <<: *osx
       env:
-        - BAZEL_OS=linux
-        - CONFIG=i386
-    - os: linux
-      dist: trusty
+        - *action_test
+        - *config_ci
+
+    - <<: *linux_native
+      env:
+        - *action_build
+        - *config_i386
+    - <<: *linux_native
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
           packages:
-            - g++-7
             - qemu
       env:
-        - BAZEL_OS=linux
+        - *action_test
+        - *config_i386
+    - <<: *linux
+      addons:
+        apt:
+          packages:
+            - qemu
+      env:
+        - *action_test
         - CONFIG=i386-linux-premade
-    - os: osx
-      osx_image: xcode12
+        -
+    - <<: *osx
       env:
-        - BAZEL_OS=darwin
-        - CONFIG=ci
-    - os: osx
-      osx_image: xcode12
+        - *action_build
+        - *config_i386
+    - <<: *osx
       addons:
         homebrew:
           packages:
             - qemu
       env:
-        - BAZEL_OS=darwin
-        - CONFIG=i386
-    - os: osx
-      osx_image: xcode12
+        - *action_test
+        - *config_i386
+    - <<: *osx
       addons:
         homebrew:
           packages:
             - qemu
       env:
-        - BAZEL_OS=darwin
+        - *action_test
         - CONFIG=i386-darwin-premade
 
 before_install:
   - tools/scripts/before_install.sh "${BAZEL_VERSION}" "${BAZEL_OS}"
 
 script:
-  - tools/scripts/continuous.sh "${CONFIG}"
+  - tools/scripts/continuous.sh "${ACTION}" "${CONFIG}"
 
 notifications:
   email: false
