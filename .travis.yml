@@ -51,44 +51,47 @@ jobs:
       env:
         - *action_test
         - *config_ci
+
     - <<: *osx
       env:
         - *action_test
         - *config_ci
 
-    - <<: *linux
-      addons:
-        apt:
-          <<: *linux_apt
-          packages:
-            - g++-7
-            - bison
-            - build-essential
-            - flex
-            - libgmp3-dev
-            - libmpc-dev
-            - libmpfr-dev
-            - texinfo
-      env:
-        - *action_build
-        - *config_i386
-    - <<: *linux
-      addons:
-        apt:
-          <<: *linux_apt
-          packages:
-            - g++-7
-            - qemu
-            - bison
-            - build-essential
-            - flex
-            - libgmp3-dev
-            - libmpc-dev
-            - libmpfr-dev
-            - texinfo
-      env:
-        - *action_test
-        - *config_i386
+    #    - <<: *linux
+    #      addons:
+    #        apt:
+    #          <<: *linux_apt
+    #          packages:
+    #            - g++-7
+    #            - bison
+    #            - build-essential
+    #            - flex
+    #            - libgmp3-dev
+    #            - libmpc-dev
+    #            - libmpfr-dev
+    #            - texinfo
+    #      env:
+    #        - *action_build
+    #        - *config_i386
+
+    #    - <<: *linux
+    #      addons:
+    #        apt:
+    #          <<: *linux_apt
+    #          packages:
+    #            - g++-7
+    #            - qemu
+    #            - bison
+    #            - build-essential
+    #            - flex
+    #            - libgmp3-dev
+    #            - libmpc-dev
+    #            - libmpfr-dev
+    #            - texinfo
+    #      env:
+    #        - *action_test
+    #        - *config_i386
+
     - <<: *linux
       addons:
         apt:
@@ -100,37 +103,39 @@ jobs:
         - *action_test
         - *config_i386_linux_premade
 
-    - <<: *osx
-      addons:
-        homebrew:
-          packages:
-            - bison
-            - flex
-            - gcc
-            - gmp
-            - glibc
-            - libmpc
-            - mpfr
-            - texinfo
-      env:
-        - *action_build
-        - *config_i386
-    - <<: *osx
-      addons:
-        homebrew:
-          packages:
-            - qemu
-            - bison
-            - flex
-            - gcc
-            - gmp
-            - glibc
-            - libmpc
-            - mpfr
-            - texinfo
-      env:
-        - *action_test
-        - *config_i386
+    #    - <<: *osx
+    #      addons:
+    #        homebrew:
+    #          packages:
+    #            - bison
+    #            - flex
+    #            - gcc
+    #            - gmp
+    #            - glibc
+    #            - libmpc
+    #            - mpfr
+    #            - texinfo
+    #      env:
+    #        - *action_build
+    #        - *config_i386
+
+    #    - <<: *osx
+    #      addons:
+    #        homebrew:
+    #          packages:
+    #            - qemu
+    #            - bison
+    #            - flex
+    #            - gcc
+    #            - gmp
+    #            - glibc
+    #            - libmpc
+    #            - mpfr
+    #            - texinfo
+    #      env:
+    #        - *action_test
+    #        - *config_i386
+
     - <<: *osx
       addons:
         homebrew:
