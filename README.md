@@ -55,11 +55,14 @@ Please note they are examples and the ktest's build target should be replaced
 with the ktest you are debugging:
 
 ```shell script
-# Run the ktest with qemu-system-i386 and print serial port output to standard out.
+# Run the ktest with qemu-system-i386 and displays output on QEMU monitor.
+bazel run --config i386 //kernel/core:init_ktest-qemu
+
+# Run the ktest with qemu-system-i386 and prints serial port output to standard out.
 bazel run --config i386 //kernel/core:init_ktest-serial
 
 # Load the ktest with qemu-system-i386 and remotely debug with GDB.
-bazel run --config i386 //kernel/core:init_ktest-gdb
+bazel run --config i386 --config dbg //kernel/core:init_ktest-gdb
 ```
 
 ## Goal

@@ -43,13 +43,19 @@ def all_flags(name):
                 flag_groups = [
                     flag_group(
                         flags = [
+                            # Disable stdlib and system startup files since they require runtime support.
                             "-nostdlib",
-                            "-ffreestanding",
                             "-nostartfiles",
-                            "-fno-exceptions",
-                            "-fno-rtti",
-                            "-std=gnu++17",
+                            # Necessary for internal GCC library subroutines. These are usually made available in
+                            # the stdlib but we've disabled it. They don't require runtime support.
                             "-lgcc",
+                            # Asserts that the compiler targets freestanding environment. The kernel does not run in a
+                            # hosted environment.
+                            "-ffreestanding",
+                            # Disable exceptions since they require runtime support.
+                            "-fno-exceptions",
+                            # Disable RTTI since it requires runtime support.
+                            "-fno-rtti",
                         ],
                     ),
                 ],
@@ -76,33 +82,10 @@ def compiler_flags(name, workspace, target, gcc_version):
                 flag_groups = [
                     flag_group(
                         flags = [
-                            "-g",
-                            "-MD",
-                            "-lk",
                             "-fstack-protector",
                             # TODO(RyRose): Remove flag when lock/mutex primitives can enforce local static guards.
                             "-fno-threadsafe-statics",
-                            "-Wall",
-                            "-Wcast-align",
-                            "-Wextra",
-                            "-Wformat-nonliteral",
-                            "-Wformat=2",
-                            "-Winvalid-pch",
-                            "-Wlogical-op",
-                            "-Wmissing-declarations",
-                            "-Wmissing-format-attribute",
-                            "-Wno-free-nonheap-object",  # has false positives
-                            "-Wodr",
-                            "-Wold-style-cast",
-                            "-Wpedantic",
-                            "-Wredundant-decls",
-                            "-Wrestrict",
-                            "-Wshadow",
-                            "-Wswitch-default",
-                            "-Wswitch",
-                            "-Wunused-but-set-parameter",
-                            "-Wuseless-cast",
-                            "-fdiagnostics-color=always",
+                            # Make available system libraries that don't need runtime support.
                             "-isystem",
                             "external/%s/lib/gcc/%s/%s/include" % (workspace, target, gcc_version),
                             "-isystem",

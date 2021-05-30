@@ -8,6 +8,8 @@
 
 namespace util {
 
+std::ostream& operator<<(std::ostream& stream, const Status& status);
+
 std::ostream& operator<<(std::ostream& stream, const Status& status) {
   const auto& code = util::ErrorCodeName(status.Code());
   const char* msg = status.Message();
