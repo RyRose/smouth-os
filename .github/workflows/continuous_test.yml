@@ -1,5 +1,9 @@
 name: continuous-testing
-on: [ push, pull_request ]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '@daily'
 
 env:
   BAZEL_VERSION: 4.0.0
