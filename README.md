@@ -1,4 +1,4 @@
-# smouth-os [![Build Status](https://travis-ci.org/RyRose/smouth-os.svg?branch=main)](https://travis-ci.org/RyRose/smouth-os)
+# smouth-os  [![Build Status](https://github.com/RyRose/smouth-os/actions/workflows/continuous_test.yml/badge.svg)](https://github.com/RyRose/smouth-os/actions/workflows/continuous_test.yml)
 
 ## How to Run
 
