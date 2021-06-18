@@ -19,9 +19,9 @@ jobs:
             packages: [g++-7]
           - action: test
             config: i386-linux-premade
-            packages: [g++-7, qemu]
+            packages: [g++-7, qemu-system-i386]
     steps:
-      - run: sudo apt-get install ${{ join(matrix.packages, ' ') }}
+      - run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
       - name: Check out repository code
         uses: actions/checkout@v2
       - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ env.BAZEL_OS_NAME }}"
