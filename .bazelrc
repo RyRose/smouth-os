@@ -84,3 +84,7 @@ build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
 # Slow progress monitor to reduce progress spam.
 build:ci --show_progress_rate_limit=10
+build:ci --config=opt
+build:ci --verbose_failures
+build:ci --cxxopt="-v"
+build:ci --cxxopt="-Wl,--verbose"

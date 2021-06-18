@@ -1,0 +1,43 @@
+name: continuous-testing
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  BAZEL_VERSION: 4.0.0
+  CC: gcc-7
+  CXX: g++-7
+
+jobs:
+  run-bazel:
+    runs-on: ubuntu-latest
+    env:
+      BAZEL_OS_NAME: linux
+    strategy:
+      matrix:
+        include:
+          - action: test
+            config: ci
+            packages: [g++-7]
+          - action: test
+            config: i386-linux-premade
+            packages: [g++-7, qemu-system-i386]
+    steps:
+      - run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ env.BAZEL_OS_NAME }}"
+      - run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}"
+      - if: ${{ failure() }}
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: command.log
+          path: ${{ github.workspace }}/command.log
+      - if: ${{ failure() }}
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: test logs
+          path: ${{ github.workspace }}/bazel-testlogs/**/test.log
+
