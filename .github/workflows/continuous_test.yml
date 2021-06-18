@@ -24,6 +24,9 @@ jobs:
           - action: test
             config: i386-linux-premade
             packages: [g++-7, qemu-system-i386]
+          - action: test
+            config: i386
+            packages: [g++-7, qemu-system-i386, bison, build-essential, flex, libgmp3-dev, libmpc-dev, libmpfr-dev, texinfo]
     steps:
       - run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
       - name: Check out repository code
