@@ -3,7 +3,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '@daily'
+    - cron: '0 0 * * *'
 
 env:
   BAZEL_VERSION: 4.0.0
