@@ -10,6 +10,7 @@ if [ "${CACHE}" = "true" ]; then
   bazel \
     --output_base "${HOME}/.cache/bazel/output" \
     "${ACTION}" \
+    -s \
     --experimental_repository_cache "${HOME}/.bazel_repository_cache" \
     --test_strategy standalone \
     --genrule_strategy standalone \
@@ -20,6 +21,7 @@ if [ "${CACHE}" = "true" ]; then
 fi
 
 bazel "${ACTION}" \
+  -s \
   --config ci \
   --config "${CONFIG}" \
   --  //...
