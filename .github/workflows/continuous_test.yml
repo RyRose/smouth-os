@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v2
       - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ env.BAZEL_OS_NAME }}"
       - run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}" "${{ matrix.cache }}"
-      - if: ${{ always() && matrix.cache == "true" }}
+      - if: ${{ always() && matrix.cache == 'true' }}
         name: Cache Bazel outputs
         uses: actions/cache@v2
         with:
