@@ -29,11 +29,11 @@ jobs:
       - if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
         with:
-          name: command.log
+          name: command.log - ${{ github.job }}
           path: ${{ github.workspace }}/command.log
       - if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
         with:
-          name: test.log
-          path: ${{ github.workspace }}/**/test.log
+          name: test logs - ${{ github.job }}
+          path: ${{ github.workspace }}/bazel-testlogs/**/test.log
 
