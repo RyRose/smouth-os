@@ -30,6 +30,6 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
-#      - run: "${{env.GITHUB_WORKSPACE}}/tools/scripts/install_bazel.sh" "${{env.BAZEL_VERSION}}" "${{env.BAZEL_OS_NAME}}"
+      - run: "${{ github.workspace }}/tools/scripts/install_bazel.sh" "${{ env.BAZEL_VERSION }}" "${{ env.BAZEL_OS_NAME }}"
 #      - run: "${{env.GITHUB_WORKSPACE}}/tools/scripts/run_bazel.sh" "${{matrix.action}}" "${{matrix.config}}"
 
