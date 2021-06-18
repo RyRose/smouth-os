@@ -20,19 +20,30 @@ jobs:
         include:
           - action: test
             config: ci
+            cache: false
             packages: [g++-7]
           - action: test
             config: i386-linux-premade
+            cache: false
             packages: [g++-7, qemu-system-i386]
           - action: test
             config: i386
+            cache: true
             packages: [g++-7, qemu-system-i386, bison, build-essential, flex, libgmp3-dev, libmpc-dev, libmpfr-dev, texinfo]
     steps:
       - run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
       - name: Check out repository code
         uses: actions/checkout@v2
       - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ env.BAZEL_OS_NAME }}"
-      - run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}"
+      - run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}" "${{ matrix.cache }}"
+      - if: ${{ always() && matrix.cache == "true" }}
+        name: Cache Bazel outputs
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/bazel/output
+            ~/.bazel_repository_cache
+          key: bazel-${{ runner.os }}-${{ matrix.config }}
       - if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
         with:
