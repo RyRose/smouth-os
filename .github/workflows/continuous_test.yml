@@ -7,7 +7,7 @@ env:
   CXX: g++-7
 
 jobs:
-  linux: &linux
+  linux:
     runs-on: ubuntu-latest
     env:
       BAZEL_OS_NAME: linux
@@ -19,7 +19,7 @@ jobs:
           - action: test
             config: i386-linux-premade
     steps:
-      - uses: actions/checkout@v2
+      - uses: "actions/checkout@v2"
       - run: "${{env.GITHUB_WORKSPACE}}/tools/scripts/install_bazel.sh" "${{env.BAZEL_VERSION}}" "${{env.BAZEL_OS_NAME}}"
       - run: "${{env.GITHUB_WORKSPACE}}/tools/scripts/run_bazel.sh" "${{matrix.action}}" "${{matrix.config}}"
 
