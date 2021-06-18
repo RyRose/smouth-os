@@ -29,6 +29,11 @@ jobs:
       - if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
         with:
+          name: command.log
+          path: ${{ github.workspace }}/command.log
+      - if: ${{ failure() }}
+        uses: 'actions/upload-artifact@v2'
+        with:
           name: test.log
-          path: ${{ github.workspace }}/test.log
+          path: ${{ github.workspace }}/**/test.log
 
