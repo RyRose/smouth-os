@@ -12,29 +12,49 @@ env:
 
 jobs:
   run-bazel:
-    runs-on: ubuntu-latest
-    env:
-      BAZEL_OS_NAME: linux
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - action: test
             config: ci
+            os: ubuntu-latest
+            bazel_os_name: linux
             cache: true
             packages: [g++-7]
           - action: test
+            config: ci
+            os: macos-latest
+            bazel_os_name: darwin
+            cache: true
+            packages: []
+          - action: test
             config: i386-linux-premade
+            os: ubuntu-latest
+            bazel_os_name: linux
             cache: true
             packages: [g++-7, qemu-system-i386]
           - action: test
+            config: i386-darwin-premade
+            os: macos-latest
+            bazel_os_name: darwin
+            cache: true
+            packages: [qemu]
+          - action: test
             config: i386
+            os: ubuntu-latest
+            bazel_os_name: linux
             cache: true
             packages: [g++-7, qemu-system-i386, bison, build-essential, flex, libgmp3-dev, libmpc-dev, libmpfr-dev, texinfo]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - name: Install required OS packages.
+      - if: ${{ runner.os == 'Linux' && matrix.packages }}
+        name: Install required Linux packages.
         run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
+      - if: ${{ runner.os == 'macOS' && matrix.packages }}
+        name: Install required macOS packages.
+        run: sudo brew install ${{ join(matrix.packages, ' ') }}
       - if: ${{ matrix.cache }}
         name: Cache Bazel outputs
         uses: actions/cache@v2
@@ -43,7 +63,7 @@ jobs:
             ~/.cache/bazel/output
             ~/.bazel_repository_cache
           key: bazel-cache-${{ matrix.config }}-${{ runner.os }}
-      - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ env.BAZEL_OS_NAME }}"
+      - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ matrix.bazel_os_name }}"
       - run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}" "${{ matrix.cache }}"
       - if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
