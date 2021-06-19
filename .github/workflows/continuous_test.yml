@@ -54,7 +54,7 @@ jobs:
         run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
       - if: ${{ runner.os == 'macOS' && matrix.packages }}
         name: Install required macOS packages.
-        run: sudo brew install ${{ join(matrix.packages, ' ') }}
+        run: brew install -y ${{ join(matrix.packages, ' ') }}
       - if: ${{ matrix.cache }}
         name: Cache Bazel outputs
         uses: actions/cache@v2
