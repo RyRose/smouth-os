@@ -51,7 +51,7 @@ jobs:
             os: macos-latest
             bazel_os_name: darwin
             cache: true
-            packages: [qemu]
+            packages: [qemu, bison, flex, gcc, gmp, glibc, libmpc, mpfr, texinfo]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
