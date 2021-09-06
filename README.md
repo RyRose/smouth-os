@@ -37,8 +37,7 @@ and verifies logic that cannot run in a hosted environment. This will take
 upwards of an hour to run the first time since it must create the
 cross-compilation toolchain. You might try running one of the following commands
 if you want to avoid this latency but there's no guarantee that it will work
-outside of the continuous integration test environment in
-[Travis CI](https://travis-ci.org/RyRose/smouth-os):
+outside of the continuous integration test environment:
 
 ```shell script
 # Linux
