@@ -78,9 +78,9 @@ build:i386-darwin-premade --config=i386
 build:i386-darwin-premade --crosstool_top=//tools/toolchain:darwin-premade
 build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
-############################################################################
-## Continuous Integration (ci) options for running SmouthOS on Travis CI. ##
-############################################################################
+###############################################################
+## Continuous Integration (ci) options for running SmouthOS. ##
+###############################################################
 
 # Slow progress monitor to reduce progress spam.
 build:ci --show_progress_rate_limit=10

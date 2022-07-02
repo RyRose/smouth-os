@@ -80,6 +80,7 @@ func (v *VM) GDB(ctx context.Context) error {
 		"-ex", fmt.Sprintf("file %s", v.Kernel),
 		"-ex", "target remote :1234",
 		"-ex", "layout split",
+		"-ex", "break KernelMain",
 	)
 	gdb.Stdin = os.Stdin
 	gdb.Stdout = os.Stdout
