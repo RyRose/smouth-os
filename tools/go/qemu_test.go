@@ -20,6 +20,7 @@ import (
 var (
 	cpu    = flag.String("cpu", "", "Guest architecture to run with.")
 	kernel = flag.String("kernel", "", "Path to the kernel to boot.")
+	subTestName = flag.String("sub_test_name", "", "Name of the sub-test to launch.")
 )
 
 type logWriter struct {
@@ -32,6 +33,10 @@ func (l *logWriter) Write(p []byte) (n int, err error) {
 }
 
 func TestRun(t *testing.T) {
+    t.Run(*subTestName, testRun)
+}
+
+func testRun(t *testing.T) {
 	flag.Parse()
 	log.SetOutput(&logWriter{t})
 

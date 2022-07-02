@@ -4,6 +4,7 @@ def qemu_test(name, kernel, **kwargs):
     go_test(
         name = name,
         args = kwargs.pop("args", []) + [
+            "--sub_test_name=%s" % name,
             "--cpu=$(TARGET_CPU)",
             "--kernel=$(rootpath %s)" % kernel,
         ],
