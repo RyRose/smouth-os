@@ -192,7 +192,9 @@ class Printer {
     }
     for (int i = 0; data[i]; i++) {
       if (c == 'q' && data[i] == '"') {
-        ASSIGN_OR_RETURN(const int temp, PutChar('\\'));
+        ASSIGN_OR_RETURN(int temp, PutChar('\\'));
+        count += temp;
+        ASSIGN_OR_RETURN(temp, PutChar('"'));
         count += temp;
         i += 1;
       }

@@ -71,6 +71,14 @@ TEST_F(StdioTest, HexIntsBig) {
   EXPECT_EQ(30, length);
 }
 
+TEST_F(StdioTest, EscapeQuotes) {
+  ASSERT_OK_AND_ASSIGN(
+      const auto& length,
+      libc::printf("a %q e", "b \"c\" d"));
+  EXPECT_EQ("a \"b \\\"c\\\" d\" e", *kernel_cache);
+  EXPECT_EQ(15, length);
+}
+
 TEST_F(StdioTest, Sprintf) {
   char actual[100];
   ASSERT_OK_AND_ASSIGN(const auto& length, libc::sprintf(actual, "test"));
