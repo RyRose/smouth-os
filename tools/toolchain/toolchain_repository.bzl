@@ -84,7 +84,7 @@ def _build_binutils(ctx, state):
         "cd build-binutils && " +
         "../binutils/configure " +
         "--target=%s " % ctx.attr.target +
-        "--prefix=%s " % state[STATE_PREFIX] +
+        "--prefix=%s " % ("" if state.get(STATE_DRY_RUN, False) else state[STATE_PREFIX]) +
         "--with-sysroot " +
         "--disable-nls " +
         "--disable-werror",
@@ -113,7 +113,7 @@ def _build_gcc(ctx, state):
         "cd build-gcc && " +
         "../gcc/configure " +
         "--target=%s " % ctx.attr.target +
-        "--prefix=%s " % state[STATE_PREFIX] +
+        "--prefix=%s " % ("" if state.get(STATE_DRY_RUN, False) else state[STATE_PREFIX]) +
         "--disable-nls " +
         "--enable-languages=c,c++ " +
         "--without-headers",
@@ -131,10 +131,7 @@ def _build(ctx, state):
 
 def _toolchain_impl(ctx):
     _check_dependencies(ctx)
-    dry_run_state = {
-        STATE_PREFIX: "prefix_dry_run",
-        STATE_DRY_RUN: True,
-    }
+    dry_run_state = {STATE_DRY_RUN: True}
     _build(ctx, dry_run_state)
     _build(ctx, {
         STATE_STEP: 1,
@@ -145,7 +142,6 @@ def _toolchain_impl(ctx):
             "python3 -c 'import multiprocessing; print(multiprocessing.cpu_count())'",
         ).stdout.strip()),
         STATE_PREFIX: _execute(ctx, {}, "pwd").stdout.strip(),
-        STATE_DRY_RUN: False,
     })
     ctx.symlink(ctx.attr.build_file, "BUILD")
 
