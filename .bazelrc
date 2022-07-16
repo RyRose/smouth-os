@@ -43,9 +43,12 @@ build --noincompatible_use_platforms_repo_for_constraints
 # TODO: Enable once I have time.
 build --noincompatible_enable_cc_toolchain_resolution
 
-########################################
-## Configs for customizing any build. ##
-########################################
+# Default to printing out when errors occur.
+test --test_output=errors
+
+###############################################
+## Configs for customizing a specific build. ##
+###############################################
 
 # Config for compiling debug builds.
 build:dbg -c dbg

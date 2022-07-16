@@ -2,6 +2,7 @@
 DEPS = [
     "make",
     "gcc",
+    "g++",
     "makeinfo",
     "sh",
     "pwd",
@@ -52,7 +53,11 @@ def _execute(ctx, state, cmd, fail_on_error = True, timeout = 24 * 60 * 60, **kw
         print("executing shell command in dry-run mode:", cmd)
         return ctx.execute(["true"])
     print("executing shell command:", cmd)
-    result = ctx.execute(["time", "sh", "-c", "set -ex; %s" % cmd], timeout = timeout, **kwargs)
+    if ctx.which("time"):
+        prefix = ["time"]
+    else:
+        prefix = []
+    result = ctx.execute(prefix+["sh", "-c", "set -ex; %s" % cmd], timeout = timeout, **kwargs)
     if fail_on_error and result.return_code != 0:
         fail(_EXECUTION_FAILURE_MESSAGE % (cmd, result.return_code, result.stdout, result.stderr))
     print(_EXECUTION_SUCCESS_MESSAGE % (cmd, result.return_code, result.stdout, result.stderr))
