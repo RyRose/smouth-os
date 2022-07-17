@@ -1,8 +1,25 @@
 package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
+load("//kernel:templates.bzl", "kernel_test")
+
 cc_library(
     name = "instructions",
     hdrs = [
         "instructions.h",
+    ],
+    deps = [
+        "//util:ret_checkf",
+        "//util:status",
+    ],
+)
+
+kernel_test(
+    name = "instructions_rdtsc_ktest",
+    srcs = [
+        "instructions_rdtsc_ktest.cc",
+    ],
+    deps = [
+        ":instructions",
+        "//kernel/testing:macros",
     ],
 )
