@@ -61,23 +61,26 @@ build:opt -c opt
 ## Configs for cross-compiling SmouthOS on the i386 architecture. ##
 ####################################################################
 
+# Common flags between i386 configs.
+build:i386-common --build_tag_filters i386,i386-only,arch-only
+build:i386-common --test_tag_filters i386,i386-only,arch-only
+build:i386-common --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:i386-common --cpu=i386
+build:i386-common --compiler=g++
+build:i386-common --action_env=TARGET=i686-elf
+
 # Build and use local toolchain.
-build:i386 --build_tag_filters i386,i386-only,arch-only
-build:i386 --test_tag_filters i386,i386-only,arch-only
+build:i386 --config=i386-common
 build:i386 --crosstool_top=//tools/toolchain
-build:i386 --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
-build:i386 --cpu=i386
-build:i386 --compiler=g++
 build:i386 --action_env=WORKSPACE=toolchain-i686-elf
-build:i386 --action_env=TARGET=i686-elf
 
 # Use pre-built Linux toolchain. For use in CI.
-build:i386-linux-premade --config=i386
+build:i386-linux-premade --config=i386-common
 build:i386-linux-premade --crosstool_top=//tools/toolchain:linux-premade
 build:i386-linux-premade --action_env=WORKSPACE=toolchain-i686-elf-linux
 
 # Use pre-built MacOS toolchain. For use in CI.
-build:i386-darwin-premade --config=i386
+build:i386-darwin-premade --config=i386-common
 build:i386-darwin-premade --crosstool_top=//tools/toolchain:darwin-premade
 build:i386-darwin-premade --action_env=WORKSPACE=toolchain-i686-elf-darwin
 
