@@ -41,6 +41,11 @@ inline uint64_t RDTSC() {
   return static_cast<uint64_t>(low) | (static_cast<uint64_t>(high) << 32);
 }
 
+inline void CPUID(int code, uint32_t where[4]) {
+  asm volatile("cpuid":"=a"(*where), "=b"(*(where + 1)),
+  "=c"(*(where + 2)), "=d"(*(where + 3)):"a"(code));
+}
+
 }  // namespace instructions
 
 #endif  // KERNEL_ARCH_I386_INSTRUCTIONS_INSTRUCTIONS_H

@@ -19,6 +19,7 @@ var (
 	output        = flag.String("output", "", "Method of displaying output from QEMU.")
 	kernel        = flag.String("kernel", "", "Path to the kernel to boot.")
 	workspaceFile = flag.String("workspace_file", "", "File containing path to the root directory containing source code.")
+	logSerial = flag.Bool("log_serial", true, "Log to serial port instead of directly writing to stdout.")
 )
 
 func workspace() string {
@@ -61,6 +62,7 @@ func main() {
 		CPU:       *cpu,
 		Kernel:    *kernel,
 		Workspace: workspace(),
+		NoLogSerial: !*logSerial,
 	}
 
 	if err := run(ctx, vm); err != nil {

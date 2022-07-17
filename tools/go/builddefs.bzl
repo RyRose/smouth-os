@@ -48,6 +48,7 @@ def qemu_binaries(name, kernel, **kwargs):
             "--cpu=$(TARGET_CPU)",
             "--kernel=$(rootpath %s)" % kernel,
             "--output=serial",
+            "--log_serial=false",
         ] + args,
         data = [
             kernel,

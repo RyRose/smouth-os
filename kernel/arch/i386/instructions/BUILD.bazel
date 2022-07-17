@@ -23,3 +23,14 @@ kernel_test(
         "//kernel/testing:macros",
     ],
 )
+
+kernel_test(
+    name = "instructions_cpuid_ktest",
+    srcs = [
+        "instructions_cpuid_ktest.cc",
+    ],
+    deps = [
+        ":instructions",
+        "//kernel/testing:macros",
+    ],
+)
