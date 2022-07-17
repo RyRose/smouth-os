@@ -21,6 +21,7 @@ var (
 	cpu    = flag.String("cpu", "", "Guest architecture to run with.")
 	kernel = flag.String("kernel", "", "Path to the kernel to boot.")
 	subTestName = flag.String("sub_test_name", "", "Name of the sub-test to launch.")
+	magicString = flag.String("magic_string", "<<KERNEL TEST COMPLETE>>", "A magic string to check for in addition to ktest assertions.")
 )
 
 type logWriter struct {
@@ -70,9 +71,8 @@ func testRun(t *testing.T) {
 		t.Errorf("%s:%s: %s = %q; want %q", data["file"], data["line"], data["expr"], data["got"], data["want"])
 	}
 
-	magic := "<<KERNEL TEST COMPLETE>>"
-	if !bytes.Contains(out, []byte(magic)) {
-		t.Errorf("!bytes.Contain(<serial port output>, %q); want serial port output containing magic string", magic)
+	if !bytes.Contains(out, []byte(*magicString)) {
+		t.Errorf("!bytes.Contain(<serial port output>, %q); want serial port output containing magic string", *magicString)
 	}
 
 }

@@ -24,3 +24,20 @@ kernel_test(
         ":macros",
     ],
 )
+
+kernel_test(
+    name = "stack_smashing_protector_ktest",
+    srcs = [
+        "stack_smashing_protector_ktest.cc",
+    ],
+    binary_copts = [
+        # Ensure stack smashing is enabled for function.
+        "-fstack-protector-all",
+    ],
+    # Instead of checking for end of the ktest, we instead check for stack smashing detection.
+    magic_string = "Stack smashing detected",
+    deps = [
+        "//kernel/arch:init",
+        "//kernel/testing:macros",
+    ],
+)

@@ -77,7 +77,7 @@ def kernel_binary(name, **kwargs):
         **kwargs
     )
 
-def kernel_test(name, timeout = "short", **kwargs):
+def kernel_test(name, timeout = "short", binary_copts = [], **kwargs):
     """A wrapped qemu_test that boots a kernel test binary and verifies it passes."""
 
     kernel = "%s_kernel_binary" % name
@@ -85,6 +85,7 @@ def kernel_test(name, timeout = "short", **kwargs):
         name = kernel,
         srcs = kwargs.pop("srcs", []),
         deps = kwargs.pop("deps", []),
+        copts = binary_copts,
     )
 
     qemu_binaries(
