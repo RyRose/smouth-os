@@ -1,7 +1,10 @@
 load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
 load("//kernel:templates.bzl", "kernel_test")
 
-package(default_visibility = ["//kernel:__subpackages__"])
+package(default_visibility = [
+    "//cxx:__subpackages__",
+    "//kernel:__subpackages__",
+])
 
 exports_files(["init.h"])
 
