@@ -30,6 +30,17 @@ cc_test(
 )
 
 cc_library(
+    name = "statusf",
+    hdrs = [
+        "statusf.h",
+    ],
+    deps = [
+        ":status",
+        "//libc:stdio",
+    ],
+)
+
+cc_library(
     name = "ret_checkf",
     srcs = [
         "ret_checkf.cc",
@@ -39,8 +50,7 @@ cc_library(
     ],
     deps = [
         ":overload_macros",
-        ":status",
-        "//libc:stdio",
+        ":statusf",
     ],
 )
 

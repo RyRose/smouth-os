@@ -46,7 +46,7 @@ class Status {
 
   Status AsStatus() const { return *this; }
 
- private:
+ protected:
   // The type of error.
   ErrorCode code_;
   const char* message_;

@@ -1,14 +1,8 @@
 #ifndef UTIL_RET_CHECKF_H
 #define UTIL_RET_CHECKF_H
 
-#include "libc/stdio.h"
 #include "util/overload_macros.h"
-#include "util/status.h"
-
-namespace util {
-// Statically-allocated array of chars for RET_CHECKF to use to store messages.
-extern char kRetCheckfMessage[1024];
-}  // namespace util
+#include "util/statusf.h"
 
 #define RET_CHECKF(...) \
   UTIL_OVERLOAD_MACROS_VA_SELECT_2(RET_CHECKF, __VA_ARGS__)
@@ -24,13 +18,9 @@ extern char kRetCheckfMessage[1024];
     if ((expr)) {                                                              \
       break;                                                                   \
     }                                                                          \
-    const auto snprintf_result = libc::snprintf(                               \
-        util::kRetCheckfMessage, sizeof(util::kRetCheckfMessage),              \
-        "%s:%d: %s: " format, __FILE__, __LINE__, expr_string, __VA_ARGS__);   \
-    if (snprintf_result.Ok()) {                                                \
-      return util::Status(util::ErrorCode::INTERNAL, util::kRetCheckfMessage); \
-    }                                                                          \
-    return util::Status(util::ErrorCode::INTERNAL, format);                    \
+    return util::Statusf(util::ErrorCode::INTERNAL, __FILE__                   \
+                         ":" STRINGIZE(__LINE__) ": " expr_string ": " format, \
+                                       __VA_ARGS__);                           \
   } while (0)
 
 #define _RET_CHECKF_OP(lhs, rhs, op) \
