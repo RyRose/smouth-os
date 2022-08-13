@@ -20,7 +20,8 @@ class Statusf : public Status {
       const T &value,
       const Args &... args
   ) {
-    const auto result = libc::snprintf(kStatusfMessage, sizeof(kStatusfMessage), format, value, args...);
+    const auto result = libc::snprintf(kStatusfMessage, sizeof(kStatusfMessage),
+                                       format, value, args...);
     if (result.Ok()) {
       message_ = kStatusfMessage;
     } else {
