@@ -39,7 +39,7 @@ class Status {
   ErrorCode Code() const { return code_; }
 
   // Returns the error message.
-  const char* Message() const { return message_; }
+  virtual const char* Message() const { return message_; }
 
   // Returns whether the status is ok.
   bool Ok() const { return code_ == ErrorCode::OK; }

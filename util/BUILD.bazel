@@ -40,6 +40,20 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "statusf_test",
+    size = "small",
+    srcs = [
+        "statusf_test.cc",
+    ],
+    deps = [
+        ":statusf",
+        "//testing:assert",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "ret_checkf",
     srcs = [
