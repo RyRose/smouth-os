@@ -11,7 +11,7 @@ def tool_paths(workspace, target):
     return [
         tool_path(
             name = binary,
-            path = "binaries/" + binary,
+            path = "binaries/%s/%s/%s" % (target, workspace, binary),
         )
         for binary in ["gcc", "ld", "ar", "cpp", "gcov", "nm", "objdump", "strip"]
     ]

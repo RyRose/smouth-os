@@ -1,0 +1,4 @@
+#!/bin/bash
+
+set -eu;
+exec "external/toolchain-i686-elf-linux/bin/i686-elf-$(basename $0)" "$@"

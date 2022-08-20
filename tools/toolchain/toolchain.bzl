@@ -18,7 +18,7 @@ def toolchain(name, workspace, target, target_cpu, compiler, **kwargs):
         native.filegroup(
             name = name + "-" + binary,
             srcs = [
-                "//tools/toolchain/binaries:" + binary,
+                "//tools/toolchain/binaries/%s/%s:%s" % (target, workspace, binary),
                 "@%s//:%s" % (workspace, binary),
             ],
             **kwargs
