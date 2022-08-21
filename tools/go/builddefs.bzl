@@ -15,60 +15,44 @@ def qemu_test(name, kernel, magic_string = None, **kwargs):
             "//tools/go:qemu_test.go",
         ],
         deps = kwargs.pop("deps", []) + ["//tools/go/qemu:go_default_library"],
-        data = kwargs.pop("data", []) + [
-            kernel,
-        ],
+        data = kwargs.pop("data", []) + [kernel],
         tags = kwargs.pop("tags", []) + ["arch-only"],
         **kwargs
     )
 
 def qemu_binaries(name, kernel, **kwargs):
     kwargs["tags"] = kwargs.pop("tags", []) + ["arch-only"]
-    args = kwargs.pop("args", [])
-    data = kwargs.pop("data", [])
-    embed = kwargs.pop("embed", [])
+    kwargs["embed"] = kwargs.pop("embed", []) + ["//tools/go/cmd/qemu:go_default_library"]
+
+    args = kwargs.pop("args", []) + [
+        "--cpu=$(TARGET_CPU)",
+        "--kernel=$(rootpath %s)" % kernel,
+    ]
+    data = kwargs.pop("data", []) + [kernel]
 
     go_binary(
         name = name + "qemu",
-        args = [
-            "--cpu=$(TARGET_CPU)",
-            "--kernel=$(rootpath %s)" % kernel,
-            "--output=monitor",
-        ] + args,
-        data = [
-            kernel,
-        ] + data,
-        embed = ["//tools/go/cmd/qemu:go_default_library"] + embed,
+        args = args + ["--output=monitor"],
+        data = data,
         **kwargs
     )
 
     go_binary(
         name = name + "serial",
-        args = [
-            "--cpu=$(TARGET_CPU)",
-            "--kernel=$(rootpath %s)" % kernel,
+        args = args + [
             "--output=serial",
             "--log_serial=false",
-        ] + args,
-        data = [
-            kernel,
-        ] + data,
-        embed = ["//tools/go/cmd/qemu:go_default_library"] + embed,
+        ],
+        data = data,
         **kwargs
     )
 
     go_binary(
         name = name + "gdb",
-        args = [
-            "--cpu=$(TARGET_CPU)",
-            "--kernel=$(rootpath %s)" % kernel,
+        args = args + [
             "--output=gdb",
             "--workspace_file=$(rootpath //:workspace_name)",
-        ] + args,
-        data = [
-            "//:workspace_name",
-            kernel,
-        ] + data,
-        embed = ["//tools/go/cmd/qemu:go_default_library"] + embed,
+        ],
+        data = data + ["//:workspace_name"],
         **kwargs
     )
