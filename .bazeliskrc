@@ -1,4 +1,4 @@
-# Pin to 6.5.0 since it still supports legacy constraints from @bazel_tools:
+# Pin to 4.0.0 since it still supports legacy constraints from @bazel_tools:
 # https://github.com/bazelbuild/bazel/issues/8622
 # TODO(RyRose): Migrate to latest version of Bazel.
-USE_BAZEL_VERSION=6.5.0
+USE_BAZEL_VERSION=4.0.0

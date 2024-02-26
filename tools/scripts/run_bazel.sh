@@ -7,7 +7,7 @@ CONFIG="${2:-i386}"
 CACHE="${3:-false}"
 
 if [ "${CACHE}" = "true" ]; then
-  bazel \
+  ~/bin/bazel \
     --output_base "${HOME}/.cache/bazel/output" \
     "${ACTION}" \
     --experimental_repository_cache "${HOME}/.bazel_repository_cache" \
@@ -19,7 +19,7 @@ if [ "${CACHE}" = "true" ]; then
   exit
 fi
 
-bazel "${ACTION}" \
+~/bin/bazel "${ACTION}" \
   --config ci \
   --config "${CONFIG}" \
   --  //...
