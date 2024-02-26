@@ -21,19 +21,19 @@ jobs:
             os: ubuntu-latest
             bazel_os_name: linux
             cache: true
-            packages: []
+            packages: [g++-7]
           - action: test
             config: i386-linux-premade
             os: ubuntu-latest
             bazel_os_name: linux
             cache: true
-            packages: [qemu-system-i386]
+            packages: [g++-7, qemu-system-i386]
           - action: test
             config: i386
             os: ubuntu-latest
             bazel_os_name: linux
             cache: true
-            packages: [qemu-system-i386, bison, build-essential, flex, libgmp3-dev, libmpc-dev, libmpfr-dev, texinfo]
+            packages: [g++-7, qemu-system-i386, bison, build-essential, flex, libgmp3-dev, libmpc-dev, libmpfr-dev, texinfo]
           - action: test
             config: ci
             os: macos-latest
@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v2
       - if: ${{ runner.os == 'Linux' && matrix.packages[0] != null }}
         name: Install required Linux packages.
-        run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
+        run: sudo add-apt-repository universe && sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
       - if: ${{ runner.os == 'macOS' && matrix.packages[0] != null }}
         name: Install required macOS packages.
         run: brew install ${{ join(matrix.packages, ' ') }}
