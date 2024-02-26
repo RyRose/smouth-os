@@ -7,8 +7,8 @@ on:
 
 env:
   BAZEL_VERSION: 4.0.0
-  CC: gcc-7
-  CXX: g++-7
+  CC: gcc-11
+  CXX: g++-11
 
 jobs:
   run-bazel:
@@ -51,7 +51,7 @@ jobs:
             os: macos-latest
             bazel_os_name: darwin
             cache: true
-            packages: [qemu, bison, flex, gcc@7, gmp, libmpc, mpfr, texinfo]
+            packages: [qemu, bison, flex, gcc@11, gmp, libmpc, mpfr, texinfo]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
