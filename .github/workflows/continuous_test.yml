@@ -6,7 +6,7 @@ on:
     - cron: '0 0 * * *'
 
 env:
-  BAZEL_VERSION: 4.0.0
+  BAZEL_VERSION: 6.5.0
   CC: gcc-11
   CXX: g++-11
 
