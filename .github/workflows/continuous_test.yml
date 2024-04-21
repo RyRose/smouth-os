@@ -61,31 +61,35 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - if: ${{ matrix.install_qemu }}
-        name: Docker Setup QEMU
+      - name: Docker Setup QEMU
+        if: ${{ matrix.install_qemu }}
         uses: docker/setup-qemu-action@v3.0.0
-      - if: ${{ runner.os == 'Linux' && matrix.packages[0] != null }}
-        name: Install required Linux packages.
+      - name: Install required Linux packages.
+        if: ${{ runner.os == 'Linux' && matrix.packages[0] != null }}
         run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
-      - if: ${{ runner.os == 'macOS' && matrix.packages[0] != null }}
-        name: Install required macOS packages.
+      - name: Install required macOS packages.
+        if: ${{ runner.os == 'macOS' && matrix.packages[0] != null }}
         run: brew install ${{ join(matrix.packages, ' ') }}
-      - if: ${{ matrix.cache }}
-        name: Cache Bazel outputs
+      - name: Cache Bazel outputs
+        if: ${{ matrix.cache }}
         uses: actions/cache@v2
         with:
           path: |
             ~/.cache/bazel/output
             ~/.bazel_repository_cache
           key: bazel-cache-${{ matrix.config }}-${{ runner.os }}
-      - run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ matrix.bazel_os_name }}"
-      - run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}" "${{ matrix.cache }}"
-      - if: ${{ failure() }}
+      - name: Install Bazel
+        run: ${{ github.workspace }}/tools/scripts/install_bazel.sh "${{ env.BAZEL_VERSION }}" "${{ matrix.bazel_os_name }}"
+      - name: Run Bazel
+        run: ${{ github.workspace }}/tools/scripts/run_bazel.sh "${{ matrix.action }}" "${{ matrix.config }}" "${{ matrix.cache }}"
+      - name: Upload command.log on failure
+        if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
         with:
           name: command.log
           path: ${{ github.workspace }}/command.log
-      - if: ${{ failure() }}
+      - name: Upload test.log on failure
+        if: ${{ failure() }}
         uses: 'actions/upload-artifact@v2'
         with:
           name: test logs
