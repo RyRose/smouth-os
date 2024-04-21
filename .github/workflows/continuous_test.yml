@@ -22,40 +22,47 @@ jobs:
             bazel_os_name: linux
             cache: true
             packages: [build-essential]
+            install_qemu: false
           - action: test
             config: i386-linux-premade
             os: ubuntu-latest
             bazel_os_name: linux
             cache: true
             packages: [build-essential]
+            install_qemu: true
           - action: test
             config: i386
             os: ubuntu-latest
             bazel_os_name: linux
             cache: true
             packages: [bison, build-essential, flex, libgmp3-dev, libmpc-dev, libmpfr-dev, texinfo]
+            install_qemu: true
           - action: test
             config: ci
             os: macos-latest
             bazel_os_name: darwin
             cache: true
             packages: []
+            install_qemu: false
           - action: test
             config: i386-darwin-premade
             os: macos-latest
             bazel_os_name: darwin
             cache: true
-            packages: []
+            packages: [qemu]
+            install_qemu: false
           - action: test
             config: i386
             os: macos-latest
             bazel_os_name: darwin
             cache: true
-            packages: [bison, flex, gcc@11, gmp, libmpc, mpfr, texinfo]
+            packages: [qemu, bison, flex, gcc@11, gmp, libmpc, mpfr, texinfo]
+            install_qemu: false
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - name: Docker Setup QEMU
+      - if: ${{ matrix.install_qemu }}
+        name: Docker Setup QEMU
         uses: docker/setup-qemu-action@v3.0.0
       - if: ${{ runner.os == 'Linux' && matrix.packages[0] != null }}
         name: Install required Linux packages.
