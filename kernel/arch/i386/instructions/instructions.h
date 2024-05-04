@@ -46,6 +46,11 @@ inline void CPUID(int code, uint32_t where[4]) {
   "=c"(*(where + 2)), "=d"(*(where + 3)):"a"(code));
 }
 
+inline __attribute__((always_inline)) uint32_t SP() {
+  register uint32_t sp asm("sp");
+  return sp;
+}
+
 }  // namespace instructions
 
 #endif  // KERNEL_ARCH_I386_INSTRUCTIONS_INSTRUCTIONS_H

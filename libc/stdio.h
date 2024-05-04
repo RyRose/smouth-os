@@ -10,6 +10,21 @@
 
 namespace libc {
 
+// printf is a minimal version of the standard C printf function. Formatters
+// supported:
+//   * %v - auto-deduce the type from the argument. Uses the following for each:
+//     * char* - %s
+//     * char - %c
+//     * number - %d %i %u
+//     * pointer - %p
+//   * %s - char*
+//   * %q - quoted char*
+//   * %d %i %u - base 10 number (signed or unsigned)
+//   * %x - base 16 number
+//   * %X - base 16 number (capitalized)
+//   * %o - octal
+//   * %p - pointer
+//   * %c - char
 template <typename T, typename... Args>
 util::StatusOr<int> printf(const char* format, const T& value,
                            const Args&... args) {

@@ -15,19 +15,15 @@
 // Reserve a stack for the initial thread.
 .section .bss
 .align   16
-
 stack_bottom:
 	.skip 32768 // 32 KiB
-
 stack_top:
 
-	// The kernel entry point.
-	.section .text
-	.global  _start
-	.type    _start, @function
-
+// The kernel entry point.
+.section .text
+.global  _start
+.type    _start, @function
 _start:
-
 	// Set up stack.
 	movl $stack_top, %esp
 
@@ -38,14 +34,17 @@ _start:
 	call _init
 
 	// Call pre-kernel main with multiboot pointer.
-	call PreKernelMain
+    call PreKernelMain
 
 	// Transfer control to the main kernel.
 	call KernelMain
 
-	// Hang if kernel_main unexpectedly returns.
+// Hang if kernel_main unexpectedly returns.
 hang:
+    // Disable interrupts.
 	cli
+	// Try to halt.
 	hlt
+	// Repeat.
 	jmp hang
 .size _start, . - _start

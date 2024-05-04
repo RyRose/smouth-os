@@ -1,6 +1,6 @@
-package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
-
 load("//kernel:templates.bzl", "kernel_test")
+
+package(default_visibility = ["//kernel/arch/i386:__subpackages__"])
 
 cc_library(
     name = "instructions",
@@ -31,6 +31,18 @@ kernel_test(
     ],
     deps = [
         ":instructions",
+        "//kernel/testing:macros",
+    ],
+)
+
+kernel_test(
+    name = "instructions_sp_ktest",
+    srcs = [
+        "instructions_sp_ktest.cc",
+    ],
+    deps = [
+        ":instructions",
+        "//kernel/arch/i386/boot",
         "//kernel/testing:macros",
     ],
 )
