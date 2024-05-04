@@ -3,9 +3,12 @@
 ## Default options used across all builds/tests. ##
 ###################################################
 
-# By default, only build rules that can run natively.
-build --build_tag_filters -i386-only,-arch-only
-build --test_tag_filters -i386-only,-arch-only
+# By default, only test rules that can run natively.
+# `build` is excluded even though it fails to enable
+# Bazel plugin to sync arch-specific files.
+# TODO(RyRose): Add --(build|test)_tag_filters to all build commands.
+test --build_tag_filters -i386-only,-arch-only
+test --test_tag_filters -i386-only,-arch-only
 
 # Build with C++17.
 build --cxxopt="-std=c++17"

@@ -1,5 +1,16 @@
 package(default_visibility = ["//visibility:public"])
 
+# Export empty file to satisfy null dependency for arch files.
+exports_files(["empty.h"])
+
+# Export empty library to satisfy null dependency for arch libraries.
+cc_library(
+    name = "empty",
+    hdrs = [
+        "empty.h",
+    ],
+)
+
 cc_library(
     name = "tty",
     srcs = [

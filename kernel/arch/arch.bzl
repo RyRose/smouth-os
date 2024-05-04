@@ -4,7 +4,7 @@ def arch_library(name, **kwargs):
         hdrs = kwargs.pop("hdrs", [name + ".h"]),
         deps = kwargs.pop("deps", []) + select({
             "//tools/toolchain:i386": ["//kernel/arch/i386:" + name],
-            "//conditions:default": [],
+            "//conditions:default": ["//kernel/arch/common:empty"],
         }),
         **kwargs
     )
@@ -14,7 +14,7 @@ def arch_file(name, **kwargs):
         name = name,
         srcs = kwargs.pop("srcs", []) + select({
             "//tools/toolchain:i386": ["//kernel/arch/i386:" + name],
-            "//conditions:default": [],
+            "//conditions:default": ["//kernel/arch/common:empty.h"],
         }),
         **kwargs
     )
