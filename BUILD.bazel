@@ -1,4 +1,5 @@
 load("@bazel_gazelle//:def.bzl", "gazelle")
+load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
 
 # Calling bazel info in an output directory returns the following error string:
 # ERROR: bazel should not be called from a bazel output directory. The pertinent workspace directory is: '/foo/bar/baz/smouth-os'
@@ -10,6 +11,22 @@ genrule(
     cmd = "bazel info workspace 2>&1 | grep -o \"/[^']*\" &> $@ || true",
     tags = ["local"],
     visibility = ["//visibility:public"],
+)
+
+refresh_compile_commands(
+    name = "refresh_compile_commands",
+
+    # Specify the targets of interest.
+    # For example, specify a dict of targets and any flags required to build.
+    targets = {
+      "@//..." : "--config i386",
+      "//...": "",
+    },
+    # No need to add flags already in .bazelrc. They're automatically picked up.
+    # If you don't need flags, a list of targets is also okay, as is a single target string.
+    # Wildcard patterns, like //... for everything, *are* allowed here, just like a build.
+      # As are additional targets (+) and subtractions (-), like in bazel query https://docs.bazel.build/versions/main/query.html#expressions
+    # And if you're working on a header-only library, specify a test or binary target that compiles it.
 )
 
 # gazelle:prefix github.com/RyRose/smouth-os
