@@ -1,6 +1,6 @@
-package(default_visibility = ["//kernel:__subpackages__"])
+load("//tools/builddefs:kernel_test.bzl", "kernel_test")
 
-load("//kernel:templates.bzl", "kernel_test")
+package(default_visibility = ["//kernel:__subpackages__"])
 
 cc_library(
     name = "init",

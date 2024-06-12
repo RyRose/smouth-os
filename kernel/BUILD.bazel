@@ -1,6 +1,4 @@
-package(default_visibility = ["//visibility:public"])
-
-load("//kernel:templates.bzl", "kernel_binary", "kernel_test")
+load("//tools/builddefs:kernel_binary.bzl", "kernel_binary")
 
 kernel_binary(
     name = "kernel",

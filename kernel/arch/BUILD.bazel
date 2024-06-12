@@ -1,5 +1,6 @@
-load("//kernel/arch:arch.bzl", "arch_file", "arch_library")
-load("//kernel:templates.bzl", "kernel_test")
+load("//tools/builddefs:arch_file.bzl", "arch_file")
+load("//tools/builddefs:arch_library.bzl", "arch_library")
+load("//tools/builddefs:kernel_test.bzl", "kernel_test")
 
 package(default_visibility = [
     "//cxx:__subpackages__",

@@ -1,5 +1,5 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
-load("//tools/go:builddefs.bzl", "qemu_binaries")
+load("//tools/builddefs:qemu_binaries.bzl", "qemu_binaries")
 
 go_library(
     name = "go_default_library",

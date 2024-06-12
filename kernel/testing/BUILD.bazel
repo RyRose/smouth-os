@@ -1,4 +1,4 @@
-load("//kernel:templates.bzl", "kernel_test")
+load("//tools/builddefs:kernel_test.bzl", "kernel_test")
 
 cc_library(
     name = "macros",
