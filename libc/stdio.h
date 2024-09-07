@@ -32,8 +32,11 @@ util::StatusOr<int> printf(const char* format, const T& value,
   return p.Printf(format, value, args...);
 }
 
+// printf is a minimal version of the standard C printf function.
 util::StatusOr<int> printf(const char* format);
 
+// Prints to a pre-allocated buffer. snprintf() should be preferred to avoid
+// buffer overflow.
 template <typename T, typename... Args>
 util::StatusOr<int> sprintf(char* buffer, const char* format, const T& value,
                             const Args&... args) {
@@ -41,8 +44,11 @@ util::StatusOr<int> sprintf(char* buffer, const char* format, const T& value,
   return p.Printf(format, value, args...);
 }
 
+// Prints to a pre-allocated buffer. snprintf() should be preferred to avoid
+// buffer overflow.
 util::StatusOr<int> sprintf(char* buffer, const char* format);
 
+// Prints to a pre-allocated buffer up to `bufsz` bytes.
 template <typename T, typename... Args>
 util::StatusOr<int> snprintf(char* buffer, size_t bufsz, const char* format,
                              const T& value, const Args&... args) {
@@ -50,8 +56,10 @@ util::StatusOr<int> snprintf(char* buffer, size_t bufsz, const char* format,
   return p.Printf(format, value, args...);
 }
 
+// Prints to a pre-allocated buffer up to `bufsz` bytes.
 util::StatusOr<int> snprintf(char* buffer, size_t bufsz, const char* format);
 
+// Prints to a newly-allocated string.
 template <typename T, typename... Args>
 util::StatusOr<int> asprintf(char** strp, const char* format, const T& value,
                              const Args&... args) {
@@ -63,11 +71,14 @@ util::StatusOr<int> asprintf(char** strp, const char* format, const T& value,
   return p.Printf(format, value, args...);
 }
 
+// Prints to a newly-allocated string.
 util::StatusOr<int> asprintf(char** strp, const char* format);
 
-util::StatusOr<int> puts(const char*);
+// Prints a null-terminated string with a newline.
+util::StatusOr<int> puts(const char* string);
 
-util::Status putchar(int);
+// Prints a character.
+util::Status putchar(int inc);
 
 }  // namespace libc
 

@@ -8,7 +8,7 @@ namespace libc {
 
 util::StatusOr<int> memcmp(const void* aptr, const void* bptr, size_t size) {
   RET_CHECK(aptr != nullptr);
-  RET_CHECK(aptr != nullptr);
+  RET_CHECK(bptr != nullptr);
   const auto* a = static_cast<const uint8_t*>(aptr);
   const auto* b = static_cast<const uint8_t*>(bptr);
   for (size_t i = 0; i < size; i++) {
