@@ -38,7 +38,7 @@
     const auto rhs_ = (rhs);                                          \
     _RET_CHECKF_N(lhs_ op rhs_, "'%v " #op " %v' not true: " format,  \
                   STRINGIZE(lhs op rhs), UNIQUE_VARIABLE, lhs_, rhs_, \
-                  __VA_ARGS__);                                       \
+                            __VA_ARGS__);                             \
   } while (0)
 
 #define RET_CHECKF_EQ(...) \

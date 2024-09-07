@@ -1,8 +1,7 @@
 #include "kernel/arch/i386/interrupt/table.h"
 
-#include "testing/assert.h"
-
 #include "gtest/gtest.h"
+#include "testing/assert.h"
 
 namespace arch {
 

@@ -29,16 +29,16 @@
 
 #define KERNEL_EXPECT_2(expr, want) \
   _KERNEL_EXPECT_2(expr, want, UNIQUE_VARIABLE)
-#define _KERNEL_EXPECT_2(expr, want, expr_result)                         \
-  do {                                                                    \
-    const bool expr_result = (expr);                                      \
-    if (expr_result) {                                                    \
-      break;                                                              \
-    }                                                                     \
-    CHECK_OK_1(libc::printf(                                              \
-        "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q] }</ktest>\n",  \
-        "expr", #expr, "want", want, "line", STRINGIZE(__LINE__), "file", \
-        __FILE__, "got", "false"));                                       \
+#define _KERNEL_EXPECT_2(expr, want, expr_result)                        \
+  do {                                                                   \
+    const bool expr_result = (expr);                                     \
+    if (expr_result) {                                                   \
+      break;                                                             \
+    }                                                                    \
+    CHECK_OK_1(libc::printf(                                             \
+        "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q] }</ktest>\n", \
+        "expr", #expr, "want", want, "line",                             \
+        STRINGIZE(__LINE__), "file", __FILE__, "got", "false"));         \
   } while (0)
 
 #define KERNEL_EXPECT_OK(...) \
@@ -48,18 +48,18 @@
 
 #define KERNEL_EXPECT_OK_2(expr, want) \
   _KERNEL_EXPECT_OK_2_(expr, want, UNIQUE_VARIABLE, UNIQUE_VARIABLE)
-#define _KERNEL_EXPECT_OK_2_(expr, want, expr_result_, expr_status_)         \
-  do {                                                                       \
-    auto expr_result_ = (expr);                                              \
-    if (expr_result_.Ok()) {                                                 \
-      break;                                                                 \
-    }                                                                        \
-    auto expr_status_ = expr_result_.AsStatus();                             \
-    CHECK_OK_1(libc::printf(                                                 \
-        "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q, %q] }</ktest>\n", \
-        "expr", #expr, "want", want, "line", STRINGIZE(__LINE__), "file",    \
-        __FILE__, "got", expr_status_.Message(),                             \
-        util::ErrorCodeName(expr_status_.Code())));                          \
+#define _KERNEL_EXPECT_OK_2_(expr, want, expr_result_, expr_status_)          \
+  do {                                                                        \
+    auto expr_result_ = (expr);                                               \
+    if (expr_result_.Ok()) {                                                  \
+      break;                                                                  \
+    }                                                                         \
+    auto expr_status_ = expr_result_.AsStatus();                              \
+    CHECK_OK_1(libc::printf(                                                  \
+        "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q, %q] }</ktest>\n",  \
+        "expr", #expr, "want", want, "line",                                  \
+        STRINGIZE(__LINE__), "file", __FILE__, "got", expr_status_.Message(), \
+                  util::ErrorCodeName(expr_status_.Code())));                 \
   } while (0)
 
 #define KERNEL_ASSERT(...) \
@@ -69,17 +69,17 @@
 
 #define KERNEL_ASSERT_2(expr, want) \
   _KERNEL_ASSERT_2(expr, want, UNIQUE_VARIABLE)
-#define _KERNEL_ASSERT_2(expr, want, expr_result_)                        \
-  do {                                                                    \
-    const bool expr_result_ = (expr);                                     \
-    if (expr_result_) {                                                   \
-      break;                                                              \
-    }                                                                     \
-    CHECK_OK_1(libc::printf(                                              \
-        "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q] }</ktest>\n",  \
-        "expr", #expr, "want", want, "line", STRINGIZE(__LINE__), "file", \
-        __FILE__, "got", "false"));                                       \
-    libc::abort();                                                        \
+#define _KERNEL_ASSERT_2(expr, want, expr_result_)                       \
+  do {                                                                   \
+    const bool expr_result_ = (expr);                                    \
+    if (expr_result_) {                                                  \
+      break;                                                             \
+    }                                                                    \
+    CHECK_OK_1(libc::printf(                                             \
+        "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q] }</ktest>\n", \
+        "expr", #expr, "want", want, "line",                             \
+        STRINGIZE(__LINE__), "file", __FILE__, "got", "false"));         \
+    libc::abort();                                                       \
   } while (0)
 
 #define KERNEL_ASSERT_OK(...) \
@@ -98,9 +98,9 @@
     auto expr_status = expr_result.AsStatus();                               \
     CHECK_OK_1(libc::printf(                                                 \
         "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q, %q] }</ktest>\n", \
-        "expr", #expr, "want", want, "line", STRINGIZE(__LINE__), "file",    \
-        __FILE__, "got", expr_status.Message(),                              \
-        util::ErrorCodeName(expr_status.Code())));                           \
+        "expr", #expr, "want", want, "line",                                 \
+        STRINGIZE(__LINE__), "file", __FILE__, "got", expr_status.Message(), \
+                  util::ErrorCodeName(expr_status.Code())));                 \
     libc::abort();                                                           \
   } while (0)
 
@@ -118,7 +118,7 @@
         "<ktest>{ %q: %q, %q: %q, %q: %q, %q: %q, %q: [%q, %q] }</ktest>\n", \
         "expr", #expr, "want", "valid expression", "line",                   \
         STRINGIZE(__LINE__), "file", __FILE__, "got", expr_status.Message(), \
-        util::ErrorCodeName(expr_status.Code())));                           \
+                  util::ErrorCodeName(expr_status.Code())));                 \
     libc::abort();                                                           \
   } while (0);                                                               \
   lhs = status_or.Value()

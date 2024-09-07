@@ -4,10 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "libc/string.h"
-
 #include "gtest/gtest_prod.h"
-
+#include "libc/string.h"
 #include "util/list.h"
 #include "util/status.h"
 

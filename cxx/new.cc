@@ -54,7 +54,7 @@ void* operator new[](size_t count) {
 void* operator new(size_t, void* ptr) noexcept { return ptr; }
 void* operator new[](size_t, void* ptr) noexcept { return ptr; }
 
-void operator delete(void*)noexcept {
+void operator delete(void*) noexcept {
   cxx::KernelPanic("kernel delete unavailable for delete* call");
 }
 

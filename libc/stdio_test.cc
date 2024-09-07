@@ -1,11 +1,10 @@
 #include "libc/stdio.h"
-#include "libc/kernel.h"
-
-#include "testing/assert.h"
 
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "libc/kernel.h"
+#include "testing/assert.h"
 
 namespace {
 std::unique_ptr<std::string> kernel_cache;
@@ -72,9 +71,7 @@ TEST_F(StdioTest, HexIntsBig) {
 }
 
 TEST_F(StdioTest, EscapeQuotes) {
-  ASSERT_OK_AND_ASSIGN(
-      const auto& length,
-      libc::printf("a %q e", "b \"c\" d"));
+  ASSERT_OK_AND_ASSIGN(const auto& length, libc::printf("a %q e", "b \"c\" d"));
   EXPECT_EQ("a \"b \\\"c\\\" d\" e", *kernel_cache);
   EXPECT_EQ(15, length);
 }

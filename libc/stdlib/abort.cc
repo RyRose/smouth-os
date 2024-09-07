@@ -1,6 +1,5 @@
-#include "libc/stdlib.h"
-
 #include "libc/kernel.h"
+#include "libc/stdlib.h"
 
 namespace libc {
 

@@ -10,7 +10,7 @@ namespace {
 // TODO: Make this thread-safe.
 char kStatusfMessage[1024];
 size_t kStatusfCount = 0;
-}
+}  // namespace
 
 class Statusf : public Status {
  public:
@@ -49,6 +49,6 @@ class Statusf : public Status {
   const char* raw_format_;
 };
 
-} // namespace util
+}  // namespace util
 
-#endif //  KERNEL_UTIL_STATUSF_H
+#endif  //  KERNEL_UTIL_STATUSF_H

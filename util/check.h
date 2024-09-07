@@ -1,11 +1,10 @@
 #ifndef UTIL_CHECK_H
 #define UTIL_CHECK_H
 
+#include "libc/stdlib.h"
 #include "util/meta_macros.h"
 #include "util/overload_macros.h"
 #include "util/status.h"
-
-#include "libc/stdlib.h"
 
 namespace util {
 

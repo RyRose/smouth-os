@@ -8,7 +8,7 @@ void __attribute__((noinline)) OverrideStackBuffer() {
   char buffer[40];
   KERNEL_ASSERT_OK(libc::memset(buffer, 'a', 100));
 }
-}
+}  // namespace
 
 KERNEL_TEST(TestStackSmashingProtector) {
   KERNEL_ASSERT_OK(arch::Initialize());

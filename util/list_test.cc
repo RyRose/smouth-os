@@ -1,8 +1,7 @@
 #include "util/list.h"
 
-#include "testing/assert.h"
-
 #include "gtest/gtest.h"
+#include "testing/assert.h"
 
 namespace util {
 

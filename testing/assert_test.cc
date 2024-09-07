@@ -1,8 +1,7 @@
 #include "testing/assert.h"
 
-#include "util/status.h"
-
 #include "gtest/gtest.h"
+#include "util/status.h"
 
 namespace testing {
 

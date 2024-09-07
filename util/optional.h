@@ -2,6 +2,7 @@
 #define KERNEL_UTIL_OPTIONAL_H
 
 #include <stdint.h>
+
 #include "cxx/new.h"
 
 namespace util {
