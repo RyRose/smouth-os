@@ -73,6 +73,7 @@ build:i386-common --test_tag_filters i386,i386-only,arch-only
 build:i386-common --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
 build:i386-common --cpu=i386
 build:i386-common --compiler=g++
+test:i386-common  --action_env=XDG_RUNTIME_DIR
 
 # Build and use local toolchain.
 build:i386 --config=i386-common
