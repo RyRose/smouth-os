@@ -32,8 +32,10 @@ func (v *VM) Monitor(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, v.qemu(),
 		"-kernel", v.Kernel,
 		"-monitor", "stdio",
+		// TODO: Allow these to be passed as options.
 		"-audiodev", "pa,id=speaker",
-		"-machine", "pcspk-audiodev=speaker")
+		"-machine", "pcspk-audiodev=speaker",
+	)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -41,7 +43,13 @@ func (v *VM) Monitor(ctx context.Context) error {
 }
 
 func (v *VM) Serial(ctx context.Context) ([]byte, error) {
-	cmd := exec.CommandContext(ctx, v.qemu(), "-kernel", v.Kernel, "-nographic", "--no-reboot")
+	cmd := exec.CommandContext(ctx, v.qemu(),
+		"-kernel", v.Kernel,
+		"-nographic",
+		"--no-reboot",
+		"-audiodev", "pa,id=speaker",
+		"-machine", "pcspk-audiodev=speaker",
+	)
 
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
