@@ -18,10 +18,7 @@ pkgs.mkShell {
           gdb
           file
           gettext
-          gmp
-          mpfr
-          mpc
-          isl
+          texinfo
         ];
     }).env
   ];
