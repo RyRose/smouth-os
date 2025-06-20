@@ -11,17 +11,17 @@ http_archive(
 
 toolchain_repository(
     name = "toolchain-i686-elf",
-    binutils_sha256 = "0d9d2bbf71e17903f26a676e7fba7c200e581c84b8f2f43e72d875d0e638771c",
-    binutils_strip_prefix = "binutils-2.29.1",
+    binutils_sha256 = "e4c38b893f590853fbe276a6b8a1268101e35e61849a07f6ee97b5ecc97fbff8",
+    binutils_strip_prefix = "binutils-2.43.1",
     binutils_urls = [
-        "http://ftp.gnu.org/gnu/binutils/binutils-2.29.1.tar.gz",
-        "http://mirrors.peers.community/mirrors/gnu/binutils/binutils-2.29.1.tar.bz2",
+        "https://mirrors.ocf.berkeley.edu/gnu/binutils/binutils-2.43.1.tar.gz",
+        "https://ftp.gnu.org/gnu/binutils/binutils-2.43.1.tar.gz",
     ],
-    gcc_sha256 = "0153a003d3b433459336a91610cca2995ee0fb3d71131bd72555f2231a6efcfc",
-    gcc_strip_prefix = "gcc-7.2.0",
+    gcc_sha256 = "ace8b8b0dbfe6abfc22f821cb093e195aa5498b7ccf7cd23e4424b9f14afed22",
+    gcc_strip_prefix = "gcc-14.3.0",
     gcc_urls = [
-        "http://ftp.gnu.org/gnu/gcc/gcc-7.2.0/gcc-7.2.0.tar.gz",
-        "https://mirrors.peers.community/mirrors/gnu/gcc/gcc-7.2.0/gcc-7.2.0.tar.gz",
+        "https://mirrors.ocf.berkeley.edu/gnu/gcc/gcc-14.3.0/gcc-14.3.0.tar.gz",
+        "https://ftp.gnu.org/gnu/gcc/gcc-14.3.0/gcc-14.3.0.tar.gz",
     ],
     target = "i686-elf",
 )

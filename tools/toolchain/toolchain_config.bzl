@@ -122,7 +122,7 @@ toolchain_config = rule(
         "workspace": attr.string(mandatory = True),
         "target_cpu": attr.string(mandatory = True),
         "compiler": attr.string(mandatory = True),
-        "gcc_version": attr.string(default = "7.2.0"),
+        "gcc_version": attr.string(default = "14.3.0"),
     },
     provides = [CcToolchainConfigInfo],
 )

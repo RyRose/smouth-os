@@ -104,20 +104,22 @@ def _build_gcc(ctx, state):
             stripPrefix = ctx.attr.gcc_strip_prefix,
         )
     _execute(ctx, state, "mkdir build-gcc")
+
     _report_progress(ctx, state, "downloading gcc prerequisites")
     _execute(ctx, state, "cd gcc && contrib/download_prerequisites", fail_on_error = False)
+
     _report_progress(ctx, state, "configuring gcc")
-    _execute(
-        ctx,
-        state,
-        "cd build-gcc && " +
-        "../gcc/configure " +
-        "--target=%s " % ctx.attr.target +
-        "--prefix=%s " % ("" if state.get(STATE_DRY_RUN, False) else state[STATE_PREFIX]) +
-        "--disable-nls " +
-        "--enable-languages=c,c++ " +
-        "--without-headers",
+    cmd = (
+        "cd build-gcc && CXXFLAGS='-Wno-error=format-security' ../gcc/configure "
+        + "--target=" + ctx.attr.target + " "
+        + "--prefix=" + ("" if state.get(STATE_DRY_RUN, False) else state[STATE_PREFIX]) + " "
+        + "--disable-nls "
+        + "--enable-languages=c,c++ "
+        + "--without-headers "
+        + "--disable-hosted-libstdcxx "
     )
+    _execute(ctx, state, cmd)
+
     _make(ctx, state, "build-gcc", "all-gcc")
     _make(ctx, state, "build-gcc", "all-target-libgcc")
     _make(ctx, state, "build-gcc", "install-gcc")

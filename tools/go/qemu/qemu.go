@@ -21,7 +21,7 @@ func restoreTerminal() error {
 
 type VM struct {
 	CPU, Kernel, Workspace string
-	NoLogSerial bool
+	NoLogSerial            bool
 }
 
 func (v *VM) qemu() string {
@@ -29,7 +29,11 @@ func (v *VM) qemu() string {
 }
 
 func (v *VM) Monitor(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, v.qemu(), "-kernel", v.Kernel, "-monitor", "stdio")
+	cmd := exec.CommandContext(ctx, v.qemu(),
+		"-kernel", v.Kernel,
+		"-monitor", "stdio",
+		"-audiodev", "pa,id=speaker",
+		"-machine", "pcspk-audiodev=speaker")
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -52,9 +56,9 @@ func (v *VM) Serial(ctx context.Context) ([]byte, error) {
 			output.Write(scanner.Bytes())
 			output.WriteByte('\n')
 			if v.NoLogSerial {
-                fmt.Printf("%s\n", scanner.Text());
+				fmt.Printf("%s\n", scanner.Text())
 			} else {
-                log.Print(fmt.Sprintf("%q", scanner.Text()))
+				log.Print(fmt.Sprintf("%q", scanner.Text()))
 			}
 		}
 		wg.Done()

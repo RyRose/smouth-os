@@ -1,3 +1,5 @@
+load("//tools/builddefs:kernel_test.bzl", "kernel_test")
+
 package(
     default_visibility = ["//kernel/arch:__pkg__"],
 )
@@ -77,5 +79,30 @@ cc_library(
     visibility = ["//kernel/arch:__pkg__"],
     deps = [
         "//kernel/arch/i386/boot",
+    ],
+)
+
+cc_library(
+    name = "pc_speaker",
+    srcs = [
+        "pc_speaker.cc",
+    ],
+    hdrs = [
+        "pc_speaker.h",
+    ],
+    deps = [
+        "//kernel/arch/i386/io:io_port",
+    ],
+)
+
+kernel_test(
+    name = "pc_speaker_ktest",
+    srcs = [
+        "pc_speaker_ktest.cc",
+    ],
+    deps = [
+        ":pc_speaker",
+        "//kernel/testing:macros",
+        "//kernel/arch:init",
     ],
 )
