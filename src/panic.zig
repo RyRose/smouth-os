@@ -1,41 +1,65 @@
 const std = @import("std");
 const serial = @import("serial.zig");
 const ioport = @import("ioport.zig");
+const builtin = @import("builtin");
 
 var panic_buffer: [1024]u8 = undefined;
 var panic_allocator_buffer: [1024]u8 = undefined;
 var panic_allocator = std.heap.FixedBufferAllocator.init(&panic_allocator_buffer);
 
-pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace, _: ?usize) noreturn {
+pub const panic = std.debug.FullPanic(innerPanic);
+
+fn log(msg: []const u8) void {
     serial.writeString("PANIC: ");
     serial.writeString(msg);
     serial.writeString("\n");
-    serial.writeString("----- Stack Trace -----\n");
-    serial.writeString("Use addr2line or a similar tool to decode addresses.\n");
+}
 
-    var writer = std.Io.Writer.fixed(&panic_buffer);
+fn logF(comptime fmt: []const u8, args: anytype) void {
+    tryLogF(fmt, args) catch {
+        log(fmt);
+    };
+}
 
-    if (trace) |stackTrace| {
-        writer.print("Stack trace ({d} frames, {d} index):\n", .{
-            stackTrace.instruction_addresses.len,
-            stackTrace.index,
-        }) catch {
-            serial.writeString("Failed to write stack trace header.\n");
-        };
+fn tryLogF(comptime fmt: []const u8, args: anytype) !void {
+    const buf = try std.fmt.bufPrint(&panic_buffer, fmt, args);
+    serial.writeString("PANIC: ");
+    serial.writeString(buf);
+    serial.writeString("\n");
+}
 
-        for (stackTrace.instruction_addresses) |addr| {
-            if (addr == 0) continue;
-            writer.print("0x{x}\n", .{addr}) catch {
-                serial.writeString("Failed to write stack trace address.\n");
-            };
-        }
+fn innerPanic(msg: []const u8, first_trace_addr: ?usize) noreturn {
+    log(msg);
+
+    logF("First trace address = 0x{x}", .{first_trace_addr.?});
+
+    logErrorReturnTrace();
+    log("System halted.");
+    shutdown();
+}
+
+fn logErrorReturnTrace() void {
+    const trace: ?*std.builtin.StackTrace = @errorReturnTrace();
+    if (trace == null) {
+        return;
     }
 
-    serial.writeString(writer.buffered());
-    serial.writeString("System halted.\n");
+    const stackTrace: *std.builtin.StackTrace = trace.?;
+    if (stackTrace.index <= 0) {
+        return;
+    }
 
-    // Halt the CPU using QEMU shutdown port with a non-zero exit code
-    // or an infinite loop.
+    logF("Error return trace ({d} frames, {d} elements):", .{
+        stackTrace.instruction_addresses.len,
+        stackTrace.index,
+    });
+    for (stackTrace.instruction_addresses) |addr| {
+        if (addr == 0) continue;
+        logF("0x{x}", .{addr});
+    }
+}
+
+fn shutdown() noreturn {
     ioport.outw(0xF4, 0);
     while (true) {}
 }

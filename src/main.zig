@@ -10,7 +10,7 @@ pub const panic = @import("panic.zig").panic;
 
 export fn kmain() noreturn {
     main() catch |err| {
-        std.debug.panic("Main failed: {}", .{err});
+        log.fatalF("Kernel main failed: {}", .{err});
     };
 
     // Halt the CPU using QEMU shutdown port with a zero exit code
