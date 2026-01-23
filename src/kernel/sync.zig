@@ -34,7 +34,7 @@ pub fn SpinLock(comptime T: type) type {
                         break;
                     }
                 }
-                asm volatile ("pause");
+                std.atomic.spinLoopHint();
             }
         }
 
@@ -48,7 +48,7 @@ pub fn SpinLock(comptime T: type) type {
                         return true;
                     }
                 }
-                asm volatile ("pause");
+                std.atomic.spinLoopHint();
             }
             return false;
         }

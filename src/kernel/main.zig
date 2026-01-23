@@ -33,8 +33,6 @@ fn main() !void {
         .base = 0,
         .limit = 0xFFFFF,
         .segment_type = 0xA, // Code segment
-        .descriptor_type = true,
-        .dpl = 0,
         .db = true,
         .granularity = true,
     });
@@ -44,12 +42,14 @@ fn main() !void {
         .base = 0,
         .limit = 0xFFFFF,
         .segment_type = 0x2, // Data segment
-        .descriptor_type = true,
-        .dpl = 0,
         .db = true,
         .granularity = true,
     }));
     try log.info("Installing and flushing GDT.");
     try table.installAndFlush();
     try log.info("GDT installed successfully.");
+}
+
+test "kernel main" {
+    try main();
 }

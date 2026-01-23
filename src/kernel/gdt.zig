@@ -1,4 +1,56 @@
 const std = @import("std");
+const arch = @import("arch");
+
+/// Privilege Levels (DPL) for i386 segments and gates.
+/// Ring 0 is the most privileged, Ring 3 the least.
+pub const PrivilegeLevel = enum(u2) {
+    /// Kernel level privilege.
+    ring0 = 0,
+    ring1 = 1,
+    ring2 = 2,
+    /// User level privilege.
+    ring3 = 3,
+};
+
+pub const DescriptorType = enum(u1) {
+    system = 0,
+    code_data = 1,
+};
+
+/// Bit64 indicates whether the segment contains 64-bit code.
+/// Since this is for i386 processors, this is always disabled.
+pub const Bit64 = enum(u1) {
+    disabled = 0,
+    enabled = 1,
+};
+
+/// SegmentClass indicates whether the segment is a data or code segment.
+pub const SegmentClass = enum(u1) {
+    data = 0,
+    code = 1,
+};
+
+pub const ExpandDownConforming = enum(u1) {
+    disabled = 0,
+    enabled = 1,
+};
+
+pub const Accessed = enum(u1) {
+    disabled = 0,
+    enabled = 1,
+};
+
+pub const Permission = enum(u1) {
+    read_or_execute_only = 0,
+    readwrite_or_readexecute = 1,
+};
+
+pub const SegmentType = packed struct {
+    accessed: Accessed = .disabled,
+    permission: Permission = .readwrite_or_readexecute,
+    segment_class: SegmentClass,
+    expand_down: ExpandDownConforming = .disabled,
+};
 
 /// Descriptor is a class that represents a Global Descriptor Table (GDT) segment
 /// descriptor. It provides the processor with size, location, access, and status
@@ -68,19 +120,19 @@ const std = @import("std");
 ///   G determines the scaling of the limit field as described above.
 ///
 pub const Descriptor = packed struct {
-    // Lower 32 bits
-    limit0: u16 = 0, // bits 0..15
-    base0: u24 = 0, // bits 16..39
+    limit0: u16 = 0,
+    base0: u24 = 0,
 
-    // Access byte + flags
-    segment_type: u4 = 0, // type
-    descriptor_type: u1 = 0, // S
-    dpl: u2 = 0, // DPL
-    present: u1 = 0, // P
+    segment_type: u4 = 0,
+
+    descriptor_type: DescriptorType = .system,
+
+    dpl: PrivilegeLevel = .ring0,
+    present: u1 = 0,
 
     limit1: u4 = 0, // limit 16..19
-    available: u1 = 0, // AVL
-    bit64: u1 = 0, // L
+    available: u1 = 0,
+    bit64: Bit64 = Bit64.disabled,
     db: u1 = 0, // DB
     granularity: u1 = 0, // G
 
@@ -88,22 +140,13 @@ pub const Descriptor = packed struct {
 
     pub fn init(args: struct {
         base: u32,
-        limit: u32,
-        segment_type: u8,
-        descriptor_type: bool,
-        dpl: u8,
+        limit: u20,
+        segment_type: u4,
+        descriptor_type: DescriptorType = .code_data,
+        dpl: PrivilegeLevel = .ring0,
         db: bool,
         granularity: bool,
     }) !Descriptor {
-        if ((args.limit >> 20) != 0)
-            return error.LimitHighBitsNonZero;
-
-        if ((args.dpl & 0xFC) != 0)
-            return error.DplHighBitsNonZero;
-
-        if ((args.segment_type & 0xF0) != 0)
-            return error.SegmentTypeHighBitsNonZero;
-
         var d = Descriptor{};
 
         d.base0 = @intCast(args.base & 0x00FF_FFFF);
@@ -112,9 +155,9 @@ pub const Descriptor = packed struct {
         d.limit0 = @intCast(args.limit & 0xFFFF);
         d.limit1 = @intCast((args.limit >> 16) & 0xF);
 
-        d.segment_type = @intCast(args.segment_type);
-        d.descriptor_type = @intFromBool(args.descriptor_type);
-        d.dpl = @intCast(args.dpl);
+        d.segment_type = args.segment_type;
+        d.descriptor_type = args.descriptor_type;
+        d.dpl = args.dpl;
         d.present = 1;
         d.db = @intFromBool(args.db);
         d.granularity = @intFromBool(args.granularity);
@@ -126,10 +169,6 @@ pub const Descriptor = packed struct {
 comptime {
     std.debug.assert(@sizeOf(Descriptor) == 8);
 }
-
-/// Installs and flushes the GDT pointed to by gdt_ptr to the processor.
-/// Defined in assembly at installAndFlushGDTInternal.S
-extern fn installAndFlushGDTInternal(gdt_ptr: u64) void;
 
 /// Table is a generic Global Descriptor Table (GDT) that can hold N descriptors.
 pub fn Table(comptime N: usize) type {
@@ -174,7 +213,7 @@ pub fn Table(comptime N: usize) type {
             if (first_entry.* != 0)
                 return error.FirstGdtEntryNotNull;
 
-            installAndFlushGDTInternal(ptr);
+            arch.installAndFlushGDT(ptr);
         }
     };
 }

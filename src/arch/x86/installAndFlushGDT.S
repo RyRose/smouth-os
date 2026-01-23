@@ -1,8 +1,8 @@
-// void installAndFlushGDTInternal(gdt_ptr: u64): Installs a new Global Descriptor Table (GDT)
+// void installAndFlushGDT(gdt_ptr: u64): Installs a new Global Descriptor Table (GDT)
 // using the provided pointer.
-.global installAndFlushGDTInternal
-.type   installAndFlushGDTInternal, @function
-installAndFlushGDTInternal:
+.global installAndFlushGDT
+.type   installAndFlushGDT, @function
+installAndFlushGDT:
 	pushl %ebp
 	movl  %esp, %ebp
 	lgdt  8(%ebp)

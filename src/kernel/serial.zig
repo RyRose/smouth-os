@@ -1,5 +1,8 @@
 //! Serial port communication for x86 architecture.
 
+const builtin = @import("builtin");
+const std = @import("std");
+
 const ioport = @import("ioport.zig");
 const sync = @import("sync.zig");
 
@@ -44,6 +47,11 @@ fn isTransmitEmpty() bool {
 
 /// Write a byte to the serial port.
 pub fn writeByte(b: u8) void {
+    if (comptime builtin.target.os.tag != .freestanding) {
+        std.debug.print("{c}", .{b});
+        return;
+    }
+
     while (isTransmitEmpty()) {}
     ioport.outb(base + 0, b);
 }
