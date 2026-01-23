@@ -232,6 +232,10 @@ pub fn Table(comptime N: usize) type {
 
         const Self = @This();
 
+        pub fn init() Self {
+            return Self{};
+        }
+
         /// Registers a descriptor at the given index in the GDT table.
         pub fn register(self: *Self, index: usize, descriptor: Descriptor) !void {
             if (index >= self.table.len)

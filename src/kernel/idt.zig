@@ -2,6 +2,29 @@ const std = @import("std");
 
 const log = @import("log.zig");
 
+pub const InterruptType = enum(u8) {
+    divide_by_zero = 0,
+    debug = 1,
+    non_maskable_interrupt = 2,
+    breakpoint = 3,
+    overflow = 4,
+    bound_range_exceeded = 5,
+    invalid_opcode = 6,
+    device_not_available = 7,
+    double_fault = 8,
+    coprocessor_segment_overrun = 9,
+    invalid_tss = 10,
+    segment_not_present = 11,
+    stack_segment_fault = 12,
+    general_protection_fault = 13,
+    page_fault = 14,
+    x87_floating_point_exception = 16,
+    alignment_check = 17,
+    machine_check = 18,
+    simd_floating_point_exception = 19,
+    virtualization_exception = 20,
+};
+
 /// Gate types for i386 IDT entries.
 pub const GateType = enum(u4) {
     empty = 0,
@@ -121,9 +144,13 @@ pub fn Table(comptime N: usize) type {
 
         const Self = @This();
 
+        pub fn init() Self {
+            return Self{};
+        }
+
         /// Registers the interrupt gate descriptor at the given index.
-        pub fn register(self: *Self, index: usize, descriptor: Descriptor) void {
-            self.table[index] = descriptor;
+        pub fn register(self: *Self, index: InterruptType, descriptor: Descriptor) void {
+            self.table[@intFromEnum(index)] = descriptor;
         }
 
         /// Returns a 48-bit value to be stored in the IDTR.
