@@ -6,6 +6,7 @@ const log = @import("log.zig");
 const gdt = @import("gdt.zig");
 const sync = @import("sync.zig");
 const idt = @import("idt.zig");
+const pci = @import("pci.zig");
 
 pub const panic = @import("panic.zig").panic;
 
@@ -53,4 +54,19 @@ fn main() !void {
     }));
     try idt_table.load();
     try log.info("IDT loaded.");
+
+    for (0..256) |bus| {
+        for (0..8) |device| {
+            const address = pci.ConfigurationAddress.init(.{
+                .bus = @intCast(bus),
+                .device = @intCast(device),
+                .function = 0,
+                .register_offset = .vendor_device,
+            });
+            ioport.outl(pci.ConfigurationAddressPort, @bitCast(address));
+            const value = ioport.inl(pci.ConfigurationDataPort);
+            if (value == 0xFFFF_FFFF) continue;
+            try log.infoF("PCI Device found at bus {d}, device {d}: 0x{x}", .{ bus, device, value });
+        }
+    }
 }

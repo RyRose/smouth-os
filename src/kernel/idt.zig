@@ -2,6 +2,7 @@ const std = @import("std");
 
 const log = @import("log.zig");
 
+/// Interrupt types for i386 architecture.
 pub const InterruptType = enum(u8) {
     divide_by_zero = 0,
     debug = 1,

@@ -52,8 +52,16 @@ pub fn build(b: *std.Build) !void {
                     // functions and this seems to fix it. My guess is that it was doing
                     // a memcpy, which used SIMD instructions under the hood.
                     // see: https://wiki.osdev.org/Zig_Bare_Bones
-                    .cpu_features_add = std.Target.x86.featureSet(&.{.soft_float}),
-                    .cpu_features_sub = std.Target.x86.featureSet(&.{ .avx, .avx2, .sse, .sse2, .mmx }),
+                    .cpu_features_add = std.Target.x86.featureSet(&.{
+                        .soft_float,
+                    }),
+                    .cpu_features_sub = std.Target.x86.featureSet(&.{
+                        .avx,
+                        .avx2,
+                        .sse,
+                        .sse2,
+                        .mmx,
+                    }),
                 }),
             },
         },
@@ -98,7 +106,14 @@ fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {
         qemu_binary_name,
         // zig fmt: off
         "-serial","mon:stdio",
-        "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04"
+        // Allows exiting QEMU by writing to I/O port 0xf4 with a
+        // non-zero exit code.
+        "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
+        // Enables virtio sound device for audio output.
+        // TODO: Make audio device configurable per OS. This assumes macOS.
+        // https://www.qemu.org/docs/master/system/devices/virtio/virtio-snd.html#examples
+        "-audiodev", "coreaudio,id=snd0",
+        "-device", "virtio-sound-pci,audiodev=snd0",
         // zig fmt: on
     });
     run_cmd.addArg("-kernel");

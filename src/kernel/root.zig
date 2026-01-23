@@ -5,6 +5,7 @@ const log = @import("log.zig");
 const panic = @import("panic.zig");
 const serial = @import("serial.zig");
 const sync = @import("sync.zig");
+const pci = @import("pci.zig");
 
 test "include modules for tests" {
     _ = gdt;
@@ -14,4 +15,5 @@ test "include modules for tests" {
     _ = panic;
     _ = serial;
     _ = sync;
+    _ = pci;
 }
