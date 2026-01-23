@@ -74,20 +74,12 @@ pub fn build(b: *std.Build) !void {
 
     try addKernelRun(&ctx, "src/kernel/main.zig", .x86);
 
-    const test_main = b.addExecutable(.{
-        .name = "test",
-        .root_module = ctx.createKernelModule(.hosted, "src/kernel/main.zig"),
-    });
-
-    const main_tests = b.addTest(.{
-        .root_module = test_main.root_module,
-    });
-
-    // A run step that will run the test executable.
-    const run_mod_tests = b.addRunArtifact(main_tests);
+    const run_unit_tests = b.addRunArtifact(b.addTest(.{
+        .root_module = ctx.createKernelModule(.hosted, "src/kernel/root.zig"),
+    }));
 
     const test_step = b.step("test", "Run tests");
-    test_step.dependOn(&run_mod_tests.step);
+    test_step.dependOn(&run_unit_tests.step);
 }
 
 fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {

@@ -12,6 +12,8 @@ pub const PrivilegeLevel = enum(u2) {
     ring3 = 3,
 };
 
+/// DescriptorType indicates whether the segment is a system segment or a
+/// code/data segment.
 pub const DescriptorType = enum(u1) {
     system = 0,
     code_data = 1,
@@ -30,6 +32,8 @@ pub const SegmentClass = enum(u1) {
     code = 1,
 };
 
+/// ExpandDownConforming indicates whether the segment is an expand-down data
+/// segment or a conforming code segment.
 pub const ExpandDownConforming = enum(u1) {
     disabled = 0,
     enabled = 1,
@@ -40,17 +44,53 @@ pub const Accessed = enum(u1) {
     enabled = 1,
 };
 
+/// Permission indicates the read/write or execute/read permissions of the segment.
 pub const Permission = enum(u1) {
+    /// For data segments: read-only. For code segments: execute-only.
     read_or_execute_only = 0,
+    /// For data segments: read-write. For code segments: execute-read.
     readwrite_or_readexecute = 1,
 };
 
+/// SegmentType encapsulates the type and permissions of a GDT segment.
+/// Defaults to zeroed struct.
 pub const SegmentType = packed struct {
     accessed: Accessed = .disabled,
-    permission: Permission = .readwrite_or_readexecute,
-    segment_class: SegmentClass,
-    expand_down: ExpandDownConforming = .disabled,
+    permission: Permission = .read_or_execute_only,
+    expand_down_conforming: ExpandDownConforming = .disabled,
+    segment_class: SegmentClass = .data,
+
+    pub fn init(args: struct {
+        accessed: Accessed = .disabled,
+        permission: Permission = .readwrite_or_readexecute,
+        expand_down_conforming: ExpandDownConforming = .disabled,
+        segment_class: SegmentClass,
+    }) SegmentType {
+        return SegmentType{
+            .accessed = args.accessed,
+            .permission = args.permission,
+            .expand_down_conforming = args.expand_down_conforming,
+            .segment_class = args.segment_class,
+        };
+    }
 };
+
+comptime {
+    // SegmentType must be exactly 4 bits.
+    std.debug.assert(@bitSizeOf(SegmentType) == 4);
+}
+
+test SegmentType {
+    const code_segment_type: u4 = @bitCast(SegmentType.init(.{
+        .segment_class = .code,
+    }));
+    try std.testing.expectEqual(0xA, code_segment_type);
+
+    const data_segment_type: u4 = @bitCast(SegmentType.init(.{
+        .segment_class = .data,
+    }));
+    try std.testing.expectEqual(0x2, data_segment_type);
+}
 
 /// Descriptor is a class that represents a Global Descriptor Table (GDT) segment
 /// descriptor. It provides the processor with size, location, access, and status
@@ -123,30 +163,31 @@ pub const Descriptor = packed struct {
     limit0: u16 = 0,
     base0: u24 = 0,
 
-    segment_type: u4 = 0,
+    segment_type: SegmentType = .{},
 
     descriptor_type: DescriptorType = .system,
 
     dpl: PrivilegeLevel = .ring0,
-    present: u1 = 0,
+    present: bool = false,
 
-    limit1: u4 = 0, // limit 16..19
-    available: u1 = 0,
+    limit1: u4 = 0,
+    available: bool = false,
     bit64: Bit64 = Bit64.disabled,
-    db: u1 = 0, // DB
-    granularity: u1 = 0, // G
+    db: bool = false,
+    granularity: bool = false,
 
-    base1: u8 = 0, // base 24..31
+    base1: u8 = 0,
 
+    /// Creates a present GDT segment Descriptor with the provided values.
     pub fn init(args: struct {
         base: u32,
         limit: u20,
-        segment_type: u4,
+        segment_type: SegmentType,
         descriptor_type: DescriptorType = .code_data,
         dpl: PrivilegeLevel = .ring0,
         db: bool,
         granularity: bool,
-    }) !Descriptor {
+    }) Descriptor {
         var d = Descriptor{};
 
         d.base0 = @intCast(args.base & 0x00FF_FFFF);
@@ -158,31 +199,38 @@ pub const Descriptor = packed struct {
         d.segment_type = args.segment_type;
         d.descriptor_type = args.descriptor_type;
         d.dpl = args.dpl;
-        d.present = 1;
-        d.db = @intFromBool(args.db);
-        d.granularity = @intFromBool(args.granularity);
+        d.present = true;
+        d.db = args.db;
+        d.granularity = args.granularity;
 
         return d;
     }
 };
 
 comptime {
-    std.debug.assert(@sizeOf(Descriptor) == 8);
+    // i386 GDT segment descriptors must be exactly 8 bytes!
+    std.debug.assert(@bitSizeOf(Descriptor) == 64);
+}
+
+test Descriptor {
+    const desc: u64 = @bitCast(Descriptor.init(.{
+        .base = 0x1234_5678,
+        .limit = 0xABCDE,
+        .segment_type = SegmentType.init(.{ .segment_class = .code }),
+        .descriptor_type = .code_data,
+        .dpl = .ring0,
+        .db = true,
+        .granularity = true,
+    }));
+    try std.testing.expectEqual(1354064187557985502, desc);
 }
 
 /// Table is a generic Global Descriptor Table (GDT) that can hold N descriptors.
 pub fn Table(comptime N: usize) type {
-    return packed struct {
-        table: *[N]Descriptor,
+    return struct {
+        table: [N]Descriptor = [_]Descriptor{.{}} ** N,
 
         const Self = @This();
-
-        /// Initializes a GDT table with the provided buffer.
-        pub fn init(buffer: *[N]Descriptor) Self {
-            return Self{
-                .table = buffer,
-            };
-        }
 
         /// Registers a descriptor at the given index in the GDT table.
         pub fn register(self: *Self, index: usize, descriptor: Descriptor) !void {
@@ -194,7 +242,7 @@ pub fn Table(comptime N: usize) type {
 
         /// Returns the pointer to the GDT table in the format required by LGDT.
         pub fn pointer(self: *Self) u64 {
-            var gdt_ptr: u64 = @intFromPtr(self.table);
+            var gdt_ptr: u64 = @intFromPtr(&self.table);
             gdt_ptr <<= 16;
             gdt_ptr |= (3 * @sizeOf(u64)) & 0xFFFF;
             return gdt_ptr;

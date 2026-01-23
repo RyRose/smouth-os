@@ -1,7 +1,9 @@
 const std = @import("std");
 
+const log = @import("log.zig");
+
 /// Gate types for i386 IDT entries.
-pub const GateType = enum(u8) {
+pub const GateType = enum(u4) {
     empty = 0,
     task = 0x5,
     interrupt_32bit = 0xE,
@@ -19,6 +21,35 @@ pub const PrivilegeLevel = enum(u2) {
     ring3 = 3,
 };
 
+pub const TableIndicator = enum(u1) {
+    /// Global Descriptor Table
+    gdt = 0,
+    /// Local Descriptor Table
+    ldt = 1,
+};
+
+/// A struct representing a segment selector in i386 architecture.
+/// Packed such that it can be directly used in segment selector fields.
+pub const SegmentSelector = packed struct {
+    /// The Requested Privilege Level (RPL) bits.
+    rpl: PrivilegeLevel = .ring0,
+    /// The Table Indicator (TI) bit. Specifies whether the selector refers to
+    /// the GDT or LDT.
+    ti: TableIndicator = .gdt,
+    /// The index into the GDT or LDT. This is a 13-bit value.
+    index: u13 = 0,
+};
+
+comptime {
+    // SegmentSelector must be exactly 16 bits (2 bytes).
+    std.debug.assert(@bitSizeOf(SegmentSelector) == 16);
+}
+
+test SegmentSelector {
+    const code_segment: u16 = @bitCast(SegmentSelector{ .index = 1 });
+    try std.testing.expectEqual(0x8, code_segment);
+}
+
 /// A struct representing a 32-bit descriptor to be stored in the Interrupt
 /// Descriptor Table (IDT). Packed such that it can be directly used as elements
 /// in the i386 IDT.
@@ -32,14 +63,14 @@ pub const Descriptor = packed struct {
     /// value where the first 13 bits are the index into the GDT/LDT and the
     /// last 3 bits are the Requested Privilege Level (RPL) and Table
     /// Indicator (TI) bits.
-    segment_selector: u16 = 0,
+    segment_selector: SegmentSelector = .{},
 
     /// A byte that should always be zero.
     zeroes: u8 = 0,
 
     /// Four bits that determine the gate type (Interrupt/Task/Trap) and 16/32
     /// bitness.
-    gate_type: u4 = @intCast(GateType.empty),
+    gate_type: GateType = GateType.empty,
 
     /// Whether this descriptor points to a code/data segment. Else, it points
     /// to some other system segment. We consider interrupt handlers some other
@@ -51,7 +82,7 @@ pub const Descriptor = packed struct {
     /// this segment/gate. Ring 0 is the most privileged, Ring 3 the least.
     /// For interrupt gates, this determines the lowest privilege level that
     /// can invoke the interrupt via the INT instruction.
-    dpl: u2 = @intCast(PrivilegeLevel.ring0),
+    dpl: PrivilegeLevel = PrivilegeLevel.ring0,
 
     /// Whether or not the segment is present.
     present: bool = false,
@@ -62,16 +93,15 @@ pub const Descriptor = packed struct {
     /// Creates a present interrupt GateDescriptor with the provided values.
     pub fn init(args: struct {
         offset: u32,
-        segment_selector: struct { index: u13, rpl: PrivilegeLevel = .ring0 },
+        segment_selector: SegmentSelector,
         gate_type: GateType = .interrupt_32bit,
         dpl: PrivilegeLevel = .ring0,
     }) Descriptor {
-        const rpl: u16 = @intCast(args.segment_selector.rpl);
         return .{
             .offset_first = @intCast(args.offset & 0xFFFF),
-            .segment_selector = (args.segment_selector.index << 3) | rpl,
-            .gate_type = @intCast(args.gate_type),
-            .dpl = @intCast(args.dpl),
+            .segment_selector = args.segment_selector,
+            .gate_type = args.gate_type,
+            .dpl = args.dpl,
             .present = true,
             .offset_second = @intCast((args.offset >> 16) & 0xFFFF),
         };
@@ -79,15 +109,15 @@ pub const Descriptor = packed struct {
 };
 
 comptime {
-    // i386 IDT gate descriptors must be 8 bytes!
-    std.debug.assert(@sizeOf(Descriptor) == 8, "GateDescriptor must be 8 bytes!");
+    // i386 IDT gate descriptors must be exactly 8 bytes!
+    std.debug.assert(@bitSizeOf(Descriptor) == 64);
 }
 
 /// Table represents the i386 IDT.
 pub fn Table(comptime N: usize) type {
-    return packed struct {
+    return struct {
         /// The interrupt descriptor table.
-        table: [N]Descriptor = undefined,
+        table: [N]Descriptor = [_]Descriptor{.{}} ** N,
 
         const Self = @This();
 
@@ -100,8 +130,23 @@ pub fn Table(comptime N: usize) type {
         pub fn idtr(self: *Self) u64 {
             var ret: u64 = @intFromPtr(&self.table);
             ret <<= 16;
-            ret |= 8 * N - 1;
+            if (N > 0) {
+                ret |= 8 * N - 1;
+            }
             return ret;
         }
+
+        pub fn load(self: *Self) !void {
+            const idtr_desc = self.idtr();
+            asm volatile ("LIDT (%[idtr])"
+                :
+                : [idtr] "rax" (&idtr_desc),
+            );
+        }
     };
+}
+
+comptime {
+    std.debug.assert(@bitSizeOf(Table(1)) == 64);
+    std.debug.assert(@bitSizeOf(Table(4)) == 4 * 64);
 }

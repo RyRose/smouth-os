@@ -93,7 +93,7 @@ pub fn errF(comptime fmt: []const u8, args: anytype) !void {
     log_buffer.lock();
     defer log_buffer.unlock();
 
-    errFInternal(fmt, args);
+    try errFInternal(fmt, args);
 }
 
 /// Log a fatal error message and halt the system.
