@@ -1,3 +1,4 @@
+const arch = @import("arch");
 const std = @import("std");
 
 const ioport = @import("ioport.zig");
@@ -55,6 +56,12 @@ fn main() !void {
     try idt_table.load();
     try log.info("IDT loaded.");
 
+    const music_data: []const u8 = @embedFile("data8000.raw");
+    try log.infoF("Embedded music data size: {d} bytes", .{music_data.len});
+
+    const msr_platform_info = try arch.rdmsr(0x1);
+    try log.infoF("MSR Platform Info (0xCE): 0x{x}", .{msr_platform_info});
+
     for (0..256) |bus| {
         for (0..8) |device| {
             const address = pci.ConfigurationAddress.init(.{
@@ -64,9 +71,22 @@ fn main() !void {
                 .register_offset = .vendor_device,
             });
             ioport.outl(pci.ConfigurationAddressPort, @bitCast(address));
-            const value = ioport.inl(pci.ConfigurationDataPort);
-            if (value == 0xFFFF_FFFF) continue;
-            try log.infoF("PCI Device found at bus {d}, device {d}: 0x{x}", .{ bus, device, value });
+            const raw = ioport.inl(pci.ConfigurationDataPort);
+
+            if (raw == 0xFFFF_FFFF) continue;
+            try log.infoF("PCI Device found at bus {d}, device {d}", .{ bus, device });
+
+            const value: *const packed struct {
+                vendor: u16,
+                device: u16,
+            } = @ptrCast(&raw);
+            try log.infoF("  Vendor ID: 0x{x}", .{value.vendor});
+            try log.infoF("  Device ID: 0x{x}", .{value.device});
+
+            if (raw != 0x1059_1AF4) {
+                continue;
+            }
+            try log.info("VirtIO sound card detected.");
         }
     }
 }

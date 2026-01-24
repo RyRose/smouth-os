@@ -4,3 +4,7 @@ zig-out/
 
 .DS_Store
 .direnv/
+
+*.raw
+*.wav
+*.mp3

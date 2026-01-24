@@ -53,7 +53,7 @@ pub fn writeByte(b: u8) void {
     }
 
     while (isTransmitEmpty()) {}
-    ioport.outb(base + 0, b);
+    ioport.outb(base, b);
 }
 
 /// Write a string to the serial port.

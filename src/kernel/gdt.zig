@@ -265,7 +265,7 @@ pub fn Table(comptime N: usize) type {
             if (first_entry.* != 0)
                 return error.FirstGdtEntryNotNull;
 
-            arch.installAndFlushGDT(ptr);
+            try arch.installAndFlushGDT(ptr);
         }
     };
 }

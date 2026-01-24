@@ -68,13 +68,13 @@ pub fn build(b: *std.Build) !void {
     };
 
     ctx.arch(.hosted).module = b.createModule(.{
-        .root_source_file = b.path("src/arch/hosted/root.zig"),
+        .root_source_file = b.path("src/arch/root.zig"),
         .target = ctx.arch(Architecture.hosted).target,
         .optimize = ctx.optimize,
     });
 
     ctx.arch(.x86).module = b.createModule(.{
-        .root_source_file = b.path("src/arch/x86/root.zig"),
+        .root_source_file = b.path("src/arch/root.zig"),
         .target = ctx.arch(Architecture.x86).target,
         .optimize = ctx.optimize,
     });
@@ -114,6 +114,8 @@ fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {
         // https://www.qemu.org/docs/master/system/devices/virtio/virtio-snd.html#examples
         "-audiodev", "coreaudio,id=snd0",
         "-device", "virtio-sound-pci,audiodev=snd0",
+        "-audiodev", "coreaudio,id=speaker",
+        "-machine", "pcspk-audiodev=speaker",
         // zig fmt: on
     });
     run_cmd.addArg("-kernel");
