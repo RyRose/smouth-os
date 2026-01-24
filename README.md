@@ -1,4 +1,4 @@
-# Hobby OS
+# smouth-os
 
 ## Requirements
 
