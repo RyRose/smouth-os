@@ -56,9 +56,6 @@ fn main() !void {
     try idt_table.load();
     try log.info("IDT loaded.");
 
-    const music_data: []const u8 = @embedFile("data8000.raw");
-    try log.infoF("Embedded music data size: {d} bytes", .{music_data.len});
-
     const msr_platform_info = try arch.rdmsr(0x1);
     try log.infoF("MSR Platform Info (0xCE): 0x{x}", .{msr_platform_info});
 
