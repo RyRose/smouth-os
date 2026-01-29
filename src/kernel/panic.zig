@@ -1,7 +1,18 @@
-const std = @import("std");
-const serial = @import("serial.zig");
-const ioport = @import("ioport.zig");
+//! Panic handling for the kernel.
+//! Logs panic messages to the serial port and halts the system.
+//! Uses a fixed-size buffer for formatting panic messages.
+//! Does not allocate memory dynamically during panic handling.
+//! Includes error return trace logging if available.
+//! Halts the system by writing to the appropriate I/O port.
+//!
+
 const builtin = @import("builtin");
+const std = @import("std");
+
+const arch = @import("arch");
+
+const ioport = arch.x86.ioport;
+const serial = @import("serial.zig");
 
 var panic_buffer: [1024]u8 = undefined;
 var panic_allocator_buffer: [1024]u8 = undefined;

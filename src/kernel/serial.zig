@@ -3,7 +3,10 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-const ioport = @import("ioport.zig");
+const arch = @import("arch");
+
+const ioport = arch.x86.ioport;
+
 const sync = @import("sync.zig");
 
 // COM1 base port
@@ -42,16 +45,11 @@ pub fn init() void {
 }
 
 fn isTransmitEmpty() bool {
-    return (ioport.inb(base + 5) & 0x20) == 0;
+    return (arch.x86.ioport.inb(base + 5) & 0x20) == 0;
 }
 
 /// Write a byte to the serial port.
 pub fn writeByte(b: u8) void {
-    if (comptime builtin.target.os.tag != .freestanding) {
-        std.debug.print("{c}", .{b});
-        return;
-    }
-
     while (isTransmitEmpty()) {}
     ioport.outb(base, b);
 }

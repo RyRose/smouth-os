@@ -1,3 +1,6 @@
+//! Synchronization primitives for kernel development.
+//!
+
 const std = @import("std");
 
 /// A simple spinlock implementation using an atomic flag.
@@ -28,12 +31,7 @@ pub fn SpinLock(comptime T: type) type {
 
         /// Acquires the lock, spinning until it is available.
         pub fn lock(self: *Self) void {
-            while (true) {
-                if (!self.flag.load(.seq_cst)) {
-                    if (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) == null) {
-                        break;
-                    }
-                }
+            while (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) != null) {
                 std.atomic.spinLoopHint();
             }
         }
@@ -42,15 +40,10 @@ pub fn SpinLock(comptime T: type) type {
         /// Returns true if the lock was acquired, false otherwise.
         pub fn tryLock(self: *Self, iterations: usize) bool {
             var i: usize = 0;
-            while (i < iterations) : (i += 1) {
-                if (!self.flag.load(.seq_cst)) {
-                    if (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) == null) {
-                        return true;
-                    }
-                }
+            while (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) != null and i < iterations) : (i += 1) {
                 std.atomic.spinLoopHint();
             }
-            return false;
+            return i < iterations;
         }
 
         /// Releases the lock.
@@ -59,4 +52,22 @@ pub fn SpinLock(comptime T: type) type {
             self.flag.store(false, .seq_cst);
         }
     };
+}
+
+test "SpinLock basic functionality" {
+    var lock = SpinLock(u32).init(0);
+    lock.lock();
+    lock.value = 42;
+    lock.unlock();
+    lock.lock();
+    try std.testing.expectEqual(42, lock.value);
+    lock.unlock();
+}
+
+test "SpinLock tryLock functionality" {
+    var lock = SpinLock(u32).init(0);
+    try std.testing.expect(lock.tryLock(1000));
+    try std.testing.expect(!lock.tryLock(1000));
+    lock.unlock();
+    try std.testing.expect(lock.tryLock(1000));
 }

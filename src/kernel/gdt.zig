@@ -1,3 +1,6 @@
+//! Global Descriptor Table (GDT) code for i386 architecture.
+//!
+
 const std = @import("std");
 const arch = @import("arch");
 
@@ -214,15 +217,25 @@ comptime {
 
 test Descriptor {
     const desc: u64 = @bitCast(Descriptor.init(.{
-        .base = 0x1234_5678,
-        .limit = 0xABCDE,
+        .base = 0x12_345678,
+        .limit = 0xA_BCDE,
         .segment_type = SegmentType.init(.{ .segment_class = .code }),
         .descriptor_type = .code_data,
         .dpl = .ring0,
         .db = true,
         .granularity = true,
     }));
-    try std.testing.expectEqual(1354064187557985502, desc);
+    try std.testing.expectEqual(0x12_C_A_9_A_345678_BCDE, desc);
+    //                            --   -   - ------ ----
+    //                            |    |   | |      \-- limit0 (0xBCDE)
+    //                            |    |   | \-- base0 (0x345678)
+    //                            |    |   \-- segment type (0xA)
+    //                            |    \-- limit1 (0xA)
+    //                            \-- base1 (0x12)
+    //
+    // Remaining fields are an exercise to the reader. I manually
+    // inspected the bits to verify correctness but was too lazy to
+    // write it all out here.
 }
 
 /// Table is a generic Global Descriptor Table (GDT) that can hold N descriptors.
@@ -265,7 +278,7 @@ pub fn Table(comptime N: usize) type {
             if (first_entry.* != 0)
                 return error.FirstGdtEntryNotNull;
 
-            try arch.installAndFlushGDT(ptr);
+            arch.x86.installAndFlushGDT(ptr);
         }
     };
 }

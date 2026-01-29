@@ -1,19 +1,13 @@
-const gdt = @import("gdt.zig");
-const idt = @import("idt.zig");
-const ioport = @import("ioport.zig");
-const log = @import("log.zig");
-const panic = @import("panic.zig");
-const serial = @import("serial.zig");
-const sync = @import("sync.zig");
-const pci = @import("pci.zig");
+const std = @import("std");
 
-test "include modules for tests" {
-    _ = gdt;
-    _ = idt;
-    _ = ioport;
-    _ = log;
-    _ = panic;
-    _ = serial;
-    _ = sync;
-    _ = pci;
+pub const gdt = @import("gdt.zig");
+pub const idt = @import("idt.zig");
+pub const log = @import("log.zig");
+pub const panic = @import("panic.zig");
+pub const pci = @import("pci.zig");
+pub const serial = @import("serial.zig");
+pub const sync = @import("sync.zig");
+
+test "include all code for testing" {
+    std.testing.refAllDecls(@This());
 }

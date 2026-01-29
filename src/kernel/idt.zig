@@ -1,3 +1,6 @@
+//! i386 Interrupt Descriptor Table (IDT) definitions.
+//!
+
 const std = @import("std");
 
 const log = @import("log.zig");
@@ -177,4 +180,19 @@ pub fn Table(comptime N: usize) type {
 comptime {
     std.debug.assert(@bitSizeOf(Table(1)) == 64);
     std.debug.assert(@bitSizeOf(Table(4)) == 4 * 64);
+}
+
+test "IDT Descriptor Initialization" {
+    const desc = Descriptor.init(.{
+        .offset = 0x12345678,
+        .segment_selector = SegmentSelector{ .index = 1 },
+        .gate_type = .interrupt_32bit,
+        .dpl = .ring0,
+    });
+    try std.testing.expectEqual(0x5678, desc.offset_first);
+    try std.testing.expectEqual(0x1234, desc.offset_second);
+    try std.testing.expectEqual(1, desc.segment_selector.index);
+    try std.testing.expectEqual(true, desc.present);
+    try std.testing.expectEqual(GateType.interrupt_32bit, desc.gate_type);
+    try std.testing.expectEqual(PrivilegeLevel.ring0, desc.dpl);
 }

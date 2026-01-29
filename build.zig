@@ -1,6 +1,12 @@
 const std = @import("std");
 
-const Architecture = enum(u2) {
+/// Supported architectures for the kernel build.
+/// - hosted: The architecture of the host machine.
+/// - x86: The x86 architecture for freestanding OS development.
+///
+/// The index of each architecture in this enum corresponds to its position
+/// in the `arches` array in the `Context` struct.
+const Architecture = enum(u8) {
     hosted = 0,
     x86 = 1,
 };
@@ -8,42 +14,111 @@ const Architecture = enum(u2) {
 const ArchState = struct {
     type: Architecture,
     target: std.Build.ResolvedTarget,
-    module: *std.Build.Module = undefined,
+    assembly_path: ?[]const u8 = null,
+    modules: std.ArrayList(std.Build.Module.Import) = undefined,
+
+    pub fn init(
+        self: *ArchState,
+        ctx: *Context,
+        library: []const ArchLibrary,
+    ) !void {
+        for (library) |lib| {
+            try self.modules.append(ctx.b.allocator, .{
+                .name = lib.name,
+                .module = ctx.b.createModule(.{
+                    .root_source_file = ctx.b.path(lib.path),
+                    .target = self.target,
+                    .optimize = ctx.optimize,
+                }),
+            });
+            if (self.assembly_path) |path| {
+                if (lib.include_assembly) {
+                    try addAssembly(ctx.b, self.modules.items[self.modules.items.len - 1].module, path);
+                }
+            }
+        }
+        // Add dependencies between modules.
+        // E.g., arch depends on kernel and kernel depends on arch.
+        for (0.., self.modules.items) |i, import| {
+            for (0.., self.modules.items) |j, other| {
+                if (i == j) {
+                    continue;
+                }
+                import.module.addImport(other.name, other.module);
+            }
+        }
+    }
+};
+
+const ArchLibrary = struct {
+    name: []const u8,
+    path: []const u8,
+    include_assembly: bool = false,
 };
 
 const Context = struct {
     b: *std.Build,
     optimize: std.builtin.OptimizeMode,
-    archState: [@typeInfo(Architecture).@"enum".fields.len]ArchState,
+    arches: [@typeInfo(Architecture).@"enum".fields.len]ArchState,
 
-    fn arch(self: *Context, key: Architecture) *ArchState {
-        return &self.archState[@intFromEnum(key)];
+    pub fn init(args: struct {
+        b: *std.Build,
+        optimize: std.builtin.OptimizeMode,
+        modules: []const ArchLibrary,
+        arches: [@typeInfo(Architecture).@"enum".fields.len]ArchState,
+    }) !Context {
+        var ctx = Context{
+            .b = args.b,
+            .optimize = args.optimize,
+            .arches = args.arches,
+        };
+
+        for (&ctx.arches) |*state| {
+            try state.init(&ctx, args.modules);
+        }
+        return ctx;
     }
 
-    fn createKernelModule(self: *Context, value: Architecture, path: []const u8) *std.Build.Module {
-        return self.b.createModule(.{
-            .root_source_file = self.b.path(path),
-            .target = self.arch(value).target,
-            .optimize = self.optimize,
-            .imports = &.{.{
-                .name = "arch",
-                .module = self.arch(value).module,
-            }},
+    pub fn arch(ctx: *Context, key: Architecture) *ArchState {
+        return &ctx.arches[@intFromEnum(key)];
+    }
+
+    pub fn createKernelModule(ctx: *Context, value: Architecture, path: []const u8) *std.Build.Module {
+        var mod = ctx.b.createModule(.{
+            .root_source_file = ctx.b.path(path),
+            .target = ctx.arch(value).target,
+            .optimize = ctx.optimize,
         });
+        for (ctx.arch(value).modules.items) |import| {
+            mod.addImport(import.name, import.module);
+        }
+        return mod;
     }
 };
 
 pub fn build(b: *std.Build) !void {
-    var ctx = Context{
+    var ctx = try Context.init(.{
         .b = b,
         .optimize = b.standardOptimizeOption(.{}),
-        .archState = .{
+        .modules = &[_]ArchLibrary{
+            .{
+                .name = "arch",
+                .path = "src/arch/root.zig",
+                .include_assembly = true,
+            },
+            .{
+                .name = "kernel",
+                .path = "src/kernel/root.zig",
+            },
+        },
+        .arches = .{
             .{
                 .type = .hosted,
                 .target = b.standardTargetOptions(.{}),
             },
             .{
                 .type = .x86,
+                .assembly_path = "src/arch/x86",
                 .target = b.resolveTargetQuery(.{
                     .cpu_arch = .x86,
                     .os_tag = .freestanding,
@@ -65,25 +140,12 @@ pub fn build(b: *std.Build) !void {
                 }),
             },
         },
-    };
-
-    ctx.arch(.hosted).module = b.createModule(.{
-        .root_source_file = b.path("src/arch/root.zig"),
-        .target = ctx.arch(Architecture.hosted).target,
-        .optimize = ctx.optimize,
     });
 
-    ctx.arch(.x86).module = b.createModule(.{
-        .root_source_file = b.path("src/arch/root.zig"),
-        .target = ctx.arch(Architecture.x86).target,
-        .optimize = ctx.optimize,
-    });
-    try addAssembly(&ctx, ctx.arch(.x86).module, .x86);
-
-    try addKernelRun(&ctx, "src/kernel/main.zig", .x86);
+    try addKernelRun(&ctx, "src/main.zig", .x86);
 
     const run_unit_tests = b.addRunArtifact(b.addTest(.{
-        .root_module = ctx.createKernelModule(.hosted, "src/kernel/root.zig"),
+        .root_module = ctx.arches[@intFromEnum(Architecture.hosted)].modules.items[1].module,
     }));
 
     const test_step = b.step("test", "Run tests");
@@ -146,12 +208,7 @@ fn addKernelExecutable(ctx: *Context, key: []const u8, path: []const u8, arch: A
     return kernel;
 }
 
-fn addAssembly(ctx: *Context, mod: *std.Build.Module, arch: Architecture) !void {
-    const root = switch (arch) {
-        .hosted => return error.AssemblyNotSupportedForHosted,
-        .x86 => "src/arch/x86",
-    };
-
+fn addAssembly(b: *std.Build, mod: *std.Build.Module, root: []const u8) !void {
     var dir = try std.fs.cwd().openDir(root, .{ .iterate = true });
     defer dir.close();
     var it = dir.iterate();
@@ -159,10 +216,10 @@ fn addAssembly(ctx: *Context, mod: *std.Build.Module, arch: Architecture) !void 
         const entry = try it.next();
         if (entry == null) break;
 
-        const path = try std.fmt.allocPrint(ctx.b.allocator, "{s}/{s}", .{ root, entry.?.name });
-        defer ctx.b.allocator.free(path);
+        const path = try std.fmt.allocPrint(b.allocator, "{s}/{s}", .{ root, entry.?.name });
+        defer b.allocator.free(path);
         if (entry.?.kind == .file and std.mem.endsWith(u8, entry.?.name, ".S")) {
-            mod.addAssemblyFile(ctx.b.path(path));
+            mod.addAssemblyFile(b.path(path));
         }
     }
 }
