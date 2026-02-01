@@ -11,4 +11,4 @@ It primarily just ensures that 0x0 is supported as a valid address.
 
 ## debug
 
-This contain copies of debug facilities for logger error traces.
+This contain copies of debug facilities for logging error traces.
