@@ -1445,9 +1445,8 @@ fn runLineNumberProgram(d: *Dwarf, gpa: Allocator, compile_unit: *CompileUnit) !
     const compile_unit_cwd = try compile_unit.die.getAttrString(d, AT.comp_dir, d.section(.debug_line_str), compile_unit.*);
     const line_info_offset = try compile_unit.die.getAttrSecOffset(AT.stmt_list);
 
-    const s = d.section(.debug_line) orelse return error.InvalidDebugInfo;
     var fbr: FixedBufferReader = .{
-        .buf = s.data,
+        .buf = d.section(.debug_line).?.data,
         .endian = d.endian,
     };
     try fbr.seekTo(line_info_offset);

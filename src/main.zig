@@ -35,6 +35,7 @@ var idt_table = idt.Table(256).init();
 
 fn main() !void {
     serial.init();
+    serial.writeByte('\n');
     log.info("Zig version: {s}", .{builtin.zig_version_string});
     log.info("OS: {}", .{builtin.os.tag});
     log.info("CPU Arch: {}", .{builtin.cpu.arch});
@@ -51,8 +52,8 @@ fn main() !void {
     log.info("Link libcpp: {}", .{builtin.link_libcpp});
     log.info("Output mode: {}", .{builtin.output_mode});
 
-    log.info("Initializing panic", .{});
-    try kernel.panic.init();
+    log.info("Initializing debug information.", .{});
+    try kernel.debug.init();
 
     try gdt_table.register(1, gdt.Descriptor.init(.{
         .base = 0,
@@ -108,4 +109,10 @@ fn main() !void {
             log.info("VirtIO sound card detected.", .{});
         }
     }
+
+    try fail();
+}
+
+fn fail() !void {
+    return error.Failed;
 }

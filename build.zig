@@ -110,6 +110,10 @@ pub fn build(b: *std.Build) !void {
                 .name = "kernel",
                 .path = "src/kernel/root.zig",
             },
+            .{
+                .name = "stdk",
+                .path = "src/stdk/root.zig",
+            },
         },
         .arches = .{
             .{
@@ -167,7 +171,8 @@ fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {
     const run_cmd = ctx.b.addSystemCommand(&[_][]const u8{
         qemu_binary_name,
         // zig fmt: off
-        "-serial","mon:stdio",
+        "-nographic",
+        // "-serial","mon:stdio",
         // Allows exiting QEMU by writing to I/O port 0xf4 with a
         // non-zero exit code.
         "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",

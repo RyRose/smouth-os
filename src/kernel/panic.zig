@@ -9,47 +9,21 @@ const std = @import("std");
 
 const arch = @import("arch");
 
+const debug = @import("debug.zig");
 const dwarf = @import("dwarf.zig");
 
 const log = std.log.scoped(.PANIC);
 
 pub const panic = std.debug.FullPanic(innerPanic);
 
-pub fn init() !void {
-    panic_dwarf = try dwarf.open(dwarf_allocator.allocator());
-}
-
-// 1 MiB buffer for DWARF debug info
-var dwarf_buffer: [1000 * 1024]u8 = undefined;
-var dwarf_allocator = std.heap.FixedBufferAllocator.init(&dwarf_buffer);
-var panic_dwarf: dwarf.Dwarf = undefined;
-
 fn innerPanic(msg: []const u8, first_trace_addr: ?usize) noreturn {
     log.err("{s}", .{msg});
     log.err("First trace address = {?x}", .{first_trace_addr});
-    logErrorReturnTrace();
+    debug.logErrorReturnTrace(.err, .PANIC) catch |err| {
+        log.err("Failed to log error return trace: {}", .{err});
+    };
+    log.err("System is shutting down.", .{});
     shutdown();
-}
-
-/// Log the current error return trace.
-/// Acquires the lock on the log buffer before logging.
-fn logErrorReturnTrace() void {
-    const trace = @errorReturnTrace();
-    if (trace == null) {
-        return;
-    }
-    const stackTrace = trace.?;
-    if (stackTrace.index <= 0) {
-        return;
-    }
-    log.err("Error return trace ({d} frames, {d} elements):", .{
-        stackTrace.instruction_addresses.len,
-        stackTrace.index,
-    });
-    for (stackTrace.instruction_addresses) |addr| {
-        if (addr == 0) continue;
-        log.err("0x{x} - {?s}", .{ addr, panic_dwarf.getSymbolName(addr) });
-    }
 }
 
 fn shutdown() noreturn {

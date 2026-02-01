@@ -1,6 +1,5 @@
 //! A simple logging utility for freestanding Zig environments.
 //! Provides functions to log messages at various levels (info, warn, error, fatal).
-//! Uses a spinlock to protect the log buffer in concurrent environments.
 //! Logs are written to a serial port for output.
 //! Designed to work in both freestanding and hosted environments.
 //! In hosted environments, it falls back to std.log.
@@ -9,12 +8,8 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-const sync = @import("sync.zig");
 const serial = @import("serial.zig");
-
-fn freestanding() bool {
-    return builtin.os.tag == .freestanding;
-}
+const sync = @import("sync.zig");
 
 // Directly write to serial console, no need to buffer.
 // TODO: Consider buffering if performance becomes an issue.
@@ -27,10 +22,10 @@ pub fn defaultLog(
     comptime format: []const u8,
     args: anytype,
 ) void {
-    if (comptime !freestanding()) return std.log.defaultLog(message_level, scope, format, args);
+    if (comptime builtin.os.tag != .freestanding) return std.log.defaultLog(message_level, scope, format, args);
 
     const locked = serial.lock.tryLock(1_000_000_000);
-    defer if (locked) serial.lock.unlock();
+    defer serial.lock.unlock();
     serial.writeString(comptime message_level.asText());
     if (scope != .default) {
         serial.writeString(" (");

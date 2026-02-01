@@ -1,9 +1,5 @@
-//! TODO: Get this working!
 //! This module extracts DWARF debug info from the current executable.
 //! This is useful for symbolication of stack traces in panics.
-//!
-//! Does not currently work sadly. Fails when parsing the
-//! debug abbrev section.
 //!
 const std = @import("std");
 const builtin = @import("builtin");
@@ -92,7 +88,7 @@ pub fn open(allocator: std.mem.Allocator) !Dwarf {
     });
 
     const debug_line = @intFromEnum(std.debug.Dwarf.Section.Id.debug_line);
-    dwarf.sections[debug_line] = dwarfSectionFromRange(&__debug_line_start, &__debug_line_end);
+    dwarf.sections[debug_line] = dwarfSectionFromZero(&__debug_line_end);
     log.debug("debug_line section: {p} - {p} (len={d})", .{
         &__debug_line_start,
         &__debug_line_end,
