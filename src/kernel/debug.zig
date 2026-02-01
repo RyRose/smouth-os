@@ -12,7 +12,7 @@ var serial_writer = serial.writer(&serial_buffer);
 // 2 MiB buffer for debug info
 var debug_buffer: [2000 * 1024]u8 = undefined;
 var debug_allocator = std.heap.FixedBufferAllocator.init(&debug_buffer);
-var debug_data: dwarf.Dwarf = undefined;
+var debug_data: stdk.Dwarf = undefined;
 
 pub fn init() !void {
     debug_data = try dwarf.open(debug_allocator.allocator());

@@ -1,10 +1,13 @@
 //! This module extracts DWARF debug info from the current executable.
 //! This is useful for symbolication of stack traces in panics.
 //!
-const std = @import("std");
-const builtin = @import("builtin");
 
-pub const Dwarf = @import("stddwarf/Dwarf.zig");
+const builtin = @import("builtin");
+const std = @import("std");
+
+const stdk = @import("stdk");
+
+const Dwarf = stdk.Dwarf;
 
 const log = std.log.scoped(.dwarf);
 
