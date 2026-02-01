@@ -2,7 +2,10 @@
 //!
 
 const std = @import("std");
+
 const arch = @import("arch");
+
+const log = std.log.scoped(.gdt);
 
 /// Privilege Levels (DPL) for i386 segments and gates.
 /// Ring 0 is the most privileged, Ring 3 the least.
@@ -270,6 +273,7 @@ pub fn Table(comptime N: usize) type {
             const ptr = self.pointer();
             const addr = ptr >> 16;
 
+            log.debug("Installing GDT at address: 0x{x}", .{addr});
             if (addr == 0)
                 return error.GdtPointerNull;
 
@@ -278,6 +282,7 @@ pub fn Table(comptime N: usize) type {
             if (first_entry.* != 0)
                 return error.FirstGdtEntryNotNull;
 
+            log.debug("Flushing GDT...", .{});
             arch.x86.installAndFlushGDT(ptr);
         }
     };

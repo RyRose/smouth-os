@@ -38,7 +38,7 @@ pub fn SpinLock(comptime T: type) type {
 
         /// Tries to acquire the lock for a specified number of iterations.
         /// Returns true if the lock was acquired, false otherwise.
-        pub fn tryLock(self: *Self, iterations: usize) bool {
+        pub fn tryLock(self: *Self, iterations: u64) bool {
             var i: usize = 0;
             while (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) != null and i < iterations) : (i += 1) {
                 std.atomic.spinLoopHint();

@@ -3,18 +3,27 @@
 
 const std = @import("std");
 
-const log = @import("log.zig");
+const log = std.log.scoped(.idt);
 
 /// Interrupt types for i386 architecture.
 pub const InterruptType = enum(u8) {
+    /// Divide by Zero Exception
+    /// Raised when the processor detects a division by zero condition.
     divide_by_zero = 0,
     debug = 1,
+    /// Non-Maskable Interrupt (NMI)
+    /// A high-priority interrupt that cannot be ignored by the processor.
     non_maskable_interrupt = 2,
     breakpoint = 3,
     overflow = 4,
     bound_range_exceeded = 5,
     invalid_opcode = 6,
     device_not_available = 7,
+    /// Double Fault Exception
+    /// Occurs when the processor encounters a second exception while trying to
+    /// service a prior exception.
+    /// This is a critical error that typically indicates a serious problem
+    /// with the system.
     double_fault = 8,
     coprocessor_segment_overrun = 9,
     invalid_tss = 10,
@@ -154,6 +163,7 @@ pub fn Table(comptime N: usize) type {
 
         /// Registers the interrupt gate descriptor at the given index.
         pub fn register(self: *Self, index: InterruptType, descriptor: Descriptor) void {
+            log.debug("Registering IDT entry for interrupt type {}", .{index});
             self.table[@intFromEnum(index)] = descriptor;
         }
 
@@ -169,6 +179,7 @@ pub fn Table(comptime N: usize) type {
 
         pub fn load(self: *Self) !void {
             const idtr_desc = self.idtr();
+            log.debug("Loading IDT with IDTR value: 0x{x}", .{idtr_desc});
             asm volatile ("LIDT (%[idtr])"
                 :
                 : [idtr] "rax" (&idtr_desc),
