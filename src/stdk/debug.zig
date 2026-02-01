@@ -39,8 +39,6 @@ pub fn printLineInfo(
             try writer.writeAll("\n");
         } else |err| switch (err) {
             error.EndOfFile, error.FileNotFound => {},
-            error.BadPathName => {},
-            error.AccessDenied => {},
             else => return err,
         }
     }

@@ -77,7 +77,7 @@ fn main() !void {
         .segment_selector = idt.SegmentSelector{ .index = 1 },
     }));
     try idt_table.load();
-    log.info("IDT loaded.", .{});
+    log.info("IDT loaded", .{});
 
     const msr_platform_info = arch.x86.cpu.rdmsr(0x1);
     log.info("MSR Platform Info (0xCE): 0x{x}", .{msr_platform_info});
@@ -109,10 +109,4 @@ fn main() !void {
             log.info("VirtIO sound card detected.", .{});
         }
     }
-
-    try fail();
-}
-
-fn fail() !void {
-    return error.Failed;
 }
