@@ -30,6 +30,9 @@ var gdt_table = kernel.gdt.Table(3).init();
 var idt_table = kernel.idt.Table(256).init();
 
 fn main() !void {
+    // Link initial boot code.
+    _ = arch.x86.boot;
+
     kernel.serial.init();
     kernel.serial.writeByte('\n');
     log.info("Zig version: {s}", .{builtin.zig_version_string});

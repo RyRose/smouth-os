@@ -1,5 +1,5 @@
-// void installAndFlushGDT(gdt_ptr: u64): Installs a new Global Descriptor Table (GDT)
-// using the provided pointer.
+// void installAndFlushGDT(gdt_ptr: u64): Installs a new Global Descriptor
+// Table (GDT) using the provided pointer.
 .global installAndFlushGDT
 .type   installAndFlushGDT, @function
 installAndFlushGDT:

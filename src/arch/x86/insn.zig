@@ -6,7 +6,8 @@
 pub fn rdtsc() u64 {
     var hi: u32 = 0;
     var lo: u32 = 0;
-    asm volatile ("rdtsc"
+    asm volatile (
+        \\ rdtsc
         : [lo] "={eax}" (lo),
           [hi] "={edx}" (hi),
     );
@@ -17,7 +18,8 @@ pub fn rdtsc() u64 {
 pub fn rdmsr(msr: u32) u64 {
     var hi: u32 = 0;
     var lo: u32 = 0;
-    asm volatile ("rdmsr"
+    asm volatile (
+        \\ rdmsr
         : [lo] "={eax}" (lo),
           [hi] "={edx}" (hi),
         : [msr] "{ecx}" (msr),
@@ -29,7 +31,8 @@ pub fn rdmsr(msr: u32) u64 {
 pub fn wrmsr(msr: u32, value: u64) void {
     const hi = @as(u32, value >> 32);
     const lo = @as(u32, value & 0xFFFFFFFF);
-    asm volatile ("wrmsr"
+    asm volatile (
+        \\ wrmsr
         :
         : [lo] "{eax}" (lo),
           [hi] "{edx}" (hi),
@@ -40,7 +43,8 @@ pub fn wrmsr(msr: u32, value: u64) void {
 /// Read a byte from the specified I/O port.
 pub fn inb(port: u16) u8 {
     var value: u8 = 0;
-    asm volatile ("inb %[port], %[value]"
+    asm volatile (
+        \\ inb %[port], %[value]
         : [value] "={al}" (value),
         : [port] "{dx}" (port),
     );
@@ -49,7 +53,8 @@ pub fn inb(port: u16) u8 {
 
 /// Write a byte to an I/O port.
 pub fn outb(port: u16, value: u8) void {
-    asm volatile ("outb %[value], %[port]"
+    asm volatile (
+        \\ outb %[value], %[port]
         :
         : [value] "{al}" (value),
           [port] "{dx}" (port),
@@ -59,7 +64,8 @@ pub fn outb(port: u16, value: u8) void {
 /// Read a 16-bit value from the specified I/O port.
 pub fn inw(port: u16) u16 {
     var value: u16 = 0;
-    asm volatile ("inw %[port], %[value]"
+    asm volatile (
+        \\ inw %[port], %[value]
         : [value] "={ax}" (value),
         : [port] "{dx}" (port),
     );
@@ -68,7 +74,8 @@ pub fn inw(port: u16) u16 {
 
 /// Write a 16-bit value to the specified I/O port.
 pub fn outw(port: u16, value: u16) void {
-    asm volatile ("outw %[value], %[port]"
+    asm volatile (
+        \\ outw %[value], %[port]
         :
         : [value] "{ax}" (value),
           [port] "{dx}" (port),
@@ -78,7 +85,8 @@ pub fn outw(port: u16, value: u16) void {
 /// Read a 32-bit value from the specified I/O port.
 pub fn inl(port: u16) u32 {
     var value: u32 = 0;
-    asm volatile ("inl %[port], %[value]"
+    asm volatile (
+        \\ inl %[port], %[value]
         : [value] "={eax}" (value),
         : [port] "{dx}" (port),
     );
@@ -87,7 +95,8 @@ pub fn inl(port: u16) u32 {
 
 /// Write a 32-bit value to the specified I/O port.
 pub fn outl(port: u16, value: u32) void {
-    asm volatile ("outl %[value], %[port]"
+    asm volatile (
+        \\ outl %[value], %[port]
         :
         : [value] "{eax}" (value),
           [port] "{dx}" (port),
@@ -128,7 +137,8 @@ pub fn cpuid(eax: u32, ecx: u32) struct {
     var ebx: u32 = 0;
     var ecx_out: u32 = 0;
     var edx: u32 = 0;
-    asm volatile ("cpuid"
+    asm volatile (
+        \\ cpuid
         : [eax] "={eax}" (eax_out),
           [ebx] "={ebx}" (ebx),
           [ecx] "={ecx}" (ecx_out),

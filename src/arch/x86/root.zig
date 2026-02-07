@@ -9,6 +9,7 @@ comptime {
 }
 
 pub const insn = @import("insn.zig");
+pub const boot = @import("boot.zig");
 
 /// Install and flush the Global Descriptor Table (GDT).
 /// Defined in assembly at installAndFlushGDT.S
