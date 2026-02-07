@@ -6,8 +6,10 @@ const std = @import("std");
 /// A simple spinlock implementation using an atomic flag.
 ///
 /// TODO: Improve implementation if performance is an issue.
-///       Current implementation uses a busy-wait loop with a pause instruction,
-///       sequentially consistent memory ordering, and strong compare-and-exchange.
+///       Current implementation uses a busy-wait loop with a pause
+///       instruction,
+///       sequentially consistent memory ordering, and strong
+///       compare-and-exchange.
 ///
 pub fn SpinLock(comptime T: type) type {
     return struct {
@@ -31,7 +33,12 @@ pub fn SpinLock(comptime T: type) type {
 
         /// Acquires the lock, spinning until it is available.
         pub fn lock(self: *Self) void {
-            while (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) != null) {
+            while (self.flag.cmpxchgStrong(
+                false,
+                true,
+                .seq_cst,
+                .seq_cst,
+            ) != null) {
                 std.atomic.spinLoopHint();
             }
         }
@@ -40,7 +47,12 @@ pub fn SpinLock(comptime T: type) type {
         /// Returns true if the lock was acquired, false otherwise.
         pub fn tryLock(self: *Self, iterations: u64) bool {
             var i: usize = 0;
-            while (self.flag.cmpxchgStrong(false, true, .seq_cst, .seq_cst) != null and i < iterations) : (i += 1) {
+            while (self.flag.cmpxchgStrong(
+                false,
+                true,
+                .seq_cst,
+                .seq_cst,
+            ) != null and i < iterations) : (i += 1) {
                 std.atomic.spinLoopHint();
             }
             return i < iterations;

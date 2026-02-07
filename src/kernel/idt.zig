@@ -114,7 +114,8 @@ pub const Descriptor = packed struct {
     segment: bool = false,
 
     /// Two bits that correspond to the 2-bit Descriptor Privilege Level (DPL)
-    /// field in the descriptor. This determines which privilege levels can access
+    /// field in the descriptor. This determines which privilege levels can
+    /// access
     /// this segment/gate. Ring 0 is the most privileged, Ring 3 the least.
     /// For interrupt gates, this determines the lowest privilege level that
     /// can invoke the interrupt via the INT instruction.
@@ -162,7 +163,11 @@ pub fn Table(comptime N: usize) type {
         }
 
         /// Registers the interrupt gate descriptor at the given index.
-        pub fn register(self: *Self, index: InterruptType, descriptor: Descriptor) void {
+        pub fn register(
+            self: *Self,
+            index: InterruptType,
+            descriptor: Descriptor,
+        ) void {
             log.debug("Registering IDT entry for interrupt type {}", .{index});
             self.table[@intFromEnum(index)] = descriptor;
         }

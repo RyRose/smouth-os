@@ -7,8 +7,6 @@ const std = @import("std");
 
 const stdk = @import("stdk");
 
-const Dwarf = stdk.Dwarf;
-
 const log = std.log.scoped(.dwarf);
 
 extern var __debug_info_start: u8;
@@ -24,21 +22,21 @@ extern var __debug_ranges_end: u8;
 extern var __eh_frame_start: u8;
 extern var __eh_frame_end: u8;
 
-fn dwarfSectionFromRange(start: *u8, end: *u8) Dwarf.Section {
+fn dwarfSectionFromRange(start: *u8, end: *u8) stdk.Dwarf.Section {
     const len: usize = @intFromPtr(end) - @intFromPtr(start);
     const slice: [*]const u8 = @ptrCast(start);
-    const section = Dwarf.Section{
+    const section = stdk.Dwarf.Section{
         .data = slice[0..len],
         .owned = false,
     };
     return section;
 }
 
-fn dwarfSectionFromZero(end: *u8) Dwarf.Section {
+fn dwarfSectionFromZero(end: *u8) stdk.Dwarf.Section {
     // HACK:
     // Trick to get a null pointer without the use of
     // allowzero. This minimizes the number of modifications
-    // needed to stddwarf. This depends on undefined behavior and
+    // needed to std.dwarf. This depends on undefined behavior and
     // may be broken at any time.
     @setRuntimeSafety(false);
     var zero: u8 = 0;
@@ -47,7 +45,7 @@ fn dwarfSectionFromZero(end: *u8) Dwarf.Section {
     @setRuntimeSafety(true);
 
     const len: usize = @intFromPtr(end);
-    const section = Dwarf.Section{
+    const section = stdk.Dwarf.Section{
         .data = start[0..len],
         .owned = false,
     };
@@ -58,23 +56,26 @@ fn dwarfSectionFromZero(end: *u8) Dwarf.Section {
     return section;
 }
 
-pub fn open(allocator: std.mem.Allocator) !Dwarf {
-    var dwarf = Dwarf{
+pub fn open(allocator: std.mem.Allocator) !stdk.Dwarf {
+    var dwarf = stdk.Dwarf{
         .endian = builtin.cpu.arch.endian(),
         // Dwarf format is not Mach-O since it's targeting freestanding.
         // https://en.wikipedia.org/wiki/Mach-O
         .is_macho = false,
     };
 
-    const debug_info = @intFromEnum(Dwarf.Section.Id.debug_info);
-    dwarf.sections[debug_info] = dwarfSectionFromRange(&__debug_info_start, &__debug_info_end);
+    const debug_info = @intFromEnum(std.debug.Dwarf.Section.Id.debug_info);
+    dwarf.sections[debug_info] = dwarfSectionFromRange(
+        &__debug_info_start,
+        &__debug_info_end,
+    );
     log.debug("debug_info section: {p} - {p} (len={d})", .{
         &__debug_info_start,
         &__debug_info_end,
         dwarf.sections[debug_info].?.data.len,
     });
 
-    const debug_abbrev = @intFromEnum(Dwarf.Section.Id.debug_abbrev);
+    const debug_abbrev = @intFromEnum(std.debug.Dwarf.Section.Id.debug_abbrev);
     dwarf.sections[debug_abbrev] = dwarfSectionFromZero(&__debug_abbrev_end);
     log.debug("debug_abbrev section: {p} - {p} (null={})", .{
         &__debug_abbrev_start,
@@ -82,7 +83,7 @@ pub fn open(allocator: std.mem.Allocator) !Dwarf {
         dwarf.sections[debug_abbrev] == null,
     });
 
-    const debug_str = @intFromEnum(Dwarf.Section.Id.debug_str);
+    const debug_str = @intFromEnum(std.debug.Dwarf.Section.Id.debug_str);
     dwarf.sections[debug_str] = dwarfSectionFromZero(&__debug_str_end);
     log.debug("debug_str section: {p} - {p} (len={d})", .{
         &__debug_str_start,
@@ -106,8 +107,11 @@ pub fn open(allocator: std.mem.Allocator) !Dwarf {
         dwarf.sections[debug_ranges].?.data.len,
     });
 
-    const eh_frame = @intFromEnum(Dwarf.Section.Id.eh_frame);
-    dwarf.sections[eh_frame] = dwarfSectionFromRange(&__eh_frame_start, &__eh_frame_end);
+    const eh_frame = @intFromEnum(std.debug.Dwarf.Section.Id.eh_frame);
+    dwarf.sections[eh_frame] = dwarfSectionFromRange(
+        &__eh_frame_start,
+        &__eh_frame_end,
+    );
     log.debug("eh_frame section: {p} - {p} (len={d})", .{
         &__eh_frame_start,
         &__eh_frame_end,

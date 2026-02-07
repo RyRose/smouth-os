@@ -50,7 +50,8 @@ pub const Accessed = enum(u1) {
     enabled = 1,
 };
 
-/// Permission indicates the read/write or execute/read permissions of the segment.
+/// Permission indicates the read/write or execute/read permissions of the
+/// segment.
 pub const Permission = enum(u1) {
     /// For data segments: read-only. For code segments: execute-only.
     read_or_execute_only = 0,
@@ -98,10 +99,10 @@ test SegmentType {
     try std.testing.expectEqual(0x2, data_segment_type);
 }
 
-/// Descriptor is a class that represents a Global Descriptor Table (GDT) segment
-/// descriptor. It provides the processor with size, location, access, and status
-/// information about a segment. It is correctly packed and thus usable directly
-/// in the GDT. It is formatted as follows:
+/// Descriptor is a class that represents a Global Descriptor Table (GDT)
+/// segment descriptor. It provides the processor with size, location, access,
+/// and status information about a segment. It is correctly packed and thus
+/// usable directly in the GDT. It is formatted as follows:
 ///
 ///  31          24 23 22 21  20 19 16 15 14 13 12 11   8 7               0
 /// |----------------------------------------------------------------------|
@@ -255,7 +256,8 @@ test Descriptor {
     // write it all out here.
 }
 
-/// Table is a generic Global Descriptor Table (GDT) that can hold N descriptors.
+/// Table is a generic Global Descriptor Table (GDT) that can hold N
+/// descriptors.
 pub fn Table(comptime N: usize) type {
     return struct {
         table: [N]Descriptor = [_]Descriptor{.{}} ** N,
@@ -267,7 +269,11 @@ pub fn Table(comptime N: usize) type {
         }
 
         /// Registers a descriptor at the given index in the GDT table.
-        pub fn register(self: *Self, index: usize, descriptor: Descriptor) !void {
+        pub fn register(
+            self: *Self,
+            index: usize,
+            descriptor: Descriptor,
+        ) !void {
             if (index >= self.table.len)
                 return error.IndexOutOfBounds;
 
@@ -283,10 +289,13 @@ pub fn Table(comptime N: usize) type {
         }
 
         /// Installs and flushes the GDT table to the processor.
+        /// code_index and data_index are the indices of the code and data
+        /// segments in the GDT, respectively. They must be greater than 0 and
+        /// less than N.
         pub fn installAndFlush(
             self: *Self,
             comptime code_index: u16,
-            comptime data_index: u16,
+            data_index: u16,
         ) !void {
             const ptr = self.pointer();
             const addr = ptr >> 16;

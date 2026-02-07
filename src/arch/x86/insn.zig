@@ -146,5 +146,10 @@ pub fn cpuid(eax: u32, ecx: u32) struct {
         : [eax] "{eax}" (eax),
           [ecx] "{ecx}" (ecx),
     );
-    return .{ .eax = eax_out, .ebx = ebx, .ecx = ecx_out, .edx = edx };
+    return .{
+        .eax = eax_out,
+        .ebx = ebx,
+        .ecx = ecx_out,
+        .edx = edx,
+    };
 }
