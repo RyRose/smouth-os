@@ -157,7 +157,7 @@ pub fn build(b: *std.Build) !void {
     );
     const rsync_step = b.addSystemCommand(&.{"rsync"});
     rsync_step.setCwd(wf_step.getDirectory());
-    rsync_step.addArg("--archive");
+    rsync_step.addArg("-r");
     rsync_step.addArg(
         b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }),
     );
