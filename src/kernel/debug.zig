@@ -31,9 +31,13 @@ pub fn logErrorReturnTrace(comptime level: std.log.Level, comptime scope: @Type(
     }.log;
 
     const frames = @min(stackTrace.instruction_addresses.len, stackTrace.index);
-    log("Error return trace [{d} frame(s)]:", .{frames});
+    if (frames == 0) {
+        log("No error return trace available.", .{});
+        return;
+    }
 
     const allocator = debug_allocator.allocator();
+    log("Error return trace [{d} frame(s)]:", .{frames});
     for (stackTrace.instruction_addresses, 0..) |addr, idx| {
         if (idx >= frames) break;
         const symbols = try debug_data.getSymbol(allocator, addr);
