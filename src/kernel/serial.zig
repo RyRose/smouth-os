@@ -1,9 +1,8 @@
-//! Serial port communication for x86 architecture.
+//! Serial port communication for arch.x86 architecture.
 
 const std = @import("std");
 
 const arch = @import("arch");
-const ioport = arch.x86.ioport;
 
 const sync = @import("sync.zig");
 
@@ -25,33 +24,33 @@ pub fn init() void {
     lock.value = true;
 
     // Disable interrupts
-    ioport.outb(base + 1, 0x00);
+    arch.x86.insn.outb(base + 1, 0x00);
 
     // Enable DLAB
-    ioport.outb(base + 3, 0x80);
+    arch.x86.insn.outb(base + 3, 0x80);
 
     // Set baud rate divisor to 3 (38400)
-    ioport.outb(base + 0, 0x03); // low byte
-    ioport.outb(base + 1, 0x00); // high byte
+    arch.x86.insn.outb(base + 0, 0x03); // low byte
+    arch.x86.insn.outb(base + 1, 0x00); // high byte
 
     // 8 bits, no parity, one stop bit
-    ioport.outb(base + 3, 0x03);
+    arch.x86.insn.outb(base + 3, 0x03);
 
     // Enable FIFO, clear, 14-byte threshold
-    ioport.outb(base + 2, 0xC7);
+    arch.x86.insn.outb(base + 2, 0xC7);
 
     // IRQs enabled, RTS/DSR set
-    ioport.outb(base + 4, 0x0B);
+    arch.x86.insn.outb(base + 4, 0x0B);
 }
 
 fn isTransmitEmpty() bool {
-    return (ioport.inb(base + 5) & 0x20) == 0;
+    return (arch.x86.insn.inb(base + 5) & 0x20) == 0;
 }
 
 /// Write a byte to the serial port.
 pub fn writeByte(b: u8) void {
     while (isTransmitEmpty()) {}
-    ioport.outb(base, b);
+    arch.x86.insn.outb(base, b);
 }
 
 /// Write a string to the serial port.

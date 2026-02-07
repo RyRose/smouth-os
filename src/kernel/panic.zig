@@ -27,6 +27,6 @@ fn innerPanic(msg: []const u8, first_trace_addr: ?usize) noreturn {
 }
 
 fn shutdown() noreturn {
-    arch.x86.ioport.outw(0xF4, 0);
+    arch.x86.insn.outw(0xF4, 0);
     while (true) {}
 }

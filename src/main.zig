@@ -4,12 +4,6 @@ const std = @import("std");
 const arch = @import("arch");
 const kernel = @import("kernel");
 
-const ioport = arch.x86.ioport;
-const gdt = kernel.gdt;
-const idt = kernel.idt;
-const pci = kernel.pci;
-const serial = kernel.serial;
-
 const log = std.log.scoped(.main);
 
 // Standard options for the kernel.
@@ -28,16 +22,16 @@ export fn kmain() noreturn {
 
     // Halt the CPU using QEMU shutdown port with a zero exit code
     // or an infinite loop.
-    ioport.outw(0x604, 0x2000);
+    arch.x86.insn.outw(0x604, 0x2000);
     while (true) {}
 }
 
-var gdt_table = gdt.Table(3).init();
-var idt_table = idt.Table(256).init();
+var gdt_table = kernel.gdt.Table(3).init();
+var idt_table = kernel.idt.Table(256).init();
 
 fn main() !void {
-    serial.init();
-    serial.writeByte('\n');
+    kernel.serial.init();
+    kernel.serial.writeByte('\n');
     log.info("Zig version: {s}", .{builtin.zig_version_string});
     log.info("OS: {}", .{builtin.os.tag});
     log.info("CPU Arch: {}", .{builtin.cpu.arch});
@@ -60,43 +54,43 @@ fn main() !void {
     log.info("Initializing debug information.", .{});
     try kernel.debug.init();
 
-    try gdt_table.register(1, gdt.Descriptor.init(.{
+    try gdt_table.register(1, kernel.gdt.Descriptor.init(.{
         .base = 0,
         .limit = 0xFFFFF,
-        .segment_type = gdt.SegmentType.init(.{ .segment_class = .code }),
+        .segment_type = kernel.gdt.SegmentType.init(.{ .segment_class = .code }),
         .db = true,
         .granularity = true,
     }));
-    try gdt_table.register(2, gdt.Descriptor.init(.{
+    try gdt_table.register(2, kernel.gdt.Descriptor.init(.{
         .base = 0,
         .limit = 0xFFFFF,
-        .segment_type = gdt.SegmentType.init(.{ .segment_class = .data }),
+        .segment_type = kernel.gdt.SegmentType.init(.{ .segment_class = .data }),
         .db = true,
         .granularity = true,
     }));
     try gdt_table.installAndFlush();
     log.info("GDT installed.", .{});
 
-    idt_table.register(.double_fault, idt.Descriptor.init(.{
+    idt_table.register(.double_fault, kernel.idt.Descriptor.init(.{
         .offset = @intFromPtr(&arch.x86.double_fault_handler),
-        .segment_selector = idt.SegmentSelector{ .index = 1 },
+        .segment_selector = kernel.idt.SegmentSelector{ .index = 1 },
     }));
     try idt_table.load();
     log.info("IDT loaded", .{});
 
-    const msr_platform_info = arch.x86.cpu.rdmsr(0x1);
+    const msr_platform_info = arch.x86.insn.rdmsr(0x1);
     log.info("MSR Platform Info (0xCE): 0x{x}", .{msr_platform_info});
 
     for (0..256) |bus| {
         for (0..8) |device| {
-            const address = pci.ConfigurationAddress.init(.{
+            const address = kernel.pci.ConfigurationAddress.init(.{
                 .bus = @intCast(bus),
                 .device = @intCast(device),
                 .function = 0,
                 .register_offset = .vendor_device,
             });
-            ioport.outl(pci.ConfigurationAddressPort, @bitCast(address));
-            const raw = ioport.inl(pci.ConfigurationDataPort);
+            arch.x86.insn.outl(kernel.pci.ConfigurationAddressPort, @bitCast(address));
+            const raw = arch.x86.insn.inl(kernel.pci.ConfigurationDataPort);
 
             if (raw == 0xFFFF_FFFF) continue;
             log.info("PCI Device found at bus {d}, device {d}", .{
