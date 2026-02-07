@@ -71,7 +71,7 @@ fn main() !void {
         .db = true,
         .granularity = true,
     }));
-    try gdt_table.installAndFlush();
+    try gdt_table.installAndFlush(1, 2);
     log.info("GDT installed.", .{});
 
     idt_table.register(.double_fault, kernel.idt.Descriptor.init(.{

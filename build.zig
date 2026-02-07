@@ -17,8 +17,6 @@ const ArchState = struct {
     type: Architecture,
     /// The resolved target for this architecture.
     target: std.Build.ResolvedTarget,
-    /// Optional path to assembly files for this architecture.
-    assembly_path: ?[]const u8 = null,
     /// The list of modules to be created as part of
     /// initializing this architecture state.
     modules: std.ArrayList(std.Build.Module.Import) = undefined,
@@ -53,8 +51,6 @@ const Library = struct {
     name: []const u8,
     /// The path to the root source file of the library.
     path: std.Build.LazyPath,
-    /// Whether to include assembly files from the architecture's assembly path.
-    include_assembly: bool = false,
     /// Whether to include source files as options in the module.
     include_source_option: bool = false,
 
@@ -69,11 +65,6 @@ const Library = struct {
             .target = state.target,
             .optimize = ctx.optimize,
         });
-        if (self.include_assembly) {
-            if (state.assembly_path) |path| {
-                try addAssembly(ctx.b, mod, path);
-            }
-        }
         if (self.include_source_option) {
             const opts = ctx.b.addOptions();
             try addSourceAssetsOption(ctx.b, opts, ctx.source_paths);
@@ -176,7 +167,6 @@ pub fn build(b: *std.Build) !void {
             .{
                 .name = "arch",
                 .path = b.path("src/arch/root.zig"),
-                .include_assembly = true,
             },
             .{
                 .name = "kernel",
@@ -199,7 +189,6 @@ pub fn build(b: *std.Build) !void {
             },
             .{
                 .type = .x86,
-                .assembly_path = "src/arch/x86",
                 .target = b.resolveTargetQuery(.{
                     .cpu_arch = .x86,
                     .os_tag = .freestanding,
@@ -294,21 +283,6 @@ fn addKernelExecutable(
     );
     ctx.b.installArtifact(kernel);
     return kernel;
-}
-
-fn addAssembly(b: *std.Build, mod: *std.Build.Module, root: []const u8) !void {
-    var dir = try std.fs.cwd().openDir(root, .{ .iterate = true });
-    defer dir.close();
-    var it = dir.iterate();
-    while (try it.next()) |file| {
-        if (file.kind != .file) {
-            continue;
-        }
-        if (!std.mem.endsWith(u8, file.name, ".S")) {
-            continue;
-        }
-        mod.addAssemblyFile(b.path(b.pathJoin(&.{ root, file.name })));
-    }
 }
 
 fn addSourceAssetsOption(

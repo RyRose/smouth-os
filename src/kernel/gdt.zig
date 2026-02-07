@@ -283,13 +283,21 @@ pub fn Table(comptime N: usize) type {
         }
 
         /// Installs and flushes the GDT table to the processor.
-        pub fn installAndFlush(self: *Self) !void {
+        pub fn installAndFlush(
+            self: *Self,
+            comptime code_index: u16,
+            comptime data_index: u16,
+        ) !void {
             const ptr = self.pointer();
             const addr = ptr >> 16;
-
             log.debug("Installing GDT at address: 0x{x}", .{addr});
+
             if (addr == 0)
                 return error.GdtPointerNull;
+            if (code_index >= N or code_index <= 0)
+                return error.CodeSegmentIndexOutOfBounds;
+            if (data_index >= N or data_index <= 0)
+                return error.DataSegmentIndexOutOfBounds;
 
             const gdt_usize_addr: usize = @intCast(addr);
             const first_entry = @as(*const u64, @ptrFromInt(gdt_usize_addr));
@@ -297,7 +305,7 @@ pub fn Table(comptime N: usize) type {
                 return error.FirstGdtEntryNotNull;
 
             log.debug("Flushing GDT...", .{});
-            arch.x86.installAndFlushGDT(ptr);
+            arch.x86.installAndFlushGDT(ptr, 8 * code_index, 8 * data_index);
         }
     };
 }
