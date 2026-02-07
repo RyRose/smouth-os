@@ -23,7 +23,7 @@ pub fn SpinLock(comptime T: type) type {
 
         /// Initializes the spinlock with the given value.
         pub fn init(value: T) Self {
-            return Self{
+            return .{
                 .flag = std.atomic.Value(bool).init(false),
                 .value = value,
             };

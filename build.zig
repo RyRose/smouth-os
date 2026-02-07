@@ -23,7 +23,8 @@ const ArchState = struct {
     /// initializing this architecture state.
     modules: std.ArrayList(std.Build.Module.Import) = undefined,
 
-    /// Initialize the architecture state by creating modules from the provided libraries.
+    /// Initialize the architecture state by creating modules from the
+    /// provided libraries.
     pub fn init(
         self: *ArchState,
         ctx: *Context,
@@ -58,7 +59,11 @@ const Library = struct {
     include_source_option: bool = false,
 
     /// Create the library module for the given architecture state.
-    pub fn create(self: Library, ctx: *Context, state: *ArchState) !std.Build.Module.Import {
+    pub fn create(
+        self: Library,
+        ctx: *Context,
+        state: *ArchState,
+    ) !std.Build.Module.Import {
         const mod = ctx.b.createModule(.{
             .root_source_file = self.path,
             .target = state.target,
@@ -81,7 +86,8 @@ const Library = struct {
     }
 };
 
-/// The overall build context containing global settings and architecture states.
+/// The overall build context containing global settings and architecture
+/// states.
 const Context = struct {
     /// The build object.
     b: *std.Build,
@@ -119,7 +125,11 @@ const Context = struct {
         return &ctx.arches[@intFromEnum(key)];
     }
 
-    pub fn createKernelModule(ctx: *Context, value: Architecture, path: []const u8) *std.Build.Module {
+    pub fn createKernelModule(
+        ctx: *Context,
+        value: Architecture,
+        path: []const u8,
+    ) *std.Build.Module {
         var mod = ctx.b.createModule(.{
             .root_source_file = ctx.b.path(path),
             .target = ctx.arch(value).target,
@@ -136,12 +146,21 @@ pub fn build(b: *std.Build) !void {
 
     // Set up generated source assets directory.
     const wf_step = b.addWriteFiles();
-    const embed_path = wf_step.addCopyFile(b.path("gen/embed.zig"), "embed.zig");
-    _ = wf_step.addCopyDirectory(b.path("src"), "src", .{ .include_extensions = &.{"zig"} });
+    const embed_path = wf_step.addCopyFile(
+        b.path("gen/embed.zig"),
+        "embed.zig",
+    );
+    _ = wf_step.addCopyDirectory(
+        b.path("src"),
+        "src",
+        .{ .include_extensions = &.{"zig"} },
+    );
     const rsync_step = b.addSystemCommand(&.{"rsync"});
     rsync_step.setCwd(wf_step.getDirectory());
     rsync_step.addArg("--archive");
-    rsync_step.addArg(b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }));
+    rsync_step.addArg(
+        b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }),
+    );
     rsync_step.addArg(".");
     rsync_step.step.dependOn(&wf_step.step);
 
@@ -185,8 +204,9 @@ pub fn build(b: *std.Build) !void {
                     .cpu_arch = .x86,
                     .os_tag = .freestanding,
                     .abi = .none,
-                    // I noticed that the kernel was triple-faulting when returning structs from
-                    // functions and this seems to fix it. My guess is that it was doing
+                    // I noticed that the kernel was triple-faulting when
+                    // returning structs from functions and this seems to fix
+                    // it. My guess is that it was doing
                     // a memcpy, which used SIMD instructions under the hood.
                     // see: https://wiki.osdev.org/Zig_Bare_Bones
                     .cpu_features_add = std.Target.x86.featureSet(&.{
@@ -207,7 +227,7 @@ pub fn build(b: *std.Build) !void {
     try addKernelRun(&ctx, "src/main.zig", .x86);
 
     const run_unit_tests = b.addRunArtifact(b.addTest(.{
-        .root_module = ctx.arches[@intFromEnum(Architecture.hosted)].modules.items[1].module,
+        .root_module = ctx.arch(.hosted).modules.items[1].module,
     }));
 
     const test_step = b.step("test", "Run tests");
@@ -268,7 +288,9 @@ fn addKernelExecutable(
         kernel.step.dependOn(dep);
     }
     kernel.setLinkerScript(
-        ctx.b.path(ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" })),
+        ctx.b.path(
+            ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" }),
+        ),
     );
     ctx.b.installArtifact(kernel);
     return kernel;
@@ -294,10 +316,10 @@ fn addSourceAssetsOption(
     options: *std.Build.Step.Options,
     in_paths: []const []const u8,
 ) !void {
-    var absolute_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
-    defer absolute_paths.deinit(b.allocator);
-    var relative_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
-    defer relative_paths.deinit(b.allocator);
+    var abs_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
+    defer abs_paths.deinit(b.allocator);
+    var rel_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
+    defer rel_paths.deinit(b.allocator);
 
     var buf: [std.fs.max_path_bytes]u8 = undefined;
     for (in_paths) |in_path| {
@@ -313,16 +335,18 @@ fn addSourceAssetsOption(
                 continue;
             }
 
-            try absolute_paths.append(
+            try abs_paths.append(
                 b.allocator,
                 b.dupe(b.pathJoin(&.{ abs_path, file.path })),
             );
-            try relative_paths.append(
+            try rel_paths.append(
                 b.allocator,
-                b.dupe(b.pathJoin(&.{ std.fs.path.basename(in_path), file.path })),
+                b.dupe(
+                    b.pathJoin(&.{ std.fs.path.basename(in_path), file.path }),
+                ),
             );
         }
     }
-    options.addOption([]const []const u8, "absolute", absolute_paths.items);
-    options.addOption([]const []const u8, "relative", relative_paths.items);
+    options.addOption([]const []const u8, "absolute", abs_paths.items);
+    options.addOption([]const []const u8, "relative", rel_paths.items);
 }

@@ -30,8 +30,6 @@ const Path = std.Build.Cache.Path;
 const FixedBufferReader = std.debug.FixedBufferReader;
 const ArrayList = std.ArrayList;
 
-const log = std.log.scoped(.stddwarf);
-
 const Dwarf = @This();
 
 pub const expression = std.debug.Dwarf.expression;
@@ -858,21 +856,13 @@ fn scanAllFunctions(di: *Dwarf, allocator: Allocator) ScanError!void {
     var this_unit_offset: u64 = 0;
 
     while (this_unit_offset < fbr.buf.len) {
-        log.debug("Scanning functions at unit offset {d}", .{this_unit_offset});
         try fbr.seekTo(this_unit_offset);
 
         const unit_header = try readUnitHeader(&fbr, null);
-        log.debug("  Unit header: format={}, length={}, header_length={}", .{
-            unit_header.format,
-            unit_header.unit_length,
-            unit_header.header_length,
-        });
         if (unit_header.unit_length == 0) return;
         const next_offset = unit_header.header_length + unit_header.unit_length;
-        log.debug("  Next unit offset: {d}", .{this_unit_offset + next_offset});
 
         const version = try fbr.readInt(u16);
-        log.debug("  DWARF version: {d}", .{version});
         if (version < 2 or version > 5) return bad();
 
         var address_size: u8 = undefined;
@@ -886,14 +876,9 @@ fn scanAllFunctions(di: *Dwarf, allocator: Allocator) ScanError!void {
             debug_abbrev_offset = try fbr.readAddress(unit_header.format);
             address_size = try fbr.readByte();
         }
-        log.debug("  Address size: {d}", .{address_size});
         if (address_size != @sizeOf(usize)) return bad();
 
         const abbrev_table = try di.getAbbrevTable(allocator, debug_abbrev_offset);
-        log.debug("  Abbrev table at offset {d} with {d} entries", .{
-            debug_abbrev_offset,
-            abbrev_table.abbrevs.len,
-        });
 
         var max_attrs: usize = 0;
         var zig_padding_abbrev_code: u7 = 0;
@@ -908,7 +893,6 @@ fn scanAllFunctions(di: *Dwarf, allocator: Allocator) ScanError!void {
                 }
             }
         }
-        log.debug("  Max attributes per DIE: {d}", .{max_attrs});
         const attrs_buf = try allocator.alloc(Die.Attr, max_attrs * 3);
         defer allocator.free(attrs_buf);
         var attrs_bufs: [3][]Die.Attr = undefined;

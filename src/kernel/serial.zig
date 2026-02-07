@@ -61,7 +61,11 @@ pub fn writeString(s: []const u8) void {
     }
 }
 
-fn drain(w: *std.Io.Writer, data: []const []const u8, splat: usize) std.Io.Writer.Error!usize {
+fn drain(
+    w: *std.Io.Writer,
+    data: []const []const u8,
+    splat: usize,
+) std.Io.Writer.Error!usize {
     if (w.end > 0) {
         writeString(w.buffer[0..w.end]);
         w.end = 0;
@@ -78,6 +82,7 @@ fn drain(w: *std.Io.Writer, data: []const []const u8, splat: usize) std.Io.Write
     return consumed;
 }
 
+/// Get a writer that writes to the serial port.
 pub fn writer(buffer: []u8) std.io.Writer {
     return .{
         .vtable = &.{

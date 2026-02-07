@@ -166,22 +166,36 @@ test SegmentType {
 ///   G determines the scaling of the limit field as described above.
 ///
 pub const Descriptor = packed struct {
+    /// Lower 16 bits of the segment limit.
     limit0: u16 = 0,
+
+    /// Lower 24 bits of the segment base address.
     base0: u24 = 0,
 
     segment_type: SegmentType = .{},
 
     descriptor_type: DescriptorType = .system,
 
+    /// Descriptor Privilege Level.
     dpl: PrivilegeLevel = .ring0,
+
+    /// Segment present flag.
     present: bool = false,
 
+    /// Upper 4 bits of the segment limit.
     limit1: u4 = 0,
+
+    /// Available for use by system software.
     available: bool = false,
+
+    /// 64-bit code segment flag.
     bit64: Bit64 = Bit64.disabled,
+
     db: bool = false,
+
     granularity: bool = false,
 
+    /// Upper 8 bits of the segment base address.
     base1: u8 = 0,
 
     /// Creates a present GDT segment Descriptor with the provided values.

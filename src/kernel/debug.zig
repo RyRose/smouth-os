@@ -9,8 +9,8 @@ const serial = @import("serial.zig");
 const serial_buffer: [0]u8 = undefined;
 var serial_writer = serial.writer(&serial_buffer);
 
-// 2 MiB buffer for debug info
-var debug_buffer: [2000 * 1024]u8 = undefined;
+// 3 MiB buffer for debug info
+var debug_buffer: [3000 * 1024]u8 = undefined;
 var debug_allocator = std.heap.FixedBufferAllocator.init(&debug_buffer);
 var debug_data: stdk.Dwarf = undefined;
 
@@ -53,7 +53,8 @@ pub fn printLine(
     writer: *std.io.Writer,
     source_location: std.debug.SourceLocation,
 ) !void {
-    const data = embed.srcFiles.get(source_location.file_name) orelse return error.FileNotFound;
+    const data = embed.srcFiles.get(source_location.file_name) orelse
+        return error.FileNotFound;
 
     var current_line: usize = 1;
     var line_start: usize = 0;

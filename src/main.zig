@@ -16,6 +16,8 @@ const log = std.log.scoped(.main);
 // Must match this specific signature to be used by Zig's standard library.
 pub const std_options: std.Options = kernel.std_options.default();
 
+/// Panic handler for the kernel.
+/// Must match this specific signature to be used by Zig's standard library.
 pub const panic = kernel.panic.panic;
 
 export fn kmain() noreturn {
@@ -43,7 +45,10 @@ fn main() !void {
     log.info("Object format: {}", .{builtin.object_format});
     log.info("Strip debug info: {}", .{builtin.strip_debug_info});
     log.info("Mode: {}", .{builtin.mode});
-    log.info("Position independent code: {}", .{builtin.position_independent_code});
+    log.info(
+        "Position independent code: {}",
+        .{builtin.position_independent_code},
+    );
     log.info("Error return tracing: {}", .{builtin.have_error_return_tracing});
     log.info("Valgrind support: {}", .{builtin.valgrind_support});
     log.info("Fuzz: {}", .{builtin.fuzz});
@@ -94,7 +99,10 @@ fn main() !void {
             const raw = ioport.inl(pci.ConfigurationDataPort);
 
             if (raw == 0xFFFF_FFFF) continue;
-            log.info("PCI Device found at bus {d}, device {d}", .{ bus, device });
+            log.info("PCI Device found at bus {d}, device {d}", .{
+                bus,
+                device,
+            });
 
             const value: *const packed struct {
                 vendor: u16,
