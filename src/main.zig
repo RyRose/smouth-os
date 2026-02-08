@@ -14,7 +14,7 @@ pub const std_options: std.Options = kernel.std_options.default();
 /// Must match this specific signature to be used by Zig's standard library.
 pub const panic = kernel.panic.panic;
 
-export fn kmain() noreturn {
+pub export fn kmain() noreturn {
     main() catch |err| {
         log.err("Kernel main failed: {}", .{err});
         @panic("Kernel main failed!");
@@ -60,14 +60,18 @@ fn main() !void {
     try gdt_table.register(1, kernel.gdt.Descriptor.init(.{
         .base = 0,
         .limit = 0xFFFFF,
-        .segment_type = kernel.gdt.SegmentType.init(.{ .segment_class = .code }),
+        .segment_type = kernel.gdt.SegmentType.init(
+            .{ .segment_class = .code },
+        ),
         .db = true,
         .granularity = true,
     }));
     try gdt_table.register(2, kernel.gdt.Descriptor.init(.{
         .base = 0,
         .limit = 0xFFFFF,
-        .segment_type = kernel.gdt.SegmentType.init(.{ .segment_class = .data }),
+        .segment_type = kernel.gdt.SegmentType.init(
+            .{ .segment_class = .data },
+        ),
         .db = true,
         .granularity = true,
     }));
@@ -92,7 +96,10 @@ fn main() !void {
                 .function = 0,
                 .register_offset = .vendor_device,
             });
-            arch.x86.insn.outl(kernel.pci.ConfigurationAddressPort, @bitCast(address));
+            arch.x86.insn.outl(
+                kernel.pci.ConfigurationAddressPort,
+                @bitCast(address),
+            );
             const raw = arch.x86.insn.inl(kernel.pci.ConfigurationDataPort);
 
             if (raw == 0xFFFF_FFFF) continue;

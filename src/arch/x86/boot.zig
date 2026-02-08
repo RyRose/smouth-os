@@ -1,3 +1,17 @@
+const root = @import("root");
+const std = @import("std");
+
+comptime {
+    const actual = @TypeOf(root.kmain);
+    const expected = fn () callconv(.c) noreturn;
+    if (actual != expected) {
+        @compileError(std.fmt.comptimePrint(
+            "kmain must have type `{}` but found `{}`",
+            .{ expected, actual },
+        ));
+    }
+}
+
 const multibootHeaderMagic = 0x1BADB002;
 const multibootFlagAlign = 1 << 0;
 const multibootFlagMeminfo = 1 << 1;
@@ -31,9 +45,9 @@ export fn _start() callconv(.naked) noreturn {
     // We use inline assembly to set up the stack before jumping to
     // our kernel entry point.
     asm volatile (
-        \\ movl %[stack_top], %%esp
-        \\ movl %%esp, %%ebp
-        \\ call kmain
+        \\ movl %[stack_top], %esp
+        \\ movl %esp, %ebp
+        \\ call %[kmain:P]
         :
         // The stack grows downwards on x86, so we need to point ESP register
         // to one element past the end of `stack_bytes`.
@@ -47,5 +61,6 @@ export fn _start() callconv(.naked) noreturn {
         // multiboot
         // to hold special values (e.g. EAX).
         : [stack_top] "i" (stack_bytes[stack_bytes.len..].ptr),
+          [kmain] "X" (&root.kmain),
     );
 }
