@@ -23,10 +23,11 @@ fn innerPanic(msg: []const u8, first_trace_addr: ?usize) noreturn {
         log.err("Failed to log error return trace: {}", .{err});
     };
     log.err("System is shutting down.", .{});
-    shutdown();
+    badShutdown();
 }
 
-fn shutdown() noreturn {
+// Use QEMU shutdown port to halt the system with a non-zero exit code.
+fn badShutdown() noreturn {
     arch.x86.insn.outw(0xF4, 0);
     while (true) {}
 }

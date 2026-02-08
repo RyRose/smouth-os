@@ -78,7 +78,13 @@ pub const SegmentSelector = packed struct {
 
 comptime {
     // SegmentSelector must be exactly 16 bits (2 bytes).
-    std.debug.assert(@bitSizeOf(SegmentSelector) == 16);
+    const size = @bitSizeOf(SegmentSelector);
+    if (size != 16) {
+        @compileError(std.fmt.comptimePrint(
+            "SegmentSelector must be 16 bits, but found {} bits",
+            .{size},
+        ));
+    }
 }
 
 test SegmentSelector {
@@ -147,7 +153,13 @@ pub const Descriptor = packed struct {
 
 comptime {
     // i386 IDT gate descriptors must be exactly 8 bytes!
-    std.debug.assert(@bitSizeOf(Descriptor) == 64);
+    const size = @bitSizeOf(Descriptor);
+    if (size != 64) {
+        @compileError(std.fmt.comptimePrint(
+            "IDT Descriptor must be 64 bits, but found {} bits",
+            .{size},
+        ));
+    }
 }
 
 /// Table represents the i386 IDT.
@@ -194,8 +206,21 @@ pub fn Table(comptime N: usize) type {
 }
 
 comptime {
-    std.debug.assert(@bitSizeOf(Table(1)) == 64);
-    std.debug.assert(@bitSizeOf(Table(4)) == 4 * 64);
+    const table1 = @bitSizeOf(Table(1));
+    if (table1 != 64) {
+        @compileError(std.fmt.comptimePrint(
+            "Table(1) must be 64 bits, but found {} bits",
+            .{table1},
+        ));
+    }
+
+    const table4 = @bitSizeOf(Table(4));
+    if (table4 != 256) {
+        @compileError(std.fmt.comptimePrint(
+            "Table(4) must be 256 bits, but found {} bits",
+            .{table4},
+        ));
+    }
 }
 
 test "IDT Descriptor Initialization" {

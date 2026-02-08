@@ -84,7 +84,13 @@ pub const SegmentType = packed struct {
 
 comptime {
     // SegmentType must be exactly 4 bits.
-    std.debug.assert(@bitSizeOf(SegmentType) == 4);
+    const size = @bitSizeOf(SegmentType);
+    if (size != 4) {
+        @compileError(std.fmt.comptimePrint(
+            "SegmentType must be 4 bits, but found {} bits",
+            .{size},
+        ));
+    }
 }
 
 test SegmentType {
@@ -230,7 +236,13 @@ pub const Descriptor = packed struct {
 
 comptime {
     // i386 GDT segment descriptors must be exactly 8 bytes!
-    std.debug.assert(@bitSizeOf(Descriptor) == 64);
+    const size = @bitSizeOf(Descriptor);
+    if (size != 64) {
+        @compileError(std.fmt.comptimePrint(
+            "GDT Descriptor must be 64 bits, but found {} bits",
+            .{size},
+        ));
+    }
 }
 
 test Descriptor {

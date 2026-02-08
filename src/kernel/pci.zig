@@ -55,5 +55,11 @@ pub const ConfigurationAddress = packed struct {
 };
 
 comptime {
-    std.debug.assert(@bitSizeOf(ConfigurationAddress) == 32);
+    const size = @bitSizeOf(ConfigurationAddress);
+    if (size != 32) {
+        @compileError(std.fmt.comptimePrint(
+            "ConfigurationAddress must be 32 bits, but found {} bits",
+            .{size},
+        ));
+    }
 }
