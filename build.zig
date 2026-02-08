@@ -146,18 +146,24 @@ pub fn build(b: *std.Build) !void {
         "src",
         .{ .include_extensions = &.{"zig"} },
     );
-    const rsync_step = b.addSystemCommand(&.{"rsync"});
-    rsync_step.setCwd(wf_step.getDirectory());
-    rsync_step.addArg("-r");
-    rsync_step.addArg(
+    const copytree = b.addExecutable(.{
+        .name = "copytree",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tools/copytree.zig"),
+            .target = b.graph.host,
+        }),
+    });
+    const copytree_step = b.addRunArtifact(copytree);
+    copytree_step.setCwd(wf_step.getDirectory());
+    copytree_step.addArg(
         b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }),
     );
-    rsync_step.addArg(".");
-    rsync_step.step.dependOn(&wf_step.step);
+    copytree_step.addArg("std");
+    copytree_step.step.dependOn(&wf_step.step);
 
     var ctx = try Context.init(.{
         .b = b,
-        .step_dependencies = &[_]*std.Build.Step{&rsync_step.step},
+        .step_dependencies = &[_]*std.Build.Step{&copytree_step.step},
         .source_paths = &[_][]const u8{
             "src",
             b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }),
