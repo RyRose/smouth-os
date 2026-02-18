@@ -1,3 +1,10 @@
+//! A simple utility to copy a directory tree. Usage: `copytree <src> <dst>`
+//! This is intended to be used in the build system to copy files from the
+//! source tree to the build directory, and is not intended to be a
+//! general-purpose file copying utility. It does not support copying symbolic
+//! links, and will skip files that already exist in the destination
+//! directory.
+
 const std = @import("std");
 
 pub fn main() !void {

@@ -22,7 +22,12 @@ pub fn defaultLog(
     comptime format: []const u8,
     args: anytype,
 ) void {
-    if (comptime builtin.os.tag != .freestanding) return std.log.defaultLog(message_level, scope, format, args);
+    if (comptime builtin.os.tag != .freestanding) return std.log.defaultLog(
+        message_level,
+        scope,
+        format,
+        args,
+    );
 
     const locked = serial.lock.tryLock(1_000_000_000);
     defer serial.lock.unlock();

@@ -153,3 +153,25 @@ pub fn cpuid(eax: u32, ecx: u32) struct {
         .edx = edx,
     };
 }
+
+/// Read the value of the ESP register.
+/// Inlined to ensure stack pointer is read directly from the caller's context.
+pub inline fn esp() usize {
+    var value: usize = 0;
+    asm volatile (
+        \\ mov %%esp, %[value]
+        : [value] "={r}" (value),
+    );
+    return value;
+}
+
+/// Read the value of the EBP register.
+/// Inlined to ensure base pointer is read directly from the caller's context.
+pub inline fn ebp() usize {
+    var value: usize = 0;
+    asm volatile (
+        \\ mov %%ebp, %[value]
+        : [value] "={r}" (value),
+    );
+    return value;
+}

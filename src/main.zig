@@ -14,30 +14,23 @@ pub const std_options: std.Options = kernel.std_options.default();
 /// Must match this specific signature to be used by Zig's standard library.
 pub const panic = kernel.panic.panic;
 
-pub export fn kmain() noreturn {
-    main() catch |err| {
-        log.err("Kernel main failed: {}", .{err});
-        @panic("Kernel main failed!");
-    };
-
-    // Halt the CPU using QEMU shutdown port with a zero exit code
-    // or an infinite loop.
-    arch.x86.insn.outw(0x604, 0x2000);
-    while (true) {}
-}
-
 var gdt_table = kernel.gdt.Table(3).init();
 var idt_table = kernel.idt.Table(256).init();
 
-fn main() !void {
+comptime {
     // Link initial boot code.
     _ = arch.x86.boot;
+}
 
+pub fn main() anyerror!void {
     kernel.serial.init();
     kernel.serial.writeByte('\n');
-    log.info("Zig version: {s}", .{builtin.zig_version_string});
+    log.info("Zig builtin: {}", .{builtin});
     log.info("OS: {}", .{builtin.os.tag});
     log.info("CPU Arch: {}", .{builtin.cpu.arch});
+    log.info("CPU Model Name: {s}", .{builtin.cpu.model.name});
+    log.info("CPU Model LLVM Name: {?s}", .{builtin.cpu.model.llvm_name});
+    log.info("CPU Model LLVM Name: {}", .{builtin.cpu.model.features});
     log.info("ABI: {}", .{builtin.abi});
     log.info("Object format: {}", .{builtin.object_format});
     log.info("Strip debug info: {}", .{builtin.strip_debug_info});
@@ -57,7 +50,7 @@ fn main() !void {
     log.info("Initializing debug information.", .{});
     try kernel.debug.init();
 
-    try gdt_table.register(1, kernel.gdt.Descriptor.init(.{
+    gdt_table.register(1, kernel.gdt.Descriptor.init(.{
         .base = 0,
         .limit = 0xFFFFF,
         .segment_type = kernel.gdt.SegmentType.init(
@@ -66,7 +59,7 @@ fn main() !void {
         .db = true,
         .granularity = true,
     }));
-    try gdt_table.register(2, kernel.gdt.Descriptor.init(.{
+    gdt_table.register(2, kernel.gdt.Descriptor.init(.{
         .base = 0,
         .limit = 0xFFFFF,
         .segment_type = kernel.gdt.SegmentType.init(
@@ -82,7 +75,7 @@ fn main() !void {
         .offset = @intFromPtr(&arch.x86.double_fault_handler),
         .segment_selector = kernel.idt.SegmentSelector{ .index = 1 },
     }));
-    try idt_table.load();
+    idt_table.load();
     log.info("IDT loaded", .{});
 
     const msr_platform_info = arch.x86.insn.rdmsr(0x1);

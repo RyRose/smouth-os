@@ -18,7 +18,10 @@ pub fn init() !void {
     debug_data = try dwarf.open(debug_allocator.allocator());
 }
 
-pub fn logErrorReturnTrace(comptime level: std.log.Level, comptime scope: @Type(.enum_literal)) !void {
+pub fn logErrorReturnTrace(
+    comptime level: std.log.Level,
+    comptime scope: @Type(.enum_literal),
+) !void {
     const trace: ?*std.builtin.StackTrace = @errorReturnTrace();
     if (trace == null) {
         return;

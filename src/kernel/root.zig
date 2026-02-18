@@ -4,6 +4,7 @@ pub const debug = @import("debug.zig");
 pub const dwarf = @import("dwarf.zig");
 pub const gdt = @import("gdt.zig");
 pub const idt = @import("idt.zig");
+pub const intelhda = @import("intelhda.zig");
 pub const log = @import("log.zig");
 pub const panic = @import("panic.zig");
 pub const pci = @import("pci.zig");

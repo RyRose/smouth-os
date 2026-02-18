@@ -283,11 +283,14 @@ pub fn Table(comptime N: usize) type {
         /// Registers a descriptor at the given index in the GDT table.
         pub fn register(
             self: *Self,
-            index: usize,
+            comptime index: usize,
             descriptor: Descriptor,
-        ) !void {
-            if (index >= self.table.len)
-                return error.IndexOutOfBounds;
+        ) void {
+            if (index >= N)
+                @compileError(std.fmt.comptimePrint(
+                    "GDT index must be less than {}, but found {}",
+                    .{ N, index },
+                ));
 
             self.table[index] = descriptor;
         }
@@ -307,7 +310,7 @@ pub fn Table(comptime N: usize) type {
         pub fn installAndFlush(
             self: *Self,
             comptime code_index: u16,
-            data_index: u16,
+            comptime data_index: u16,
         ) !void {
             const ptr = self.pointer();
             const addr = ptr >> 16;
@@ -316,9 +319,15 @@ pub fn Table(comptime N: usize) type {
             if (addr == 0)
                 return error.GdtPointerNull;
             if (code_index >= N or code_index <= 0)
-                return error.CodeSegmentIndexOutOfBounds;
+                @compileError(std.fmt.comptimePrint(
+                    "Code segment index must be between 1 and {}, inclusive, but found {}",
+                    .{ N - 1, code_index },
+                ));
             if (data_index >= N or data_index <= 0)
-                return error.DataSegmentIndexOutOfBounds;
+                @compileError(std.fmt.comptimePrint(
+                    "Data segment index must be between 1 and {}, inclusive, but found {}",
+                    .{ N - 1, data_index },
+                ));
 
             const gdt_usize_addr: usize = @intCast(addr);
             const first_entry = @as(*const u64, @ptrFromInt(gdt_usize_addr));

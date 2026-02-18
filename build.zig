@@ -256,6 +256,8 @@ fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {
         "-device", "virtio-sound-pci,audiodev=snd0",
         "-audiodev", "coreaudio,id=speaker",
         "-machine", "pcspk-audiodev=speaker",
+        "-device", "intel-hda",
+        "-device", "hda-duplex,audiodev=snd0",
     });
     // zig fmt: on
     run_cmd.addArg("-kernel");

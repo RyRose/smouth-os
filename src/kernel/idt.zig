@@ -194,7 +194,7 @@ pub fn Table(comptime N: usize) type {
             return ret;
         }
 
-        pub fn load(self: *Self) !void {
+        pub fn load(self: *Self) void {
             const idtr_desc = self.idtr();
             log.debug("Loading IDT with IDTR value: 0x{x}", .{idtr_desc});
             asm volatile ("LIDT (%[idtr])"
