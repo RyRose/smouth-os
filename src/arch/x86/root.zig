@@ -4,8 +4,18 @@
 comptime {
     const builtin = @import("builtin");
     const std = @import("std");
-    std.debug.assert(builtin.target.cpu.arch == .x86);
-    std.debug.assert(builtin.os.tag == .freestanding);
+    if (builtin.target.cpu.arch != .x86) {
+        @compileError(std.fmt.comptimePrint(
+            "This code is only supported on x86 architecture but found {}",
+            .{builtin.target.cpu.arch},
+        ));
+    }
+    if (builtin.os.tag != .freestanding) {
+        @compileError(std.fmt.comptimePrint(
+            "This code is only supported on freestanding targets but found {}",
+            .{builtin.os.tag},
+        ));
+    }
 }
 
 pub const insn = @import("insn.zig");

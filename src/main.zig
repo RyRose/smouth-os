@@ -29,8 +29,6 @@ pub fn main() anyerror!void {
     log.info("OS: {}", .{builtin.os.tag});
     log.info("CPU Arch: {}", .{builtin.cpu.arch});
     log.info("CPU Model Name: {s}", .{builtin.cpu.model.name});
-    log.info("CPU Model LLVM Name: {?s}", .{builtin.cpu.model.llvm_name});
-    log.info("CPU Model LLVM Name: {}", .{builtin.cpu.model.features});
     log.info("ABI: {}", .{builtin.abi});
     log.info("Object format: {}", .{builtin.object_format});
     log.info("Strip debug info: {}", .{builtin.strip_debug_info});

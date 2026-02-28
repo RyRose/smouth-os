@@ -33,7 +33,7 @@ const MultibootHeader = packed struct {
     padding: u32 = 0,
 };
 
-export var multibootHeader: MultibootHeader align(4) linksection(".multiboot") = .{
+export var multHeader: MultibootHeader align(4) linksection(".multiboot") = .{
     // Here we are adding magic and flags and ~ to get 1's complement and by
     // adding 1 we get 2's complement
     .checksum = ~@as(u32, (multibootHeaderMagic + multibootFlags)) + 1,

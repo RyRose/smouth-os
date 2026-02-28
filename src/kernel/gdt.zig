@@ -196,7 +196,7 @@ pub const Descriptor = packed struct {
     available: bool = false,
 
     /// 64-bit code segment flag.
-    bit64: Bit64 = Bit64.disabled,
+    bit64: Bit64 = .disabled,
 
     db: bool = false,
 
