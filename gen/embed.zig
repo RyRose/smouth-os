@@ -1,3 +1,7 @@
+//! This file generates a compile-time map of absolute paths to embedded file
+//! data for all files in the `src` directory. The resulting map is stored in
+//! `srcFiles`, which can be used at runtime to access the embedded assets.
+
 const src = @import("src");
 const std = @import("std");
 

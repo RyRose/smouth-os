@@ -44,8 +44,7 @@ var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
 export fn kmain() noreturn {
     root.main() catch |err| {
-        log.err("Kernel main failed: {}", .{err});
-        @panic("Kernel main failed!");
+        std.debug.panic("Kernel main failed: {}", .{err});
     };
 
     // Halt the CPU using QEMU shutdown port with a zero exit code

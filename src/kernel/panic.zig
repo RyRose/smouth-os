@@ -18,7 +18,12 @@ pub const panic = std.debug.FullPanic(innerPanic);
 
 fn innerPanic(msg: []const u8, first_trace_addr: ?usize) noreturn {
     log.err("{s}", .{msg});
-    log.err("First trace address = {?x}", .{first_trace_addr});
+    if (first_trace_addr) |addr| {
+        log.err("First trace address:", .{});
+        debug.printLineInfo(addr) catch |err| {
+            log.err("Failed to print line info for first trace address: {}", .{err});
+        };
+    }
     debug.logErrorReturnTrace(.err, .PANIC) catch |err| {
         log.err("Failed to log error return trace: {}", .{err});
     };

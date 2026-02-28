@@ -39,21 +39,27 @@ pub fn logErrorReturnTrace(
         return;
     }
 
-    const allocator = debug_allocator.allocator();
     log("Error return trace [{d} frame(s)]:", .{frames});
     for (stackTrace.instruction_addresses, 0..) |addr, idx| {
         if (idx >= frames) break;
-        const symbols = try debug_data.getSymbol(allocator, addr);
-        try stdk.debug.printLineInfo(
-            &serial_writer,
-            symbols.source_location,
-            addr,
-            symbols.name,
-            symbols.compile_unit_name,
-            .escape_codes,
-            printLine,
-        );
+        try printLineInfo(addr);
     }
+}
+
+pub fn printLineInfo(addr: usize) !void {
+    var arena = std.heap.ArenaAllocator.init(debug_allocator.allocator());
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const symbols = try debug_data.getSymbol(allocator, addr);
+    try stdk.debug.printLineInfo(
+        &serial_writer,
+        symbols.source_location,
+        addr,
+        symbols.name,
+        symbols.compile_unit_name,
+        .escape_codes,
+        printLine,
+    );
 }
 
 pub fn printLine(
