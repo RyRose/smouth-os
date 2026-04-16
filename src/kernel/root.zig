@@ -1,5 +1,6 @@
 const std = @import("std");
 
+pub const init = @import("init.zig");
 pub const debug = @import("debug.zig");
 pub const dwarf = @import("dwarf.zig");
 pub const gdt = @import("gdt.zig");

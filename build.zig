@@ -131,6 +131,18 @@ const Context = struct {
         }
         return mod;
     }
+
+    pub fn createKernelModuleNoImports(
+        ctx: *Context,
+        value: Architecture,
+        path: []const u8,
+    ) *std.Build.Module {
+        return ctx.b.createModule(.{
+            .root_source_file = ctx.b.path(path),
+            .target = ctx.arch(value).target,
+            .optimize = ctx.optimize,
+        });
+    }
 };
 
 pub fn build(b: *std.Build) !void {
@@ -219,8 +231,17 @@ pub fn build(b: *std.Build) !void {
         },
     });
 
-    try addKernelRun(&ctx, "src/main.zig", .x86);
+    const x86_exe = try addKernelExecutable(&ctx, "kernel-x86-main", "src/main.zig", .x86);
+    const run_x86 = try buildQemu(&ctx, x86_exe, .x86);
+    const run_x86_step = ctx.b.step("run-x86", "Run the x86 kernel in QEMU.");
+    run_x86_step.dependOn(&run_x86.step);
 
+    const x86_test_exe = try addKernelTest(&ctx, "test-kernel-x86-main", .x86);
+    const test_x86 = try buildQemu(&ctx, x86_test_exe, .x86);
+    const test_x86_step = ctx.b.step("test-x86", "Run the x86 kernel in QEMU.");
+    test_x86_step.dependOn(&test_x86.step);
+
+    // Run unit tests for kernel module in hosted mode.
     const run_unit_tests = b.addRunArtifact(b.addTest(.{
         .root_module = ctx.arch(.hosted).modules.items[1].module,
     }));
@@ -229,23 +250,17 @@ pub fn build(b: *std.Build) !void {
     test_step.dependOn(&run_unit_tests.step);
 }
 
-fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {
-    const base = std.fs.path.basename(path);
-    const dotIndex = std.mem.indexOf(u8, base, ".");
-    const key = if (dotIndex) |i| base[0..i] else base;
-    const kernel = try addKernelExecutable(ctx, key, path, arch);
-
+fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*std.Build.Step.Run {
     const qemu_binary_name = switch (arch) {
         .hosted => return error.QEMUUnsupportedForHosted,
         .x86 => "qemu-system-x86_64",
     };
 
-    const kernel_path = kernel.getEmittedBin();
     // zig fmt: off
     const run_cmd = ctx.b.addSystemCommand(&[_][]const u8{
         qemu_binary_name,
-        "-nographic",
-        // "-serial","mon:stdio",
+         "-nographic",
+        //  "-serial","mon:stdio",
         // Allows exiting QEMU by writing to I/O port 0xf4 with a
         // non-zero exit code.
         "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
@@ -261,25 +276,44 @@ fn addKernelRun(ctx: *Context, path: []const u8, arch: Architecture) !void {
     });
     // zig fmt: on
     run_cmd.addArg("-kernel");
-    run_cmd.addFileArg(kernel_path);
-    run_cmd.step.dependOn(ctx.b.getInstallStep());
-
-    const run_step = ctx.b.step(
-        ctx.b.fmt("run-{s}-{s}", .{ key, @tagName(arch) }),
-        ctx.b.fmt("Run the {s} kernel in QEMU", .{key}),
-    );
-    run_step.dependOn(&run_cmd.step);
+    run_cmd.addFileArg(exe.getEmittedBin());
+    return run_cmd;
 }
 
 fn addKernelExecutable(
     ctx: *Context,
-    key: []const u8,
+    name: []const u8,
     path: []const u8,
     arch: Architecture,
 ) !*std.Build.Step.Compile {
     const kernel = ctx.b.addExecutable(.{
-        .name = ctx.b.fmt("kernel-{s}-{s}", .{ @tagName(arch), key }),
+        .name = name,
         .root_module = ctx.createKernelModule(arch, path),
+    });
+    for (ctx.dependencies) |dep| {
+        kernel.step.dependOn(dep);
+    }
+    kernel.setLinkerScript(
+        ctx.b.path(
+            ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" }),
+        ),
+    );
+    ctx.b.installArtifact(kernel);
+    return kernel;
+}
+
+fn addKernelTest(
+    ctx: *Context,
+    name: []const u8,
+    arch: Architecture,
+) !*std.Build.Step.Compile {
+    const kernel = ctx.b.addTest(.{
+        .name = name,
+        .root_module = ctx.arch(.x86).modules.items[1].module,
+        .test_runner = .{
+            .path = ctx.b.path("tools/testrunner.zig"),
+            .mode = .simple,
+        },
     });
     for (ctx.dependencies) |dep| {
         kernel.step.dependOn(dep);

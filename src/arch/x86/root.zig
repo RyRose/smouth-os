@@ -25,7 +25,10 @@ comptime {
 
 pub const insn = @import("insn.zig");
 pub const boot = @import("boot.zig");
+pub const testboot = @import("testboot.zig");
 
+/// Installs the GDT using the provided pointer and segment selectors, then flushes it by
+/// performing a far jump and updating all segment registers.
 pub fn installAndFlushGDT(
     gdt_ptr: u64,
     comptime code_segment: u16,

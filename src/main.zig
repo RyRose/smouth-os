@@ -24,7 +24,7 @@ comptime {
 
 pub fn main() anyerror!void {
     kernel.serial.init();
-    kernel.serial.writeByte('\n');
+    kernel.serial.write("\n");
     log.info("Zig builtin: {}", .{builtin});
     log.info("OS: {}", .{builtin.os.tag});
     log.info("CPU Arch: {}", .{builtin.cpu.arch});

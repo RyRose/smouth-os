@@ -11,10 +11,7 @@ const std = @import("std");
 const serial = @import("serial.zig");
 const sync = @import("sync.zig");
 
-// Directly write to serial console, no need to buffer.
-// TODO: Consider buffering if performance becomes an issue.
-const serial_writer_buffer: [0]u8 = undefined;
-var serial_writer = serial.writer(&serial_writer_buffer);
+pub var test_name: ?[]const u8 = null;
 
 pub fn defaultLog(
     comptime message_level: std.log.Level,
@@ -22,29 +19,42 @@ pub fn defaultLog(
     comptime format: []const u8,
     args: anytype,
 ) void {
-    if (comptime builtin.os.tag != .freestanding) return std.log.defaultLog(
-        message_level,
-        scope,
-        format,
-        args,
-    );
+    if (comptime builtin.os.tag != .freestanding) {
+        if (scope == .testing) {
+            std.debug.print(format, args);
+        } else {
+            std.log.defaultLog(
+                message_level,
+                scope,
+                format,
+                args,
+            );
+        }
+        return;
+    }
 
     const locked = serial.lock.tryLock(1_000_000_000);
     defer serial.lock.unlock();
-    serial.writeString(comptime message_level.asText());
+
+    serial.write(comptime message_level.asText());
     if (scope != .default) {
-        serial.writeString(" (");
-        serial.writeString(@tagName(scope));
-        serial.writeString(")");
+        serial.write(" (");
+        serial.write(@tagName(scope));
+        serial.write(")");
     }
-    serial.writeString(": ");
+    if (test_name) |name| {
+        serial.write(" (");
+        serial.write(name);
+        serial.write(")");
+    }
+    serial.write(": ");
     if (!locked) {
-        serial.writeString("[LOG LOCK TIMEOUT] ");
+        serial.write("[LOG LOCK TIMEOUT] ");
     }
 
-    serial_writer.print(format, args) catch {
-        serial.writeString("[WRITE ERROR] ");
-        serial.writeString(format);
+    serial.writer.print(format, args) catch {
+        serial.write("[WRITE ERROR] ");
+        serial.write(format);
     };
-    serial.writeString("\n");
+    serial.write("\n");
 }

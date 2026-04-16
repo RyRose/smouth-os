@@ -1,20 +1,11 @@
-const root = @import("root");
+const builtin = @import("builtin");
+const kernel = @import("kernel");
 const std = @import("std");
+const stdk = @import("stdk");
 
 const insn = @import("insn.zig");
 
 const log = std.log.scoped(.boot);
-
-comptime {
-    const actual = @TypeOf(root.main);
-    const expected = fn () anyerror!void;
-    if (actual != expected) {
-        @compileError(std.fmt.comptimePrint(
-            "main must have type `{}` but found `{}`",
-            .{ expected, actual },
-        ));
-    }
-}
 
 const multibootHeaderMagic = 0x1BADB002;
 const multibootFlagAlign = 1 << 0;
@@ -42,9 +33,68 @@ export var multHeader: MultibootHeader align(4) linksection(".multiboot") = .{
 // Reserve 16 KiB stack for initial thread.
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
+pub const std_options: std.Options = kernel.std_options.default();
+
+pub const panic = kernel.panic.panic;
+
+var serial_buffer: [1000]u8 = undefined;
+
+/// A writer that writes to the serial port. This is used for logging and debugging.
+var test_writer = kernel.serial.newWriter(&serial_buffer);
+
+const tty: std.io.tty.Config = .escape_codes;
+
+fn main() anyerror!void {
+    try kernel.init.init();
+    stdk.testing.print_writer = &test_writer;
+
+    try tty.setColor(&kernel.serial.writer, .dim);
+    kernel.serial.write("start\n");
+    try kernel.serial.writer.print("└─ {d} tests\n", .{builtin.test_functions.len});
+    try tty.setColor(&kernel.serial.writer, .reset);
+
+    var failed: usize = 0;
+    for (builtin.test_functions) |t| {
+        kernel.log.test_name = t.name;
+        t.func() catch {
+            try tty.setColor(&kernel.serial.writer, .bright_red);
+            kernel.serial.write("error:");
+            try tty.setColor(&kernel.serial.writer, .reset);
+            kernel.serial.write(" '");
+            kernel.serial.write(t.name);
+            kernel.serial.write("' failed: ");
+            try test_writer.flush();
+            kernel.serial.write("\n");
+            _ = try kernel.debug.printErrorReturnTrace();
+            failed += 1;
+        };
+    }
+    try tty.setColor(&kernel.serial.writer, .dim);
+    kernel.serial.write("end\n");
+    try kernel.serial.writer.print("└─ {d}/{d} passed", .{
+        builtin.test_functions.len - failed,
+        builtin.test_functions.len,
+    });
+
+    if (failed == 0) {
+        kernel.serial.write("\n");
+        try tty.setColor(&kernel.serial.writer, .reset);
+        return;
+    }
+    kernel.serial.write(", ");
+    try tty.setColor(&kernel.serial.writer, .red);
+    try kernel.serial.writer.print("{d} failed\n", .{failed});
+    try tty.setColor(&kernel.serial.writer, .reset);
+
+    return error.TestFailed;
+}
+
 export fn kmain() noreturn {
-    root.main() catch |err| {
-        std.debug.panic("Kernel main failed: {}", .{err});
+    main() catch |err| {
+        if (err != error.TestFailed) {
+            std.debug.panic("Kernel main failed: {}", .{err});
+        }
+        insn.outw(0xF4, 0);
     };
 
     // Halt the CPU using QEMU shutdown port with a zero exit code

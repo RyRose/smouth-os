@@ -29,8 +29,8 @@ pub fn rdmsr(msr: u32) u64 {
 
 /// Write a value to a Model-Specific Register (MSR).
 pub fn wrmsr(msr: u32, value: u64) void {
-    const hi = @as(u32, value >> 32);
-    const lo = @as(u32, value & 0xFFFFFFFF);
+    const hi: u32 = @intCast(value >> 32);
+    const lo: u32 = @intCast(value & 0xFFFFFFFF);
     asm volatile (
         \\ wrmsr
         :
@@ -127,30 +127,30 @@ pub inline fn pause() void {
 
 /// Execute the CPUID instruction with the specified EAX and ECX values.
 /// Returns the results in a struct containing EAX, EBX, ECX, and EDX.
-pub fn cpuid(eax: u32, ecx: u32) struct {
+pub fn cpuid(leaf: u32, subleaf: u32) struct {
     eax: u32,
     ebx: u32,
     ecx: u32,
     edx: u32,
 } {
-    var eax_out: u32 = 0;
-    var ebx: u32 = 0;
-    var ecx_out: u32 = 0;
-    var edx: u32 = 0;
+    var eax_out: u32 = leaf;
+    var ecx_out: u32 = subleaf;
+    var ebx_out: u32 = undefined;
+    var edx_out: u32 = undefined;
+
     asm volatile (
         \\ cpuid
-        : [eax] "={eax}" (eax_out),
-          [ebx] "={ebx}" (ebx),
-          [ecx] "={ecx}" (ecx_out),
-          [edx] "={edx}" (edx),
-        : [eax] "{eax}" (eax),
-          [ecx] "{ecx}" (ecx),
+        : [eax] "+{eax}" (eax_out),
+          [ebx] "={ebx}" (ebx_out),
+          [ecx] "+{ecx}" (ecx_out),
+          [edx] "={edx}" (edx_out),
     );
+
     return .{
         .eax = eax_out,
-        .ebx = ebx,
+        .ebx = ebx_out,
         .ecx = ecx_out,
-        .edx = edx,
+        .edx = edx_out,
     };
 }
 

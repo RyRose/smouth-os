@@ -9,16 +9,21 @@ const sync = @import("sync.zig");
 // COM1 base port
 const base: u16 = 0x3F8;
 
-// SpinLock to provide thread-safe access to the serial port.
-// Should be grabbed by any code wanting to write to the serial port.
+/// SpinLock to provide thread-safe access to the serial port.
+/// Should be grabbed by any code wanting to write to the serial port.
 pub var lock = sync.SpinLock(bool).init(false);
+
+const serial_buffer: [0]u8 = undefined;
+
+/// A writer that writes to the serial port. This is used for logging and debugging.
+pub var writer = newWriter(&serial_buffer);
 
 /// Initialize the serial port.
 pub fn init() void {
     lock.lock();
     defer lock.unlock();
     if (lock.value) {
-        writeString("SERIAL: Serial port already initialized.\n");
+        write("SERIAL: Serial port already initialized.\n");
         return;
     }
     lock.value = true;
@@ -48,13 +53,13 @@ fn isTransmitEmpty() bool {
 }
 
 /// Write a byte to the serial port.
-pub fn writeByte(b: u8) void {
+fn writeByte(b: u8) void {
     while (isTransmitEmpty()) {}
     arch.x86.insn.outb(base, b);
 }
 
 /// Write a string to the serial port.
-pub fn writeString(s: []const u8) void {
+pub fn write(s: []const u8) void {
     for (s) |c| {
         writeByte(c);
     }
@@ -66,7 +71,7 @@ fn drain(
     splat: usize,
 ) std.Io.Writer.Error!usize {
     if (w.end > 0) {
-        writeString(w.buffer[0..w.end]);
+        write(w.buffer[0..w.end]);
         w.end = 0;
     }
 
@@ -74,7 +79,7 @@ fn drain(
     for (data, 0..) |slice, i| {
         const repeat = if (i + 1 == data.len) splat else 1;
         for (0..repeat) |_| {
-            writeString(slice);
+            write(slice);
             consumed += slice.len;
         }
     }
@@ -82,7 +87,7 @@ fn drain(
 }
 
 /// Get a writer that writes to the serial port.
-pub fn writer(buffer: []u8) std.io.Writer {
+pub fn newWriter(buffer: []u8) std.io.Writer {
     return .{
         .vtable = &.{
             .drain = drain,

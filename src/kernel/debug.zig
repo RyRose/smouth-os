@@ -6,9 +6,6 @@ const stdk = @import("stdk");
 const dwarf = @import("dwarf.zig");
 const serial = @import("serial.zig");
 
-const serial_buffer: [0]u8 = undefined;
-var serial_writer = serial.writer(&serial_buffer);
-
 // 3 MiB buffer for debug info
 var debug_buffer: [3000 * 1024]u8 = undefined;
 var debug_allocator = std.heap.FixedBufferAllocator.init(&debug_buffer);
@@ -18,32 +15,39 @@ pub fn init() !void {
     debug_data = try dwarf.open(debug_allocator.allocator());
 }
 
-pub fn logErrorReturnTrace(
-    comptime level: std.log.Level,
-    comptime scope: @Type(.enum_literal),
-) !void {
+pub fn printStackTrace(frame_address: ?usize) !void {
+    var rbp: usize = frame_address orelse @frameAddress();
+    while (rbp != 0) {
+        const frame: *[2]usize = @ptrFromInt(rbp);
+
+        const prev_rbp = frame[0];
+        const addr = frame[1];
+        if (addr == 0) {
+            break;
+        }
+
+        try printLineInfo(addr);
+        rbp = prev_rbp;
+    }
+}
+
+pub fn printErrorReturnTrace() !bool {
     const trace: ?*std.builtin.StackTrace = @errorReturnTrace();
     if (trace == null) {
-        return;
+        return false;
     }
     const stackTrace = trace.?;
-    const log = struct {
-        fn log(comptime format: []const u8, args: anytype) void {
-            std.options.logFn(level, scope, format, args);
-        }
-    }.log;
 
     const frames = @min(stackTrace.instruction_addresses.len, stackTrace.index);
     if (frames == 0) {
-        log("No error return trace available.", .{});
-        return;
+        return false;
     }
 
-    log("Error return trace [{d} frame(s)]:", .{frames});
     for (stackTrace.instruction_addresses, 0..) |addr, idx| {
         if (idx >= frames) break;
         try printLineInfo(addr);
     }
+    return true;
 }
 
 pub fn printLineInfo(addr: usize) !void {
@@ -52,7 +56,7 @@ pub fn printLineInfo(addr: usize) !void {
     const allocator = arena.allocator();
     const symbols = try debug_data.getSymbol(allocator, addr);
     try stdk.debug.printLineInfo(
-        &serial_writer,
+        &serial.writer,
         symbols.source_location,
         addr,
         symbols.name,
@@ -62,6 +66,7 @@ pub fn printLineInfo(addr: usize) !void {
     );
 }
 
+/// Prints the source line corresponding to the given source location to the provided writer.
 pub fn printLine(
     writer: *std.io.Writer,
     source_location: std.debug.SourceLocation,
@@ -92,6 +97,8 @@ pub fn printLine(
     }
 }
 
+/// Writes the given string to the writer, replacing tabs with spaces for better
+/// formatting in serial output.
 fn writeWithTabsReplaced(writer: *std.io.Writer, s: []const u8) !void {
     var i: usize = 0;
     while (i < s.len) {

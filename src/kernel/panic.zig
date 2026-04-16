@@ -16,17 +16,22 @@ const log = std.log.scoped(.PANIC);
 
 pub const panic = std.debug.FullPanic(innerPanic);
 
-fn innerPanic(msg: []const u8, first_trace_addr: ?usize) noreturn {
+fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     log.err("{s}", .{msg});
-    if (first_trace_addr) |addr| {
-        log.err("First trace address:", .{});
-        debug.printLineInfo(addr) catch |err| {
-            log.err("Failed to print line info for first trace address: {}", .{err});
+    if (return_address) |addr| {
+        log.err("Panic stack trace: 0x{x}", .{addr});
+        debug.printStackTrace(null) catch |err| {
+            log.err("Failed to log stack trace: {}", .{err});
         };
     }
-    debug.logErrorReturnTrace(.err, .PANIC) catch |err| {
+    log.err("Panic return trace:", .{});
+    if (debug.printErrorReturnTrace()) |value| {
+        if (!value) {
+            log.warn("No error return trace available.", .{});
+        }
+    } else |err| {
         log.err("Failed to log error return trace: {}", .{err});
-    };
+    }
     log.err("System is shutting down.", .{});
     badShutdown();
 }

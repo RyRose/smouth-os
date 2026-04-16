@@ -2,6 +2,7 @@
 //!
 
 const std = @import("std");
+const stdk = @import("stdk");
 
 const arch = @import("arch");
 
@@ -97,12 +98,12 @@ test SegmentType {
     const code_segment_type: u4 = @bitCast(SegmentType.init(.{
         .segment_class = .code,
     }));
-    try std.testing.expectEqual(0xA, code_segment_type);
+    try stdk.testing.expectEqual(0xA, code_segment_type);
 
     const data_segment_type: u4 = @bitCast(SegmentType.init(.{
         .segment_class = .data,
     }));
-    try std.testing.expectEqual(0x2, data_segment_type);
+    try stdk.testing.expectEqual(0x2, data_segment_type);
 }
 
 /// Descriptor is a class that represents a Global Descriptor Table (GDT)
@@ -255,7 +256,7 @@ test Descriptor {
         .db = true,
         .granularity = true,
     }));
-    try std.testing.expectEqual(0x12_C_A_9_A_345678_BCDE, desc);
+    try stdk.testing.expectEqual(0x12_C_A_9_A_345678_BCDE, desc);
     //                            --   -   - ------ ----
     //                            |    |   | |      \-- limit0 (0xBCDE)
     //                            |    |   | \-- base0 (0x345678)
