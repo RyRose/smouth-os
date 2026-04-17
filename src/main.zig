@@ -23,61 +23,7 @@ comptime {
 }
 
 pub fn main() anyerror!void {
-    kernel.serial.init();
-    kernel.serial.write("\n");
-    log.info("Zig builtin: {}", .{builtin});
-    log.info("OS: {}", .{builtin.os.tag});
-    log.info("CPU Arch: {}", .{builtin.cpu.arch});
-    log.info("CPU Model Name: {s}", .{builtin.cpu.model.name});
-    log.info("ABI: {}", .{builtin.abi});
-    log.info("Object format: {}", .{builtin.object_format});
-    log.info("Strip debug info: {}", .{builtin.strip_debug_info});
-    log.info("Mode: {}", .{builtin.mode});
-    log.info(
-        "Position independent code: {}",
-        .{builtin.position_independent_code},
-    );
-    log.info("Error return tracing: {}", .{builtin.have_error_return_tracing});
-    log.info("Valgrind support: {}", .{builtin.valgrind_support});
-    log.info("Fuzz: {}", .{builtin.fuzz});
-    log.info("Code model: {}", .{builtin.code_model});
-    log.info("Link libc: {}", .{builtin.link_libc});
-    log.info("Link libcpp: {}", .{builtin.link_libcpp});
-    log.info("Output mode: {}", .{builtin.output_mode});
-
-    log.info("Initializing debug information.", .{});
-    try kernel.debug.init();
-
-    gdt_table.register(1, kernel.gdt.Descriptor.init(.{
-        .base = 0,
-        .limit = 0xFFFFF,
-        .segment_type = kernel.gdt.SegmentType.init(
-            .{ .segment_class = .code },
-        ),
-        .db = true,
-        .granularity = true,
-    }));
-    gdt_table.register(2, kernel.gdt.Descriptor.init(.{
-        .base = 0,
-        .limit = 0xFFFFF,
-        .segment_type = kernel.gdt.SegmentType.init(
-            .{ .segment_class = .data },
-        ),
-        .db = true,
-        .granularity = true,
-    }));
-    try gdt_table.installAndFlush(1, 2);
-    log.info("GDT installed.", .{});
-
-    idt_table.register(.double_fault, kernel.idt.Descriptor.init(.{
-        .offset = @intFromPtr(&arch.x86.double_fault_handler),
-        .segment_selector = kernel.idt.SegmentSelector{ .index = 1 },
-    }));
-    idt_table.load();
-    log.info("IDT loaded", .{});
-
-    const msr_platform_info = arch.x86.insn.rdmsr(0x1);
-    log.info("MSR Platform Info (0xCE): 0x{x}", .{msr_platform_info});
+    try kernel.init.init();
 
     for (0..256) |bus| {
         for (0..8) |device| {

@@ -238,7 +238,7 @@ pub fn build(b: *std.Build) !void {
 
     const x86_test_exe = try addKernelTest(&ctx, "test-kernel-x86-main", .x86);
     const test_x86 = try buildQemu(&ctx, x86_test_exe, .x86);
-    const test_x86_step = ctx.b.step("test-x86", "Run the x86 kernel in QEMU.");
+    const test_x86_step = ctx.b.step("test-x86", "Run tests on x86 in QEMU.");
     test_x86_step.dependOn(&test_x86.step);
 
     // Run unit tests for kernel module in hosted mode.
@@ -246,8 +246,12 @@ pub fn build(b: *std.Build) !void {
         .root_module = ctx.arch(.hosted).modules.items[1].module,
     }));
 
-    const test_step = b.step("test", "Run tests");
+    const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
+
+    const test_all_step = b.step("test-all", "Run all tests");
+    test_all_step.dependOn(&test_x86.step);
+    test_all_step.dependOn(&run_unit_tests.step);
 }
 
 fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*std.Build.Step.Run {
