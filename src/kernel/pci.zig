@@ -1,4 +1,5 @@
 const std = @import("std");
+const stdk = @import("stdk");
 
 /// IO port for addressing PCI configuration space.
 pub const ConfigurationAddressPort: u16 = 0xCF8;
@@ -54,12 +55,7 @@ pub const ConfigurationAddress = packed struct {
     }
 };
 
-comptime {
+test ConfigurationAddress {
     const size = @bitSizeOf(ConfigurationAddress);
-    if (size != 32) {
-        @compileError(std.fmt.comptimePrint(
-            "ConfigurationAddress must be 32 bits, but found {} bits",
-            .{size},
-        ));
-    }
+    try stdk.testing.expectEqual(size, 32);
 }

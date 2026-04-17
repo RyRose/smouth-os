@@ -1,6 +1,8 @@
 //! Serial port communication for arch.x86 architecture.
 
+const builtin = @import("builtin");
 const std = @import("std");
+const stdk = @import("stdk");
 
 const arch = @import("arch");
 
@@ -96,4 +98,16 @@ pub fn newWriter(buffer: []u8) std.io.Writer {
         },
         .buffer = buffer,
     };
+}
+
+test "serial writer" {
+    if (builtin.os.tag != .freestanding) {
+        return error.SkipZigTest;
+    }
+    var buffer: [100]u8 = undefined;
+    var w = newWriter(&buffer);
+    const data = "Hello, world!";
+    const consumed = try w.write(data);
+    try stdk.testing.expectEqual(consumed, data.len);
+    try stdk.testing.expectEqualStrings(data, buffer[0..data.len]);
 }

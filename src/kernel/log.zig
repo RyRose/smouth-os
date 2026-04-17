@@ -9,10 +9,15 @@ const builtin = @import("builtin");
 const std = @import("std");
 
 const serial = @import("serial.zig");
-const sync = @import("sync.zig");
 
+/// The name of the currently running test, if any.
+/// This is used to include the test name in log messages when running tests.
+/// Set by testboot.zig when running tests, and null otherwise.
 pub var test_name: ?[]const u8 = null;
 
+/// Logs a message with the given level and scope.
+/// In freestanding environments, logs are written to the serial port.
+/// In hosted environments, it falls back to std.log.
 pub fn defaultLog(
     comptime message_level: std.log.Level,
     comptime scope: @Type(.enum_literal),
@@ -20,16 +25,12 @@ pub fn defaultLog(
     args: anytype,
 ) void {
     if (comptime builtin.os.tag != .freestanding) {
-        if (scope == .testing) {
-            std.debug.print(format, args);
-        } else {
-            std.log.defaultLog(
-                message_level,
-                scope,
-                format,
-                args,
-            );
-        }
+        std.log.defaultLog(
+            message_level,
+            scope,
+            format,
+            args,
+        );
         return;
     }
 

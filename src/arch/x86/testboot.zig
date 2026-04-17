@@ -54,9 +54,14 @@ fn main() anyerror!void {
     try tty.setColor(&kernel.serial.writer, .reset);
 
     var failed: usize = 0;
+    var skipped: usize = 0;
     for (builtin.test_functions) |t| {
         kernel.log.test_name = t.name;
-        t.func() catch {
+        t.func() catch |err| {
+            if (err == error.SkipZigTest) {
+                skipped += 1;
+                continue;
+            }
             try tty.setColor(&kernel.serial.writer, .bright_red);
             kernel.serial.write("error:");
             try tty.setColor(&kernel.serial.writer, .reset);
@@ -72,21 +77,27 @@ fn main() anyerror!void {
     try tty.setColor(&kernel.serial.writer, .dim);
     kernel.serial.write("end\n");
     try kernel.serial.writer.print("└─ {d}/{d} passed", .{
-        builtin.test_functions.len - failed,
+        builtin.test_functions.len - failed - skipped,
         builtin.test_functions.len,
     });
 
-    if (failed == 0) {
-        kernel.serial.write("\n");
+    if (failed > 0) {
+        kernel.serial.write(", ");
+        try tty.setColor(&kernel.serial.writer, .red);
+        try kernel.serial.writer.print("{d} failed", .{failed});
         try tty.setColor(&kernel.serial.writer, .reset);
-        return;
     }
-    kernel.serial.write(", ");
-    try tty.setColor(&kernel.serial.writer, .red);
-    try kernel.serial.writer.print("{d} failed\n", .{failed});
-    try tty.setColor(&kernel.serial.writer, .reset);
 
-    return error.TestFailed;
+    if (skipped > 0) {
+        kernel.serial.write(", ");
+        try tty.setColor(&kernel.serial.writer, .yellow);
+        try kernel.serial.writer.print("{d} skipped", .{skipped});
+        try tty.setColor(&kernel.serial.writer, .reset);
+    }
+    kernel.serial.write("\n");
+    if (failed > 0) {
+        return error.TestFailed;
+    }
 }
 
 export fn kmain() noreturn {

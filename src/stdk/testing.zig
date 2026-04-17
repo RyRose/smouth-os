@@ -46,10 +46,11 @@ pub var print_writer: ?*std.io.Writer = null;
 fn print(comptime fmt: []const u8, args: anytype) void {
     if (@inComptime()) {
         @compileError(std.fmt.comptimePrint(fmt, args));
-    } else if (!backend_can_print) {
+    }
+    if (comptime !backend_can_print) {
         return;
     }
-    if (builtin.os.tag != .freestanding) {
+    if (comptime builtin.os.tag != .freestanding) {
         std.debug.print(fmt, args);
         return;
     }
