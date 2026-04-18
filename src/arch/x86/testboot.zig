@@ -117,6 +117,7 @@ export fn kmain() noreturn {
                 };
             }
         }
+        // Use QEMU shutdown port to halt the system with a non-zero exit code on test failure.
         kernel.arch.x86.insn.outw(0xF4, 0);
     };
 
