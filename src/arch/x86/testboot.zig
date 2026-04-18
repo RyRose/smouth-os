@@ -41,6 +41,7 @@ export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") 
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
 fn main() anyerror!void {
+    _ = kernel.io.make(kernel.io.test_interface);
     try kernel.init.init();
 
     const tty = kernel.serial.tty;
@@ -64,8 +65,8 @@ fn main() anyerror!void {
             try tty.writer.writeAll(" '");
             try tty.writer.writeAll(t.name);
             try tty.writer.writeAll("' failed: ");
-            try tty.writer.writeAll(kernel.iotest.writer.buffer);
-            kernel.iotest.writer.end = 0;
+            try tty.writer.writeAll(kernel.io.writer.buffer);
+            kernel.io.writer.end = 0;
             try tty.writer.writeAll("\n");
             if (@errorReturnTrace()) |trace| {
                 std.debug.writeErrorReturnTrace(trace, tty) catch |err2| {

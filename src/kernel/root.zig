@@ -4,7 +4,6 @@ pub const arch = @import("arch");
 
 pub const init = @import("init.zig");
 pub const io = @import("io.zig");
-pub const iotest = @import("iotest.zig");
 pub const debug = @import("debug.zig");
 pub const dwarf = @import("dwarf.zig");
 pub const gdt = @import("gdt.zig");

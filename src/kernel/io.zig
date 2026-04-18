@@ -1,29 +1,65 @@
 //! A minimal std.Io implementation for the freestanding kernel.
 //!
-//! Routes stderr / debug output to the serial port and leaves all other
-//! operations returning errors (via std.Io.failing's vtable).  Suitable for
-//! use as std_options_debug_io so that std.debug.print, stack-trace dumps,
-//! and std.log all reach the serial console.
+//! Routes stderr / debug output to a caller-supplied writer interface and
+//! leaves all other operations returning errors (via std.Io.failing's vtable).
+//! Suitable for use as std_options_debug_io so that std.debug.print,
+//! stack-trace dumps, and std.log all reach the configured output.
+//!
+//! Call make() with the desired writer interface before any output is produced.
+//! For kernel mode pass serial.tty.writer.*; for test mode pass test_interface.
 
 const std = @import("std");
 const arch = @import("arch");
-
 const serial = @import("serial.zig");
+
+// ── Test-mode buffered output ─────────────────────────────────────────────────
+
+/// Buffer that captures stderr output in test mode.
+pub var buffer: [1000]u8 = undefined;
+
+/// Fixed writer backed by buffer; reset .end to 0 between tests.
+pub var writer = std.Io.Writer.fixed(&buffer);
+
+fn drain(
+    w: *std.Io.Writer,
+    data: []const []const u8,
+    splat: usize,
+) std.Io.Writer.Error!usize {
+    if (w.end > 0) {
+        _ = try writer.writeAll(w.buffer[0..w.end]);
+        w.end = 0;
+    }
+    var consumed: usize = 0;
+    for (data, 0..) |slice, i| {
+        const repeat = if (i + 1 == data.len) splat else 1;
+        for (0..repeat) |_| {
+            try writer.writeAll(slice);
+            consumed += slice.len;
+        }
+    }
+    return consumed;
+}
+
+var null_buffer: [0]u8 = undefined;
+
+/// Writer interface that buffers to writer/buffer; pass to make() in test mode.
+pub const test_interface: std.Io.Writer = .{
+    .vtable = &.{ .drain = drain },
+    .buffer = &null_buffer,
+};
 
 // ── stderr file-writer ────────────────────────────────────────────────────────
 
-// A File.Writer whose .interface drains to the serial port.
-// Only the .interface field is used; .io and .file are never reached because
-// our custom drain bypasses the normal file-write path.
 var stderr_file_writer: std.Io.File.Writer = undefined;
 var stderr_file_writer_ready = false;
+var _interface: ?std.Io.Writer = null;
 
 fn stderrFileWriter() *std.Io.File.Writer {
     if (!stderr_file_writer_ready) {
         stderr_file_writer = .{
             .io = std.Io.failing,
             .file = .{ .handle = {}, .flags = .{ .nonblocking = false } },
-            .interface = serial.tty.writer.*,
+            .interface = _interface orelse serial.tty.writer.*,
         };
         stderr_file_writer_ready = true;
     }
@@ -89,7 +125,7 @@ fn swapCancelProtectionFn(
 // ── VTable ────────────────────────────────────────────────────────────────────
 
 // Start from std.Io.failing's vtable (returns errors for everything) and
-// override only the handful of functions needed for serial debug output.
+// override only the handful of functions needed for debug output.
 const kernel_vtable: std.Io.VTable = blk: {
     var v = std.Io.failing.vtable.*;
     v.crashHandler = crashHandler;
@@ -103,8 +139,15 @@ const kernel_vtable: std.Io.VTable = blk: {
 
 // ── Public interface ──────────────────────────────────────────────────────────
 
-/// A minimal Io instance that routes stderr/debug output to the serial port.
-/// Assign to std_options_debug_io to connect std.debug and std.log to serial.
+/// Configures the stderr writer interface and returns the Io instance.
+/// Must be called before any output is produced.
+pub fn make(interface: std.Io.Writer) std.Io {
+    _interface = interface;
+    return io;
+}
+
+/// A minimal Io instance for use as std_options_debug_io.
+/// Call make() to configure the writer interface before first use.
 pub const io: std.Io = .{
     .userdata = null,
     .vtable = &kernel_vtable,
