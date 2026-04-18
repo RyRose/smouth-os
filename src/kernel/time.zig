@@ -15,9 +15,6 @@ const log = std.log.scoped(.time);
 /// TSC frequency in Hz. Set by calibrate().
 var tsc_hz: u64 = 0;
 
-/// TSC ticks per microsecond. Derived from tsc_hz by calibrate().
-var tsc_per_us: u64 = 0;
-
 /// PIT oscillator frequency in Hz.
 const pit_hz: u64 = 1_193_182;
 
@@ -83,8 +80,6 @@ pub fn calibrate() void {
     const end = insn.rdtsc();
 
     tsc_hz = (end - start) * pit_hz / pit_ticks;
-    tsc_per_us = tsc_hz / 1_000_000;
-
     log.debug("TSC: {} Hz", .{tsc_hz});
 }
 
@@ -107,7 +102,7 @@ pub fn ndelay(ns: u64) void {
 /// calibrate() must be called before using this function.
 pub fn udelay(us: u64) void {
     const start = insn.rdtsc();
-    const target = start + us * tsc_per_us;
+    const target = start + us * tsc_hz / 1_000_000;
     while (insn.rdtsc() < target) {
         std.atomic.spinLoopHint();
     }
@@ -120,7 +115,7 @@ pub fn mdelay(ms: u64) void {
 }
 
 test "ndelay waits at least the requested duration" {
-    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
+    try arch.freestanding();
     try std.testing.expect(tsc_hz > 0);
 
     const ns: u64 = 500_000; // 500 µs
@@ -132,25 +127,25 @@ test "ndelay waits at least the requested duration" {
 }
 
 test "udelay waits at least the requested duration" {
-    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
-    try std.testing.expect(tsc_per_us > 0);
+    try arch.freestanding();
+    try std.testing.expect(tsc_hz > 0);
 
     const us: u64 = 1_000; // 1 ms
     const before = insn.rdtsc();
     udelay(us);
     const after = insn.rdtsc();
 
-    try std.testing.expect(after - before >= us * tsc_per_us);
+    try std.testing.expect(after - before >= us * (tsc_hz / 1_000_000));
 }
 
 test "mdelay waits at least the requested duration" {
-    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
-    try std.testing.expect(tsc_per_us > 0);
+    try arch.freestanding();
+    try std.testing.expect(tsc_hz > 0);
 
     const ms: u64 = 1;
     const before = insn.rdtsc();
     mdelay(ms);
     const after = insn.rdtsc();
 
-    try std.testing.expect(after - before >= ms * 1_000 * tsc_per_us);
+    try std.testing.expect(after - before >= ms * 1_000 * (tsc_hz / 1_000_000));
 }

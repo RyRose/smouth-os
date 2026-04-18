@@ -113,7 +113,8 @@ pub fn newWriter(buffer: []u8) std.Io.Writer {
 }
 
 test "serial writer" {
-    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
+    try arch.freestanding();
+
     var buffer: [100]u8 = undefined;
     var w = newWriter(&buffer);
     const data = "Hello, world!";
