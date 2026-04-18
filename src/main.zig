@@ -11,7 +11,7 @@ const log = std.log.scoped(.main);
 pub const std_options: std.Options = kernel.std_options.default();
 
 /// Route std.debug / std.log output to the serial port.
-pub const std_options_debug_io: std.Io = kernel.io.io;
+pub const std_options_debug_io: std.Io = kernel.io.make(.serial);
 
 /// Overrides std.debug.SelfInfo for freestanding kernel DWARF stack traces.
 pub const debug = kernel.debug.self;

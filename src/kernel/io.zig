@@ -1,20 +1,17 @@
 //! A minimal std.Io implementation for the freestanding kernel.
 //!
-//! Routes stderr / debug output to a caller-supplied writer interface and
-//! leaves all other operations returning errors (via std.Io.failing's vtable).
-//! Suitable for use as std_options_debug_io so that std.debug.print,
-//! stack-trace dumps, and std.log all reach the configured output.
-//!
-//! Call make() with the desired writer interface before any output is produced.
-//! For kernel mode pass serial.tty.writer.*; for test mode pass test_interface.
+//! Use make() with a compile-time Mode to construct an Io instance backed by
+//! either the serial port or a capture buffer. Assign to std_options_debug_io
+//! so that std.debug.print, stack-trace dumps, and std.log reach the chosen
+//! output with no separate runtime initialisation call required.
 
 const std = @import("std");
 const arch = @import("arch");
 const serial = @import("serial.zig");
 
-// ── Test-mode buffered output ─────────────────────────────────────────────────
+// ── Buffer mode capture ───────────────────────────────────────────────────────
 
-/// Buffer that captures stderr output in test mode.
+/// Buffer that captures stderr output in buffer mode.
 pub var buffer: [1000]u8 = undefined;
 
 /// Fixed writer backed by buffer; reset .end to 0 between tests.
@@ -41,32 +38,12 @@ fn drain(
 }
 
 var null_buffer: [0]u8 = undefined;
-
-/// Writer interface that buffers to writer/buffer; pass to make() in test mode.
-pub const test_interface: std.Io.Writer = .{
+const buffer_iface: std.Io.Writer = .{
     .vtable = &.{ .drain = drain },
     .buffer = &null_buffer,
 };
 
-// ── stderr file-writer ────────────────────────────────────────────────────────
-
-var stderr_file_writer: std.Io.File.Writer = undefined;
-var stderr_file_writer_ready = false;
-var _interface: ?std.Io.Writer = null;
-
-fn stderrFileWriter() *std.Io.File.Writer {
-    if (!stderr_file_writer_ready) {
-        stderr_file_writer = .{
-            .io = std.Io.failing,
-            .file = .{ .handle = {}, .flags = .{ .nonblocking = false } },
-            .interface = _interface orelse serial.tty.writer.*,
-        };
-        stderr_file_writer_ready = true;
-    }
-    return &stderr_file_writer;
-}
-
-// ── VTable implementations ────────────────────────────────────────────────────
+// ── Shared vtable helpers (mode-independent) ──────────────────────────────────
 
 fn crashHandler(userdata: ?*anyopaque) void {
     _ = userdata;
@@ -75,32 +52,6 @@ fn crashHandler(userdata: ?*anyopaque) void {
     while (true) {}
 }
 
-fn lockStderrFn(
-    userdata: ?*anyopaque,
-    terminal_mode: ?std.Io.Terminal.Mode,
-) std.Io.Cancelable!std.Io.LockedStderr {
-    _ = userdata;
-    return .{
-        .file_writer = stderrFileWriter(),
-        .terminal_mode = terminal_mode orelse .escape_codes,
-    };
-}
-
-fn tryLockStderrFn(
-    userdata: ?*anyopaque,
-    terminal_mode: ?std.Io.Terminal.Mode,
-) std.Io.Cancelable!?std.Io.LockedStderr {
-    return try lockStderrFn(userdata, terminal_mode);
-}
-
-fn unlockStderrFn(userdata: ?*anyopaque) void {
-    _ = userdata;
-    if (stderr_file_writer_ready) {
-        stderr_file_writer.interface.flush() catch {};
-    }
-}
-
-// Called by std.debug after a crash to spin forever.
 fn futexWaitUncancelableFn(
     userdata: ?*anyopaque,
     ptr: *const u32,
@@ -122,33 +73,76 @@ fn swapCancelProtectionFn(
     return .blocked;
 }
 
-// ── VTable ────────────────────────────────────────────────────────────────────
+// ── Mode-specific vtable ──────────────────────────────────────────────────────
 
-// Start from std.Io.failing's vtable (returns errors for everything) and
-// override only the handful of functions needed for debug output.
-const kernel_vtable: std.Io.VTable = blk: {
-    var v = std.Io.failing.vtable.*;
-    v.crashHandler = crashHandler;
-    v.lockStderr = lockStderrFn;
-    v.tryLockStderr = tryLockStderrFn;
-    v.unlockStderr = unlockStderrFn;
-    v.futexWaitUncancelable = futexWaitUncancelableFn;
-    v.swapCancelProtection = swapCancelProtectionFn;
-    break :blk v;
+/// Selects the stderr backend used when constructing an Io with make().
+pub const Mode = enum {
+    /// Write to the serial port, with no buffering.
+    serial,
+    /// Capture output in the `buffer` variable, for retrieval by tests.
+    buffer,
 };
+
+fn Backed(comptime mode: Mode) type {
+    return struct {
+        var fw: std.Io.File.Writer = undefined;
+        var fw_ready = false;
+
+        fn getWriter() *std.Io.File.Writer {
+            if (!fw_ready) {
+                fw = .{
+                    .io = std.Io.failing,
+                    .file = .{ .handle = {}, .flags = .{ .nonblocking = false } },
+                    .interface = switch (mode) {
+                        .serial => serial.tty.writer.*,
+                        .buffer => buffer_iface,
+                    },
+                };
+                fw_ready = true;
+            }
+            return &fw;
+        }
+
+        fn lockStderrFn(
+            userdata: ?*anyopaque,
+            terminal_mode: ?std.Io.Terminal.Mode,
+        ) std.Io.Cancelable!std.Io.LockedStderr {
+            _ = userdata;
+            return .{
+                .file_writer = getWriter(),
+                .terminal_mode = terminal_mode orelse .escape_codes,
+            };
+        }
+
+        fn tryLockStderrFn(
+            userdata: ?*anyopaque,
+            terminal_mode: ?std.Io.Terminal.Mode,
+        ) std.Io.Cancelable!?std.Io.LockedStderr {
+            return try lockStderrFn(userdata, terminal_mode);
+        }
+
+        fn unlockStderrFn(userdata: ?*anyopaque) void {
+            _ = userdata;
+            if (fw_ready) fw.interface.flush() catch {};
+        }
+
+        const vtable: std.Io.VTable = blk: {
+            var v = std.Io.failing.vtable.*;
+            v.crashHandler = crashHandler;
+            v.lockStderr = lockStderrFn;
+            v.tryLockStderr = tryLockStderrFn;
+            v.unlockStderr = unlockStderrFn;
+            v.futexWaitUncancelable = futexWaitUncancelableFn;
+            v.swapCancelProtection = swapCancelProtectionFn;
+            break :blk v;
+        };
+    };
+}
 
 // ── Public interface ──────────────────────────────────────────────────────────
 
-/// Configures the stderr writer interface and returns the Io instance.
-/// Must be called before any output is produced.
-pub fn make(interface: std.Io.Writer) std.Io {
-    _interface = interface;
-    return io;
+/// Returns an Io instance for the given mode. Comptime-safe: suitable for
+/// direct use in std_options_debug_io declarations.
+pub fn make(comptime mode: Mode) std.Io {
+    return .{ .userdata = null, .vtable = &Backed(mode).vtable };
 }
-
-/// A minimal Io instance for use as std_options_debug_io.
-/// Call make() to configure the writer interface before first use.
-pub const io: std.Io = .{
-    .userdata = null,
-    .vtable = &kernel_vtable,
-};

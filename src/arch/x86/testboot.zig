@@ -41,7 +41,6 @@ export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") 
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
 fn main() anyerror!void {
-    _ = kernel.io.make(kernel.io.test_interface);
     try kernel.init.init();
 
     const tty = kernel.serial.tty;
