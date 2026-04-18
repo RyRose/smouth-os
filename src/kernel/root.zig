@@ -17,6 +17,6 @@ pub const std_options = @import("std_options.zig");
 pub const sync = @import("sync.zig");
 pub const time = @import("time.zig");
 
-test "include all code for testing" {
+test {
     std.testing.refAllDecls(@This());
 }

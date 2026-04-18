@@ -69,10 +69,10 @@ pub fn SpinLock(comptime T: type) type {
 test "SpinLock basic functionality" {
     var lock = SpinLock(u32).init(0);
     lock.lock();
-    lock.value = 43;
+    lock.value = 42;
     lock.unlock();
     lock.lock();
-    try std.testing.expectEqual(43, lock.value);
+    try std.testing.expectEqual(42, lock.value);
     lock.unlock();
 }
 
