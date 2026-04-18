@@ -37,4 +37,5 @@ pub fn init() !void {
         .segment_selector = kernel.idt.SegmentSelector{ .index = 1 },
     }));
     idt_table.load();
+    kernel.time.calibrate();
 }

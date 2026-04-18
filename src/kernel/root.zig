@@ -12,6 +12,7 @@ pub const pci = @import("pci.zig");
 pub const serial = @import("serial.zig");
 pub const std_options = @import("std_options.zig");
 pub const sync = @import("sync.zig");
+pub const time = @import("time.zig");
 
 test "include all code for testing" {
     std.testing.refAllDecls(@This());
