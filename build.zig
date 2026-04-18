@@ -191,10 +191,6 @@ pub fn build(b: *std.Build) !void {
                 .path = b.path("src/kernel/root.zig"),
             },
             .{
-                .name = "stdk",
-                .path = b.path("src/stdk/root.zig"),
-            },
-            .{
                 .name = "embed",
                 .path = embed_path,
                 .include_source_option = true,

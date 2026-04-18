@@ -1,5 +1,4 @@
 const std = @import("std");
-const stdk = @import("stdk");
 
 /// IO port for addressing PCI configuration space.
 pub const ConfigurationAddressPort: u16 = 0xCF8;
@@ -57,5 +56,5 @@ pub const ConfigurationAddress = packed struct {
 
 test ConfigurationAddress {
     const size = @bitSizeOf(ConfigurationAddress);
-    try stdk.testing.expectEqual(size, 32);
+    try std.testing.expectEqual(size, 32);
 }

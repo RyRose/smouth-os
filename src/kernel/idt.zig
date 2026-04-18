@@ -2,7 +2,6 @@
 //!
 
 const std = @import("std");
-const stdk = @import("stdk");
 
 const log = std.log.scoped(.idt);
 
@@ -90,7 +89,7 @@ comptime {
 
 test SegmentSelector {
     const code_segment: u16 = @bitCast(SegmentSelector{ .index = 1 });
-    try stdk.testing.expectEqual(0x8, code_segment);
+    try std.testing.expectEqual(0x8, code_segment);
 }
 
 /// A struct representing a 32-bit descriptor to be stored in the Interrupt
@@ -231,10 +230,10 @@ test "IDT Descriptor Initialization" {
         .gate_type = .interrupt_32bit,
         .dpl = .ring0,
     });
-    try stdk.testing.expectEqual(0x5678, desc.offset_first);
-    try stdk.testing.expectEqual(0x1234, desc.offset_second);
-    try stdk.testing.expectEqual(1, desc.segment_selector.index);
-    try stdk.testing.expectEqual(true, desc.present);
-    try stdk.testing.expectEqual(GateType.interrupt_32bit, desc.gate_type);
-    try stdk.testing.expectEqual(PrivilegeLevel.ring0, desc.dpl);
+    try std.testing.expectEqual(0x5678, desc.offset_first);
+    try std.testing.expectEqual(0x1234, desc.offset_second);
+    try std.testing.expectEqual(1, desc.segment_selector.index);
+    try std.testing.expectEqual(true, desc.present);
+    try std.testing.expectEqual(GateType.interrupt_32bit, desc.gate_type);
+    try std.testing.expectEqual(PrivilegeLevel.ring0, desc.dpl);
 }

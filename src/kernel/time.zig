@@ -10,8 +10,6 @@ const std = @import("std");
 const arch = @import("arch");
 const insn = arch.x86.insn;
 
-const stdk = @import("stdk");
-
 const log = std.log.scoped(.time);
 
 /// TSC frequency in Hz. Set by calibrate().
@@ -123,36 +121,36 @@ pub fn mdelay(ms: u64) void {
 
 test "ndelay waits at least the requested duration" {
     if (builtin.os.tag != .freestanding) return error.SkipZigTest;
-    try stdk.testing.expect(tsc_hz > 0);
+    try std.testing.expect(tsc_hz > 0);
 
     const ns: u64 = 500_000; // 500 µs
     const before = insn.rdtsc();
     ndelay(ns);
     const after = insn.rdtsc();
 
-    try stdk.testing.expect(after - before >= ns * tsc_hz / 1_000_000_000);
+    try std.testing.expect(after - before >= ns * tsc_hz / 1_000_000_000);
 }
 
 test "udelay waits at least the requested duration" {
     if (builtin.os.tag != .freestanding) return error.SkipZigTest;
-    try stdk.testing.expect(tsc_per_us > 0);
+    try std.testing.expect(tsc_per_us > 0);
 
     const us: u64 = 1_000; // 1 ms
     const before = insn.rdtsc();
     udelay(us);
     const after = insn.rdtsc();
 
-    try stdk.testing.expect(after - before >= us * tsc_per_us);
+    try std.testing.expect(after - before >= us * tsc_per_us);
 }
 
 test "mdelay waits at least the requested duration" {
     if (builtin.os.tag != .freestanding) return error.SkipZigTest;
-    try stdk.testing.expect(tsc_per_us > 0);
+    try std.testing.expect(tsc_per_us > 0);
 
     const ms: u64 = 1;
     const before = insn.rdtsc();
     mdelay(ms);
     const after = insn.rdtsc();
 
-    try stdk.testing.expect(after - before >= ms * 1_000 * tsc_per_us);
+    try std.testing.expect(after - before >= ms * 1_000 * tsc_per_us);
 }

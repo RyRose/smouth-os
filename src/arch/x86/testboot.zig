@@ -9,7 +9,6 @@
 
 const builtin = @import("builtin");
 const std = @import("std");
-const stdk = @import("stdk");
 
 const kernel = @import("kernel");
 
@@ -50,7 +49,6 @@ const tty: std.Io.Terminal = .{ .writer = &kernel.serial.writer, .mode = .escape
 
 fn main() anyerror!void {
     try kernel.init.init();
-    stdk.testing.print_writer = &test_writer;
 
     try tty.setColor(.dim);
     kernel.serial.write("start\n");

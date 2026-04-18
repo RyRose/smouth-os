@@ -2,7 +2,6 @@
 
 const builtin = @import("builtin");
 const std = @import("std");
-const stdk = @import("stdk");
 
 const arch = @import("arch");
 
@@ -119,6 +118,6 @@ test "serial writer" {
     var w = newWriter(&buffer);
     const data = "Hello, world!";
     const consumed = try w.write(data);
-    try stdk.testing.expectEqual(consumed, data.len);
-    try stdk.testing.expectEqualStrings(data, buffer[0..data.len]);
+    try std.testing.expectEqual(consumed, data.len);
+    try std.testing.expectEqualStrings(data, buffer[0..data.len]);
 }

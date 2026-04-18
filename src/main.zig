@@ -64,6 +64,4 @@ pub fn main() anyerror!void {
             log.info("VirtIO sound card detected.", .{});
         }
     }
-
-    return error.Failed;
 }
