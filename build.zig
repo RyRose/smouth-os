@@ -129,16 +129,11 @@ const Context = struct {
         return mod;
     }
 
-    pub fn createKernelModuleNoImports(
-        ctx: *Context,
-        value: Architecture,
-        path: []const u8,
-    ) *std.Build.Module {
-        return ctx.b.createModule(.{
-            .root_source_file = ctx.b.path(path),
-            .target = ctx.arch(value).target,
-            .optimize = ctx.optimize,
-        });
+    pub fn moduleByName(ctx: *Context, value: Architecture, name: []const u8) !*std.Build.Module {
+        for (ctx.arch(value).modules.items) |import| {
+            if (std.mem.eql(u8, import.name, name)) return import.module;
+        }
+        return error.ModuleNotFound;
     }
 };
 
@@ -224,18 +219,18 @@ pub fn build(b: *std.Build) !void {
         },
     });
 
-    const x86_exe = try addKernelExecutable(&ctx, "kernel-x86-main", "src/main.zig", .x86);
+    const x86_exe = addKernelExecutable(&ctx, "kernel-x86-main", "src/main.zig", .x86);
     const run_x86 = try buildQemu(&ctx, x86_exe, .x86);
     const run_x86_step = ctx.b.step("run-x86", "Run the x86 kernel in QEMU.");
     run_x86_step.dependOn(&run_x86.step);
 
     // Build test executable for x86 architecture with the kernel root module and
     // run it in QEMU.
-    const x86_test_exe = try addKernelTest(
+    const x86_test_exe = addKernelTest(
         &ctx,
         "test-kernel-x86-main",
         .x86,
-        ctx.arch(.x86).modules.items[1].module,
+        try ctx.moduleByName(.x86, "kernel"),
     );
     const test_x86 = try buildQemu(&ctx, x86_test_exe, .x86);
     const test_x86_step = ctx.b.step("test-x86", "Run tests on x86 in QEMU.");
@@ -243,11 +238,11 @@ pub fn build(b: *std.Build) !void {
 
     // Build test executable for x86 architecture with the arch root module run
     // it in QEMU. This is to test that the architecture root.
-    const x86_test_arch_exe = try addKernelTest(
+    const x86_test_arch_exe = addKernelTest(
         &ctx,
         "test-arch-x86-main",
         .x86,
-        ctx.arch(.x86).modules.items[0].module,
+        try ctx.moduleByName(.x86, "arch"),
     );
     const test_arch_x86 = try buildQemu(&ctx, x86_test_arch_exe, .x86);
     const test_arch_x86_step = ctx.b.step("test-arch-x86", "Run tests on x86 in QEMU.");
@@ -255,7 +250,7 @@ pub fn build(b: *std.Build) !void {
 
     // Run unit tests for kernel module in hosted mode.
     const run_unit_tests = b.addRunArtifact(b.addTest(.{
-        .root_module = ctx.arch(.hosted).modules.items[1].module,
+        .root_module = try ctx.moduleByName(.hosted, "kernel"),
     }));
 
     const test_step = b.step("test", "Run unit tests");
@@ -302,7 +297,7 @@ fn addKernelExecutable(
     name: []const u8,
     path: []const u8,
     arch: Architecture,
-) !*std.Build.Step.Compile {
+) *std.Build.Step.Compile {
     const kernel = ctx.b.addExecutable(.{
         .name = name,
         .root_module = ctx.createKernelModule(arch, path),
@@ -324,7 +319,7 @@ fn addKernelTest(
     name: []const u8,
     arch: Architecture,
     mod: *std.Build.Module,
-) !*std.Build.Step.Compile {
+) *std.Build.Step.Compile {
     const kernel = ctx.b.addTest(.{
         .name = name,
         .root_module = mod,
