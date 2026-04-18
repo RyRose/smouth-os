@@ -33,11 +33,8 @@ const ArchState = struct {
         }
         // Add dependencies between modules.
         // E.g., arch depends on kernel and kernel depends on arch.
-        for (0.., self.modules.items) |i, import| {
-            for (0.., self.modules.items) |j, other| {
-                if (i == j) {
-                    continue;
-                }
+        for (self.modules.items) |import| {
+            for (self.modules.items) |other| {
                 import.module.addImport(other.name, other.module);
             }
         }
@@ -239,7 +236,6 @@ pub fn build(b: *std.Build) !void {
         "test-kernel-x86-main",
         .x86,
         ctx.arch(.x86).modules.items[1].module,
-        .arch,
     );
     const test_x86 = try buildQemu(&ctx, x86_test_exe, .x86);
     const test_x86_step = ctx.b.step("test-x86", "Run tests on x86 in QEMU.");
@@ -252,7 +248,6 @@ pub fn build(b: *std.Build) !void {
         "test-arch-x86-main",
         .x86,
         ctx.arch(.x86).modules.items[0].module,
-        .kernel,
     );
     const test_arch_x86 = try buildQemu(&ctx, x86_test_arch_exe, .x86);
     const test_arch_x86_step = ctx.b.step("test-arch-x86", "Run tests on x86 in QEMU.");
@@ -329,13 +324,12 @@ fn addKernelTest(
     name: []const u8,
     arch: Architecture,
     mod: *std.Build.Module,
-    runner: enum { kernel, arch },
 ) !*std.Build.Step.Compile {
     const kernel = ctx.b.addTest(.{
         .name = name,
         .root_module = mod,
         .test_runner = .{
-            .path = ctx.b.path(ctx.b.pathJoin(&.{ "tools/testrunner", @tagName(runner), "runner.zig" })),
+            .path = ctx.b.path("tools/testrunner.zig"),
             .mode = .simple,
         },
     });

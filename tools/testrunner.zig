@@ -1,5 +1,5 @@
-//! Test runner for arch. This is a freestanding Zig program that links
-//! against the kernel's code and runs tests in a simulated environment.
+//! Test runner for the x86 kernel. This is a freestanding Zig program that
+//! links against the kernel's code and runs tests in a simulated environment.
 
 const arch = @import("arch");
 const std = @import("std");
