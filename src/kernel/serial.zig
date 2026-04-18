@@ -23,6 +23,11 @@ const serial_buffer: [0]u8 = undefined;
 /// A writer that writes to the serial port. This is used for logging and debugging.
 pub var writer = newWriter(&serial_buffer);
 
+pub const tty = std.Io.Terminal{
+    .writer = &writer,
+    .mode = .escape_codes,
+};
+
 /// Initialize the serial port.
 /// This should be called once during kernel initialization before any writes
 /// to the serial port are made. This function is thread-safe and can be called
@@ -97,12 +102,12 @@ fn drain(
 }
 
 /// Get a writer that writes to the serial port.
-pub fn newWriter(buffer: []u8) std.io.Writer {
+pub fn newWriter(buffer: []u8) std.Io.Writer {
     return .{
         .vtable = &.{
             .drain = drain,
-            .flush = std.io.Writer.defaultFlush,
-            .rebase = std.io.Writer.failingRebase,
+            .flush = std.Io.Writer.defaultFlush,
+            .rebase = std.Io.Writer.failingRebase,
         },
         .buffer = buffer,
     };

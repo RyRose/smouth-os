@@ -10,6 +10,12 @@ const log = std.log.scoped(.main);
 // Must match this specific signature to be used by Zig's standard library.
 pub const std_options: std.Options = kernel.std_options.default();
 
+/// Route std.debug / std.log output to the serial port.
+pub const std_options_debug_io: std.Io = kernel.io.io;
+
+/// Overrides std.debug.SelfInfo for freestanding kernel DWARF stack traces.
+pub const debug = kernel.debug.self;
+
 /// Panic handler for the kernel.
 /// Must match this specific signature to be used by Zig's standard library.
 pub const panic = kernel.panic.panic;
@@ -58,4 +64,6 @@ pub fn main() anyerror!void {
             log.info("VirtIO sound card detected.", .{});
         }
     }
+
+    return error.Failed;
 }

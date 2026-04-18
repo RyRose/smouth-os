@@ -13,13 +13,15 @@ const stdk = @import("stdk");
 
 const kernel = @import("kernel");
 
+const log = std.log.scoped(.TESTBOOT);
+
 const multiboot_header_magic = 0x1BADB002;
 const multiboot_flag_align = 1 << 0;
 const multiboot_flag_meminfo = 1 << 1;
 const multiboot_flags = multiboot_flag_align | multiboot_flag_meminfo;
 
 /// https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
-const MultibootHeader = packed struct {
+const MultibootHeader = packed struct(u128) {
     magic: u32 = multiboot_header_magic,
     flags: u32 = multiboot_flags,
     checksum: u32,
@@ -44,16 +46,16 @@ var serial_buffer: [1000]u8 = undefined;
 /// A writer that writes to the serial port. This is used for logging and debugging.
 var test_writer = kernel.serial.newWriter(&serial_buffer);
 
-const tty: std.io.tty.Config = .escape_codes;
+const tty: std.Io.Terminal = .{ .writer = &kernel.serial.writer, .mode = .escape_codes };
 
 fn main() anyerror!void {
     try kernel.init.init();
     stdk.testing.print_writer = &test_writer;
 
-    try tty.setColor(&kernel.serial.writer, .dim);
+    try tty.setColor(.dim);
     kernel.serial.write("start\n");
     try kernel.serial.writer.print("└─ {d} tests\n", .{builtin.test_functions.len});
-    try tty.setColor(&kernel.serial.writer, .reset);
+    try tty.setColor(.reset);
 
     var failed: usize = 0;
     var skipped: usize = 0;
@@ -64,19 +66,23 @@ fn main() anyerror!void {
                 skipped += 1;
                 continue;
             }
-            try tty.setColor(&kernel.serial.writer, .bright_red);
+            try tty.setColor(.bright_red);
             kernel.serial.write("error:");
-            try tty.setColor(&kernel.serial.writer, .reset);
+            try tty.setColor(.reset);
             kernel.serial.write(" '");
             kernel.serial.write(t.name);
             kernel.serial.write("' failed: ");
             try test_writer.flush();
             kernel.serial.write("\n");
-            _ = try kernel.debug.printErrorReturnTrace();
+            if (@errorReturnTrace()) |trace| {
+                std.debug.writeErrorReturnTrace(trace, tty) catch |err2| {
+                    log.warn("Failed to write test error trace: {}.", .{err2});
+                };
+            }
             failed += 1;
         };
     }
-    try tty.setColor(&kernel.serial.writer, .dim);
+    try tty.setColor(.dim);
     kernel.serial.write("end\n");
     try kernel.serial.writer.print("└─ {d}/{d} passed", .{
         builtin.test_functions.len - failed - skipped,
@@ -85,18 +91,18 @@ fn main() anyerror!void {
 
     if (failed > 0) {
         kernel.serial.write(", ");
-        try tty.setColor(&kernel.serial.writer, .red);
+        try tty.setColor(.red);
         try kernel.serial.writer.print("{d} failed", .{failed});
-        try tty.setColor(&kernel.serial.writer, .reset);
+        try tty.setColor(.reset);
     }
 
     if (skipped > 0) {
         kernel.serial.write(", ");
-        try tty.setColor(&kernel.serial.writer, .yellow);
+        try tty.setColor(.yellow);
         try kernel.serial.writer.print("{d} skipped", .{skipped});
-        try tty.setColor(&kernel.serial.writer, .reset);
+        try tty.setColor(.reset);
     }
-    try tty.setColor(&kernel.serial.writer, .reset);
+    try tty.setColor(.reset);
     kernel.serial.write("\n");
     if (failed > 0) {
         return error.TestFailed;

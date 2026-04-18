@@ -13,7 +13,6 @@ var idt_table = kernel.idt.Table(256).init();
 pub fn init() !void {
     kernel.serial.init();
     kernel.serial.write("\n");
-    try kernel.debug.init();
 
     // Set up the GDT with a code segment and a data segment, both covering the
     // entire 4 GiB address space. The code segment is executable and readable,

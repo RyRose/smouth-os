@@ -61,7 +61,6 @@ pub const SelfInfo = struct {
         symbols: *std.ArrayList(std.debug.Symbol),
     ) std.debug.SelfInfoError!void {
         _ = io;
-        log.debug("getSymbols: address=0x{x}", .{address});
         si.ensureOpened() catch |err| {
             log.err("ensureOpened failed: {}", .{err});
             return error.MissingDebugInfo;
@@ -311,8 +310,16 @@ fn patchAttr(
         F.data2, F.ref2 => p += 2,
         F.data4, F.ref4 => p += 4,
         F.data8, F.ref8, F.ref_sig8 => p += 8,
-        F.sdata => { const _v, const l = readSleb128(info[p..]) orelse return p; _ = _v; p += l; },
-        F.udata, F.ref_udata => { const _v, const l = readUleb128(info[p..]) orelse return p; _ = _v; p += l; },
+        F.sdata => {
+            const _v, const l = readSleb128(info[p..]) orelse return p;
+            _ = _v;
+            p += l;
+        },
+        F.udata, F.ref_udata => {
+            const _v, const l = readUleb128(info[p..]) orelse return p;
+            _ = _v;
+            p += l;
+        },
         F.flag_present => {},
         F.implicit_const => {},
         F.string => {

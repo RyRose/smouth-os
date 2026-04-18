@@ -360,18 +360,21 @@ fn addSourceAssetsOption(
     options: *std.Build.Step.Options,
     in_paths: []const []const u8,
 ) !void {
+    const io = b.graph.io;
     var abs_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
     defer abs_paths.deinit(b.allocator);
     var rel_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
     defer rel_paths.deinit(b.allocator);
 
-    var buf: [std.fs.max_path_bytes]u8 = undefined;
+    var buf: [std.Io.Dir.max_path_bytes]u8 = undefined;
     for (in_paths) |in_path| {
-        const abs_path = try std.fs.cwd().realpath(in_path, buf[0..]);
-        var dir = try std.fs.openDirAbsolute(abs_path, .{ .iterate = true });
-        defer dir.close();
+        const n = try std.Io.Dir.cwd().realPathFile(io, in_path, buf[0..]);
+        const abs_path = buf[0..n];
+        var dir = try std.Io.Dir.openDirAbsolute(io, abs_path, .{ .iterate = true });
+        defer dir.close(io);
         var it = try dir.walk(b.allocator);
-        while (try it.next()) |file| {
+        defer it.deinit();
+        while (try it.next(io)) |file| {
             if (file.kind != .file) {
                 continue;
             }

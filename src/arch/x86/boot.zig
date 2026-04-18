@@ -22,7 +22,7 @@ const multiboot_flag_meminfo = 1 << 1;
 const multiboot_flags = multiboot_flag_align | multiboot_flag_meminfo;
 
 /// https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
-const MultibootHeader = packed struct {
+const MultibootHeader = packed struct(u128) {
     magic: u32 = multiboot_header_magic,
     flags: u32 = multiboot_flags,
     checksum: u32,

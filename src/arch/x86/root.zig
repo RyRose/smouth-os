@@ -67,8 +67,14 @@ pub fn double_fault_handler(
 ) callconv(.{ .x86_interrupt = .{} }) void {
     _ = error_code;
     log.err("Double fault occurred at:", .{});
-    kernel.debug.printLineInfo(frame.instruction_pointer) catch |err| {
-        log.err("Failed to print line info for double fault: {}", .{err});
+    var addrs = [_]usize{frame.instruction_pointer};
+
+    const trace: std.debug.StackTrace = .{
+        .return_addresses = addrs[0..],
+        .skipped = .none,
+    };
+    std.debug.writeStackTrace(&trace, kernel.serial.tty) catch |err| {
+        log.err("Failed to print stack trace for double fault: {}", .{err});
     };
     std.debug.panic("Double fault occurred!", .{});
 }

@@ -41,7 +41,7 @@ pub const backend_can_print = switch (builtin.zig_backend) {
     else => true,
 };
 
-pub var print_writer: ?*std.io.Writer = null;
+pub var print_writer: ?*std.Io.Writer = null;
 
 fn print(comptime fmt: []const u8, args: anytype) void {
     if (@inComptime()) {
@@ -817,7 +817,7 @@ fn expectEqualDeepInner(comptime T: type, expected: T, actual: T) error{TestExpe
             }
         },
 
-        .array => |_| {
+        .array => {
             if (expected.len != actual.len) {
                 print("Array len not the same, expected {d}, found {d}\n", .{ expected.len, actual.len });
                 return error.TestExpectedEqual;

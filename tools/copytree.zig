@@ -7,35 +7,35 @@
 
 const std = @import("std");
 
-pub fn main() !void {
-    var general_purpose_allocator = std.heap.GeneralPurposeAllocator(.{}){};
-    defer std.debug.assert(general_purpose_allocator.deinit() == .ok);
-    const gpa = general_purpose_allocator.allocator();
+pub fn main(init: std.process.Init) !void {
+    const gpa = init.gpa;
+    const io = init.io;
 
-    const args = try std.process.argsAlloc(gpa);
-    defer std.process.argsFree(gpa, args);
+    const args = try init.minimal.args.toSlice(init.arena.allocator());
 
     if (args.len != 3) {
-        std.debug.print("Usage: copytree <src> <dst>\n", .{});
+        std.log.err("Usage: copytree <src> <dst>", .{});
         return;
     }
 
-    var src_dir = try std.fs.cwd().openDir(args[1], .{});
-    defer src_dir.close();
+    var src_dir = try std.Io.Dir.cwd().openDir(io, args[1], .{ .iterate = true });
+    defer src_dir.close(io);
 
-    var dest_dir = try std.fs.cwd().makeOpenPath(args[2], .{});
-    defer dest_dir.close();
+    var dest_dir = try std.Io.Dir.cwd().createDirPathOpen(io, args[2], .{});
+    defer dest_dir.close(io);
 
     var walker = try src_dir.walk(gpa);
     defer walker.deinit();
 
-    while (try walker.next()) |entry| {
+    while (try walker.next(io)) |entry| {
         switch (entry.kind) {
             .file => {
-                entry.dir.copyFile(
+                std.Io.Dir.copyFile(
+                    entry.dir,
                     entry.basename,
                     dest_dir,
                     entry.path,
+                    io,
                     .{},
                 ) catch |err| {
                     if (err == error.PathAlreadyExists) {
@@ -45,7 +45,7 @@ pub fn main() !void {
                 };
             },
             .directory => {
-                dest_dir.makeDir(entry.path) catch |err| {
+                dest_dir.createDir(io, entry.path, .default_dir) catch |err| {
                     if (err == error.PathAlreadyExists) {
                         continue;
                     }

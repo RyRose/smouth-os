@@ -20,7 +20,7 @@ pub var test_name: ?[]const u8 = null;
 /// In hosted environments, it falls back to std.log.
 pub fn defaultLog(
     comptime message_level: std.log.Level,
-    comptime scope: @Type(.enum_literal),
+    comptime scope: @EnumLiteral(),
     comptime format: []const u8,
     args: anytype,
 ) void {

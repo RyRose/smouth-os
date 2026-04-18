@@ -11,26 +11,30 @@ const arch = @import("arch");
 
 const debug = @import("debug.zig");
 const dwarf = @import("dwarf.zig");
+const serial = @import("serial.zig");
 
 const log = std.log.scoped(.PANIC);
 
 pub const panic = std.debug.FullPanic(innerPanic);
 
+const tty: std.Io.Terminal = .{ .writer = &serial.writer, .mode = .escape_codes };
+
 fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     log.err("{s}", .{msg});
-    if (return_address) |addr| {
-        log.err("Panic stack trace: 0x{x}", .{addr});
-        debug.printStackTrace(null) catch |err| {
-            log.err("Failed to log stack trace: {}", .{err});
+
+    log.err("Panic stack trace: 0x{?x}", .{return_address});
+    std.debug.writeCurrentStackTrace(
+        .{ .allow_unsafe_unwind = true },
+        tty,
+    ) catch |err| {
+        log.err("Failed to log stack trace: {}", .{err});
+    };
+
+    if (@errorReturnTrace()) |trace| {
+        log.err("Panic return trace:", .{});
+        std.debug.writeErrorReturnTrace(trace, tty) catch |err| {
+            log.warn("Failed to write error trace: {}.", .{err});
         };
-    }
-    log.err("Panic return trace:", .{});
-    if (debug.printErrorReturnTrace()) |value| {
-        if (!value) {
-            log.warn("No error return trace available.", .{});
-        }
-    } else |err| {
-        log.err("Failed to log error return trace: {}", .{err});
     }
     log.err("System is shutting down.", .{});
     badShutdown();
