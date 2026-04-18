@@ -1,4 +1,9 @@
-//! A minimal std.Io implementation for the freestanding kernel.
+//! A minimal std.Io implementation for the freestanding kernel to be
+//! used in tests.
+//!
+//! The main difference is the stderr writer, which buffers output to a
+//! fixed-size array such that we can include the test output in the
+//! appropriate place in the output.
 //!
 //! Routes stderr / debug output to the serial port and leaves all other
 //! operations returning errors (via std.Io.failing's vtable).  Suitable for
@@ -12,18 +17,52 @@ const serial = @import("serial.zig");
 
 // ── stderr file-writer ────────────────────────────────────────────────────────
 
-// A File.Writer whose .interface drains to the serial port.
+// A File.Writer whose .interface drains to a buffer.
 // Only the .interface field is used; .io and .file are never reached because
 // our custom drain bypasses the normal file-write path.
 var stderr_file_writer: std.Io.File.Writer = undefined;
 var stderr_file_writer_ready = false;
 
-fn stderrFileWriter() *std.Io.File.Writer {
+var buffer: [1000]u8 = undefined;
+pub var writer = std.Io.Writer.fixed(&buffer);
+
+/// Sends the buffered bytes and bytes provided in `data` to the buffer,
+/// repeating the last slice `splat` times.
+fn drain(
+    w: *std.Io.Writer,
+    data: []const []const u8,
+    splat: usize,
+) std.Io.Writer.Error!usize {
+    if (w.end > 0) {
+        _ = try writer.writeAll(w.buffer[0..w.end]);
+        w.end = 0;
+    }
+
+    var consumed: usize = 0;
+    for (data, 0..) |slice, i| {
+        const repeat = if (i + 1 == data.len) splat else 1;
+        for (0..repeat) |_| {
+            try writer.writeAll(slice);
+            consumed += slice.len;
+        }
+    }
+    return consumed;
+}
+
+// A zero-length buffer for unbuffered writers.
+var null_buffer: [0]u8 = undefined;
+
+pub fn stderrFileWriter() *std.Io.File.Writer {
     if (!stderr_file_writer_ready) {
         stderr_file_writer = .{
             .io = std.Io.failing,
             .file = .{ .handle = {}, .flags = .{ .nonblocking = false } },
-            .interface = serial.tty.writer.*,
+            .interface = .{
+                .vtable = &.{
+                    .drain = drain,
+                },
+                .buffer = &null_buffer,
+            },
         };
         stderr_file_writer_ready = true;
     }

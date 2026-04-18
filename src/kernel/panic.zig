@@ -17,22 +17,20 @@ const log = std.log.scoped(.PANIC);
 
 pub const panic = std.debug.FullPanic(innerPanic);
 
-const tty: std.Io.Terminal = .{ .writer = &serial.writer, .mode = .escape_codes };
-
 fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     log.err("{s}", .{msg});
 
     log.err("Panic stack trace: 0x{?x}", .{return_address});
     std.debug.writeCurrentStackTrace(
         .{ .allow_unsafe_unwind = true },
-        tty,
+        serial.tty,
     ) catch |err| {
         log.err("Failed to log stack trace: {}", .{err});
     };
 
     if (@errorReturnTrace()) |trace| {
         log.err("Panic return trace:", .{});
-        std.debug.writeErrorReturnTrace(trace, tty) catch |err| {
+        std.debug.writeErrorReturnTrace(trace, serial.tty) catch |err| {
             log.warn("Failed to write error trace: {}.", .{err});
         };
     }

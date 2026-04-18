@@ -16,12 +16,17 @@ const base: u16 = 0x3F8;
 /// Should be grabbed by any code wanting to write to the serial port.
 pub var lock = sync.SpinLock(bool).init(false);
 
-// A buffer for the serial writer. This is used to store data before it is
-const serial_buffer: [0]u8 = undefined;
+/// A buffer for the serial writer. This is unbuffered to ensure that writes to
+/// the serial port are not delayed, but it must still be provided to satisfy
+/// the Writer interface.
+const null_buffer: [0]u8 = undefined;
 
 /// A writer that writes to the serial port. This is used for logging and debugging.
-pub var writer = newWriter(&serial_buffer);
+/// Not buffered to ensure that writes to the serial port are not delayed.
+var writer = newWriter(null);
 
+/// A terminal that writes to the serial port. This is used for logging and debugging.
+/// Not buffered to ensure that writes to the serial port are not delayed.
 pub const tty = std.Io.Terminal{
     .writer = &writer,
     .mode = .escape_codes,
@@ -79,6 +84,8 @@ pub fn write(s: []const u8) void {
     }
 }
 
+/// Sends the buffered bytes and bytes provided in `data` to the serial port,
+/// repeating the last slice `splat` times.
 fn drain(
     w: *std.Io.Writer,
     data: []const []const u8,
@@ -100,15 +107,25 @@ fn drain(
     return consumed;
 }
 
-/// Get a writer that writes to the serial port.
-pub fn newWriter(buffer: []u8) std.Io.Writer {
+/// Options for creating a serial writer.
+pub const WriterOpts = struct {
+    /// A buffer for the writer. Defaults to unbuffered.
+    buffer: ?[]u8 = &null_buffer,
+    /// A flush function. Defaults to a function that repeatedly drains until
+    /// the transmit buffer is empty, to ensure that all data is sent before
+    /// returning from flush.
+    flush: *const fn (w: *std.Io.Writer) std.Io.Writer.Error!void = std.Io.Writer.defaultFlush,
+};
+
+/// Returns a writer that writes to the serial port.
+pub fn newWriter(options: ?WriterOpts) std.Io.Writer {
+    const opts: WriterOpts = options orelse .{};
     return .{
         .vtable = &.{
             .drain = drain,
-            .flush = std.Io.Writer.defaultFlush,
-            .rebase = std.Io.Writer.failingRebase,
+            .flush = opts.flush,
         },
-        .buffer = buffer,
+        .buffer = opts.buffer.?,
     };
 }
 
@@ -116,7 +133,7 @@ test "serial writer" {
     try arch.freestanding();
 
     var buffer: [100]u8 = undefined;
-    var w = newWriter(&buffer);
+    var w = newWriter(.{ .buffer = &buffer });
     const data = "Hello, world!";
     const consumed = try w.write(data);
     try std.testing.expectEqual(consumed, data.len);

@@ -40,19 +40,13 @@ export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") 
 // Reserve 16 KiB stack for initial thread.
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
-var serial_buffer: [1000]u8 = undefined;
-
-/// A writer that writes to the serial port. This is used for logging and debugging.
-var test_writer = kernel.serial.newWriter(&serial_buffer);
-
-const tty: std.Io.Terminal = .{ .writer = &kernel.serial.writer, .mode = .escape_codes };
-
 fn main() anyerror!void {
     try kernel.init.init();
 
+    const tty = kernel.serial.tty;
     try tty.setColor(.dim);
-    kernel.serial.write("start\n");
-    try kernel.serial.writer.print("└─ {d} tests\n", .{builtin.test_functions.len});
+    try tty.writer.writeAll("start\n");
+    try tty.writer.print("└─ {d} tests\n", .{builtin.test_functions.len});
     try tty.setColor(.reset);
 
     var failed: usize = 0;
@@ -65,13 +59,14 @@ fn main() anyerror!void {
                 continue;
             }
             try tty.setColor(.bright_red);
-            kernel.serial.write("error:");
+            try tty.writer.writeAll("error:");
             try tty.setColor(.reset);
-            kernel.serial.write(" '");
-            kernel.serial.write(t.name);
-            kernel.serial.write("' failed: ");
-            try test_writer.flush();
-            kernel.serial.write("\n");
+            try tty.writer.writeAll(" '");
+            try tty.writer.writeAll(t.name);
+            try tty.writer.writeAll("' failed: ");
+            try tty.writer.writeAll(kernel.iotest.writer.buffer);
+            kernel.iotest.writer.end = 0;
+            try tty.writer.writeAll("\n");
             if (@errorReturnTrace()) |trace| {
                 std.debug.writeErrorReturnTrace(trace, tty) catch |err2| {
                     log.warn("Failed to write test error trace: {}.", .{err2});
@@ -81,23 +76,23 @@ fn main() anyerror!void {
         };
     }
     try tty.setColor(.dim);
-    kernel.serial.write("end\n");
-    try kernel.serial.writer.print("└─ {d}/{d} passed", .{
+    try tty.writer.writeAll("end\n");
+    try tty.writer.print("└─ {d}/{d} passed", .{
         builtin.test_functions.len - failed - skipped,
         builtin.test_functions.len,
     });
 
     if (failed > 0) {
-        kernel.serial.write(", ");
+        try tty.writer.writeAll(", ");
         try tty.setColor(.red);
-        try kernel.serial.writer.print("{d} failed", .{failed});
+        try tty.writer.print("{d} failed", .{failed});
         try tty.setColor(.reset);
     }
 
     if (skipped > 0) {
-        kernel.serial.write(", ");
+        try tty.writer.writeAll(", ");
         try tty.setColor(.yellow);
-        try kernel.serial.writer.print("{d} skipped", .{skipped});
+        try tty.writer.print("{d} skipped", .{skipped});
         try tty.setColor(.reset);
     }
     try tty.setColor(.reset);

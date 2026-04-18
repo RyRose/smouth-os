@@ -9,7 +9,7 @@ const std = @import("std");
 pub const std_options = arch.kernel.std_options.default();
 
 /// Route std.debug / std.log output to the serial port.
-pub const std_options_debug_io: std.Io = arch.kernel.io.io;
+pub const std_options_debug_io: std.Io = arch.kernel.iotest.io;
 
 /// Panic handler for the kernel.
 /// Must match this specific signature to be used by Zig's standard library.

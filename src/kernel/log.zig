@@ -33,29 +33,8 @@ pub fn defaultLog(
         );
         return;
     }
-
-    const locked = serial.lock.tryLock(1_000_000_000);
+    _ = serial.lock.tryLock(1_000_000_000);
     defer serial.lock.unlock();
 
-    serial.write(comptime message_level.asText());
-    if (scope != .default) {
-        serial.write(" (");
-        serial.write(@tagName(scope));
-        serial.write(")");
-    }
-    if (test_name) |name| {
-        serial.write(" (");
-        serial.write(name);
-        serial.write(")");
-    }
-    serial.write(": ");
-    if (!locked) {
-        serial.write("[LOG LOCK TIMEOUT] ");
-    }
-
-    serial.writer.print(format, args) catch {
-        serial.write("[WRITE ERROR] ");
-        serial.write(format);
-    };
-    serial.write("\n");
+    std.log.defaultLogFileTerminal(message_level, scope, format, args, serial.tty) catch {};
 }
