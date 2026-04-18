@@ -8,3 +8,6 @@ zig-out/
 *.raw
 *.wav
 *.mp3
+
+# Symlink to the Zig standard library, created by `zig build`.
+/std

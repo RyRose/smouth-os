@@ -85,7 +85,7 @@ const Context = struct {
     arches: [@typeInfo(Architecture).@"enum".fields.len]ArchState,
     /// The source paths to be embedded in the build.
     source_paths: []const []const u8,
-    /// Any build step dependencies for this library.
+    /// Build steps that must complete before compiling any kernel artifact.
     dependencies: []const *std.Build.Step,
 
     pub fn init(args: struct {
@@ -138,40 +138,16 @@ const Context = struct {
 };
 
 pub fn build(b: *std.Build) !void {
+    const stdlib_std_path = b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" });
 
-    // Set up generated source assets directory.
-    const wf_step = b.addWriteFiles();
-    const embed_path = wf_step.addCopyFile(
-        b.path("tools/embed.zig"),
-        "embed.zig",
-    );
-    _ = wf_step.addCopyDirectory(
-        b.path("src"),
-        "src",
-        .{ .include_extensions = &.{"zig"} },
-    );
-    const copytree = b.addExecutable(.{
-        .name = "copytree",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("tools/copytree.zig"),
-            .target = b.graph.host,
-        }),
-    });
-    const copytree_step = b.addRunArtifact(copytree);
-    copytree_step.setCwd(wf_step.getDirectory());
-    copytree_step.addArg(
-        b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }),
-    );
-    copytree_step.addArg("std");
-    copytree_step.step.dependOn(&wf_step.step);
+    // Create a symlink `std -> <zig_lib_dir>/std` at the project root so that
+    // embed.zig can @embedFile("std/...") without copying the standard library.
+    const std_link = b.addSystemCommand(&.{ "ln", "-sfn", stdlib_std_path, "std" });
 
     var ctx = try Context.init(.{
         .b = b,
-        .step_dependencies = &[_]*std.Build.Step{&copytree_step.step},
-        .source_paths = &[_][]const u8{
-            "src",
-            b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" }),
-        },
+        .step_dependencies = &.{&std_link.step},
+        .source_paths = &[_][]const u8{ "src", stdlib_std_path },
         .optimize = b.standardOptimizeOption(.{}),
         .libraries = &[_]Library{
             .{
@@ -184,7 +160,7 @@ pub fn build(b: *std.Build) !void {
             },
             .{
                 .name = "embed",
-                .path = embed_path,
+                .path = b.path("embed.zig"),
                 .include_source_option = true,
             },
         },
@@ -249,9 +225,11 @@ pub fn build(b: *std.Build) !void {
     test_arch_x86_step.dependOn(&test_arch_x86.step);
 
     // Run unit tests for kernel module in hosted mode.
-    const run_unit_tests = b.addRunArtifact(b.addTest(.{
+    const unit_test = b.addTest(.{
         .root_module = try ctx.moduleByName(.hosted, "kernel"),
-    }));
+    });
+    unit_test.step.dependOn(&std_link.step);
+    const run_unit_tests = b.addRunArtifact(unit_test);
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
