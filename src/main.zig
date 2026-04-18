@@ -20,8 +20,8 @@ pub const debug = kernel.debug.self;
 /// Must match this specific signature to be used by Zig's standard library.
 pub const panic = kernel.panic.panic;
 
-var gdt_table = kernel.gdt.Table(3).init();
-var idt_table = kernel.idt.Table(256).init();
+var gdt = kernel.gdt.Table(3).init();
+var idt = kernel.idt.Table(256).init();
 
 comptime {
     // Link initial boot code.

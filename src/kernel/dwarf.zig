@@ -109,7 +109,7 @@ pub const SelfInfo = struct {
         const ranges_base: u32 = @intCast(@intFromPtr(&__debug_ranges_start));
         const info_base: u32 = @intCast(@intFromPtr(&__debug_info_start));
 
-        log.debug("DWARF sections: info={d}B abbrev={d}B str={d}B line={d}B ranges={d}B", .{
+        errdefer log.debug("DWARF sections: info={d}B abbrev={d}B str={d}B line={d}B ranges={d}B", .{
             info_raw.len, abbrev_raw.len, str_raw.len, line_raw.len, ranges_raw.len,
         });
 
@@ -127,7 +127,6 @@ pub const SelfInfo = struct {
             log.err("dwarf.open failed: {}", .{err});
             return err;
         };
-        log.debug("DWARF opened successfully", .{});
     }
 };
 

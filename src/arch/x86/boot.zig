@@ -1,6 +1,8 @@
 const root = @import("root");
 const std = @import("std");
 
+const kernel = @import("kernel");
+
 const insn = @import("insn.zig");
 
 const log = std.log.scoped(.boot);
@@ -44,7 +46,12 @@ var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
 export fn kmain() noreturn {
     root.main() catch |err| {
-        std.debug.panic("Kernel main failed: {}", .{err});
+        log.err("Kernel main failed: {}", .{err});
+        if (@errorReturnTrace()) |trace| {
+            std.debug.writeErrorReturnTrace(trace, kernel.serial.tty) catch |err2| {
+                log.warn("Failed to write error trace: {}.", .{err2});
+            };
+        }
     };
 
     // Halt the CPU using QEMU shutdown port with a zero exit code

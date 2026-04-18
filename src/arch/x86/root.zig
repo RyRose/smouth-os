@@ -66,13 +66,13 @@ pub fn double_fault_handler(
     error_code: u32,
 ) callconv(.{ .x86_interrupt = .{} }) void {
     _ = error_code;
-    log.err("Double fault occurred at:", .{});
     var addrs = [_]usize{frame.instruction_pointer};
 
     const trace: std.debug.StackTrace = .{
         .return_addresses = addrs[0..],
         .skipped = .none,
     };
+    log.err("Double fault occurred at:", .{});
     std.debug.writeStackTrace(&trace, kernel.serial.tty) catch |err| {
         log.err("Failed to print stack trace for double fault: {}", .{err});
     };

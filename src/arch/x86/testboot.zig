@@ -110,7 +110,12 @@ fn main() anyerror!void {
 export fn kmain() noreturn {
     main() catch |err| {
         if (err != error.TestFailed) {
-            std.debug.panic("Kernel main failed: {}", .{err});
+            log.err("Kernel main failed: {}", .{err});
+            if (@errorReturnTrace()) |trace| {
+                std.debug.writeErrorReturnTrace(trace, kernel.serial.tty) catch |err2| {
+                    log.warn("Failed to write error trace: {}.", .{err2});
+                };
+            }
         }
         kernel.arch.x86.insn.outw(0xF4, 0);
     };
