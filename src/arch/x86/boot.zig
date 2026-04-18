@@ -52,6 +52,7 @@ export fn kmain() noreturn {
                 log.warn("Failed to write error trace: {}.", .{err2});
             };
         }
+        insn.outw(0xF4, 0);
     };
 
     // Halt the CPU using QEMU shutdown port with a zero exit code
