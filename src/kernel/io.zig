@@ -77,6 +77,17 @@ fn futexWaitUncancelableFn(
     while (true) {}
 }
 
+// The kernel is single-threaded with no async cancellation support.
+// Callers (e.g. std.debug.lockStderr) swap to .blocked and restore; we just
+// always report the previous state as .blocked so callers see a no-op.
+fn swapCancelProtectionFn(
+    userdata: ?*anyopaque,
+    new: std.Io.CancelProtection,
+) std.Io.CancelProtection {
+    _ = .{ userdata, new };
+    return .blocked;
+}
+
 // ── VTable ────────────────────────────────────────────────────────────────────
 
 // Start from std.Io.failing's vtable (returns errors for everything) and
@@ -88,6 +99,7 @@ const kernel_vtable: std.Io.VTable = blk: {
     v.tryLockStderr = tryLockStderrFn;
     v.unlockStderr = unlockStderrFn;
     v.futexWaitUncancelable = futexWaitUncancelableFn;
+    v.swapCancelProtection = swapCancelProtectionFn;
     break :blk v;
 };
 

@@ -2,7 +2,6 @@
 //!
 
 const std = @import("std");
-const stdk = @import("stdk");
 
 /// A simple spinlock implementation using an atomic flag.
 ///
@@ -70,17 +69,17 @@ pub fn SpinLock(comptime T: type) type {
 test "SpinLock basic functionality" {
     var lock = SpinLock(u32).init(0);
     lock.lock();
-    lock.value = 42;
+    lock.value = 43;
     lock.unlock();
     lock.lock();
-    try stdk.testing.expectEqual(42, lock.value);
+    try std.testing.expectEqual(43, lock.value);
     lock.unlock();
 }
 
 test "SpinLock tryLock functionality" {
     var lock = SpinLock(u32).init(0);
-    try stdk.testing.expect(lock.tryLock(1000));
-    try stdk.testing.expect(!lock.tryLock(1000));
+    try std.testing.expect(lock.tryLock(1000));
+    try std.testing.expect(!lock.tryLock(1000));
     lock.unlock();
-    try stdk.testing.expect(lock.tryLock(1000));
+    try std.testing.expect(lock.tryLock(1000));
 }
