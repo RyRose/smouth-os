@@ -150,7 +150,7 @@ pub fn build(b: *std.Build) !void {
     // Set up generated source assets directory.
     const wf_step = b.addWriteFiles();
     const embed_path = wf_step.addCopyFile(
-        b.path("gen/embed.zig"),
+        b.path("tools/embed.zig"),
         "embed.zig",
     );
     _ = wf_step.addCopyDirectory(
