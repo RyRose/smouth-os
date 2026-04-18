@@ -20,5 +20,5 @@ pub const debug = kernel.debug.self;
 
 comptime {
     // Link initial boot code.
-    _ = kernel.arch.x86.testboot;
+    _ = kernel.arch.x86.boot;
 }
