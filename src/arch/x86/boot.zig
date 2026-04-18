@@ -16,15 +16,15 @@ comptime {
     }
 }
 
-const multibootHeaderMagic = 0x1BADB002;
-const multibootFlagAlign = 1 << 0;
-const multibootFlagMeminfo = 1 << 1;
-const multibootFlags = multibootFlagAlign | multibootFlagMeminfo;
+const multiboot_header_magic = 0x1BADB002;
+const multiboot_flag_align = 1 << 0;
+const multiboot_flag_meminfo = 1 << 1;
+const multiboot_flags = multiboot_flag_align | multiboot_flag_meminfo;
 
 /// https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
 const MultibootHeader = packed struct {
-    magic: u32 = multibootHeaderMagic,
-    flags: u32 = multibootFlags,
+    magic: u32 = multiboot_header_magic,
+    flags: u32 = multiboot_flags,
     checksum: u32,
     // Required padding to allow for exporting according to ABI standards.
     // Fails with this error otherwise:
@@ -33,10 +33,10 @@ const MultibootHeader = packed struct {
     padding: u32 = 0,
 };
 
-export var multHeader: MultibootHeader align(4) linksection(".multiboot") = .{
+export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") = .{
     // Here we are adding magic and flags and ~ to get 1's complement and by
     // adding 1 we get 2's complement
-    .checksum = ~@as(u32, (multibootHeaderMagic + multibootFlags)) + 1,
+    .checksum = ~@as(u32, (multiboot_header_magic + multiboot_flags)) + 1,
 };
 
 // Reserve 16 KiB stack for initial thread.

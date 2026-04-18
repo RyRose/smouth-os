@@ -236,10 +236,31 @@ pub fn build(b: *std.Build) !void {
     const run_x86_step = ctx.b.step("run-x86", "Run the x86 kernel in QEMU.");
     run_x86_step.dependOn(&run_x86.step);
 
-    const x86_test_exe = try addKernelTest(&ctx, "test-kernel-x86-main", .x86);
+    // Build test executable for x86 architecture with the kernel root module and
+    // run it in QEMU.
+    const x86_test_exe = try addKernelTest(
+        &ctx,
+        "test-kernel-x86-main",
+        .x86,
+        ctx.arch(.x86).modules.items[1].module,
+        .arch,
+    );
     const test_x86 = try buildQemu(&ctx, x86_test_exe, .x86);
     const test_x86_step = ctx.b.step("test-x86", "Run tests on x86 in QEMU.");
     test_x86_step.dependOn(&test_x86.step);
+
+    // Build test executable for x86 architecture with the arch root module run
+    // it in QEMU. This is to test that the architecture root.
+    const x86_test_arch_exe = try addKernelTest(
+        &ctx,
+        "test-arch-x86-main",
+        .x86,
+        ctx.arch(.x86).modules.items[0].module,
+        .kernel,
+    );
+    const test_arch_x86 = try buildQemu(&ctx, x86_test_arch_exe, .x86);
+    const test_arch_x86_step = ctx.b.step("test-arch-x86", "Run tests on x86 in QEMU.");
+    test_arch_x86_step.dependOn(&test_arch_x86.step);
 
     // Run unit tests for kernel module in hosted mode.
     const run_unit_tests = b.addRunArtifact(b.addTest(.{
@@ -251,6 +272,7 @@ pub fn build(b: *std.Build) !void {
 
     const test_all_step = b.step("test-all", "Run all tests");
     test_all_step.dependOn(&test_x86.step);
+    test_all_step.dependOn(&test_arch_x86.step);
     test_all_step.dependOn(&run_unit_tests.step);
 }
 
@@ -310,12 +332,14 @@ fn addKernelTest(
     ctx: *Context,
     name: []const u8,
     arch: Architecture,
+    mod: *std.Build.Module,
+    runner: enum { kernel, arch },
 ) !*std.Build.Step.Compile {
     const kernel = ctx.b.addTest(.{
         .name = name,
-        .root_module = ctx.arch(.x86).modules.items[1].module,
+        .root_module = mod,
         .test_runner = .{
-            .path = ctx.b.path("tools/testrunner.zig"),
+            .path = ctx.b.path(ctx.b.pathJoin(&.{ "tools/testrunner", @tagName(runner), "runner.zig" })),
             .mode = .simple,
         },
     });

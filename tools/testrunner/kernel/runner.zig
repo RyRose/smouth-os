@@ -1,14 +1,14 @@
-const arch = @import("arch");
+const kernel = @import("kernel");
 
 // Standard options for the kernel.
 // Must match this specific signature to be used by Zig's standard library.
-pub const std_options = arch.x86.testboot.std_options;
+pub const std_options = kernel.std_options.default();
 
 /// Panic handler for the kernel.
 /// Must match this specific signature to be used by Zig's standard library.
-pub const panic = arch.x86.testboot.panic;
+pub const panic = kernel.panic.panic;
 
 comptime {
     // Link initial boot code.
-    _ = arch.x86.testboot;
+    _ = kernel.arch.x86.testboot;
 }

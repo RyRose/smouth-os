@@ -1,21 +1,27 @@
+//! This file contains the entry point for the kernel when booting in test
+//! mode. It sets up a stack, initializes the kernel, and runs all tests
+//! defined in the `builtin` module. The results of the tests are printed to
+//! the serial port.
+//!
+//! This file intentionally does not take a direct dependency on any arch files
+//! to simplify build configuration.
+//!
+
 const builtin = @import("builtin");
-const kernel = @import("kernel");
 const std = @import("std");
 const stdk = @import("stdk");
 
-const insn = @import("insn.zig");
+const kernel = @import("kernel");
 
-const log = std.log.scoped(.boot);
-
-const multibootHeaderMagic = 0x1BADB002;
-const multibootFlagAlign = 1 << 0;
-const multibootFlagMeminfo = 1 << 1;
-const multibootFlags = multibootFlagAlign | multibootFlagMeminfo;
+const multiboot_header_magic = 0x1BADB002;
+const multiboot_flag_align = 1 << 0;
+const multiboot_flag_meminfo = 1 << 1;
+const multiboot_flags = multiboot_flag_align | multiboot_flag_meminfo;
 
 /// https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
 const MultibootHeader = packed struct {
-    magic: u32 = multibootHeaderMagic,
-    flags: u32 = multibootFlags,
+    magic: u32 = multiboot_header_magic,
+    flags: u32 = multiboot_flags,
     checksum: u32,
     // Required padding to allow for exporting according to ABI standards.
     // Fails with this error otherwise:
@@ -24,18 +30,14 @@ const MultibootHeader = packed struct {
     padding: u32 = 0,
 };
 
-export var multHeader: MultibootHeader align(4) linksection(".multiboot") = .{
+export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") = .{
     // Here we are adding magic and flags and ~ to get 1's complement and by
     // adding 1 we get 2's complement
-    .checksum = ~@as(u32, (multibootHeaderMagic + multibootFlags)) + 1,
+    .checksum = ~@as(u32, (multiboot_header_magic + multiboot_flags)) + 1,
 };
 
 // Reserve 16 KiB stack for initial thread.
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
-
-pub const std_options: std.Options = kernel.std_options.default();
-
-pub const panic = kernel.panic.panic;
 
 var serial_buffer: [1000]u8 = undefined;
 
@@ -94,6 +96,7 @@ fn main() anyerror!void {
         try kernel.serial.writer.print("{d} skipped", .{skipped});
         try tty.setColor(&kernel.serial.writer, .reset);
     }
+    try tty.setColor(&kernel.serial.writer, .reset);
     kernel.serial.write("\n");
     if (failed > 0) {
         return error.TestFailed;
@@ -105,12 +108,12 @@ export fn kmain() noreturn {
         if (err != error.TestFailed) {
             std.debug.panic("Kernel main failed: {}", .{err});
         }
-        insn.outw(0xF4, 0);
+        kernel.arch.x86.insn.outw(0xF4, 0);
     };
 
     // Halt the CPU using QEMU shutdown port with a zero exit code
     // or an infinite loop.
-    insn.outw(0x604, 0x2000);
+    kernel.arch.x86.insn.outw(0x604, 0x2000);
     while (true) {}
 }
 
