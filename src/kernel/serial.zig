@@ -8,6 +8,8 @@ const arch = @import("arch");
 
 const sync = @import("sync.zig");
 
+const log = std.log.scoped(.serial);
+
 // COM1 base port
 const base: u16 = 0x3F8;
 
@@ -15,17 +17,22 @@ const base: u16 = 0x3F8;
 /// Should be grabbed by any code wanting to write to the serial port.
 pub var lock = sync.SpinLock(bool).init(false);
 
+// A buffer for the serial writer. This is used to store data before it is
 const serial_buffer: [0]u8 = undefined;
 
 /// A writer that writes to the serial port. This is used for logging and debugging.
 pub var writer = newWriter(&serial_buffer);
 
 /// Initialize the serial port.
+/// This should be called once during kernel initialization before any writes
+/// to the serial port are made. This function is thread-safe and can be called
+/// multiple times, but only the first call will have an effect. Subsequent
+/// calls will print a warning message to the serial port.
 pub fn init() void {
     lock.lock();
     defer lock.unlock();
     if (lock.value) {
-        write("SERIAL: Serial port already initialized.\n");
+        log.warn("SERIAL: Serial port already initialized.", .{});
         return;
     }
     lock.value = true;
@@ -50,6 +57,7 @@ pub fn init() void {
     arch.x86.insn.outb(base + 4, 0x0B);
 }
 
+/// Check if the transmit buffer is empty.
 fn isTransmitEmpty() bool {
     return (arch.x86.insn.inb(base + 5) & 0x20) == 0;
 }
@@ -101,9 +109,7 @@ pub fn newWriter(buffer: []u8) std.io.Writer {
 }
 
 test "serial writer" {
-    if (builtin.os.tag != .freestanding) {
-        return error.SkipZigTest;
-    }
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
     var buffer: [100]u8 = undefined;
     var w = newWriter(&buffer);
     const data = "Hello, world!";
