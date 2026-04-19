@@ -201,27 +201,15 @@ pub fn build(b: *std.Build) !void {
     run_x86_step.dependOn(&run_x86.step);
 
     // Build test executable for x86 architecture with the kernel root module and
-    // run it in QEMU.
-    const x86_test_exe = addKernelTest(
-        &ctx,
-        "test-kernel-x86-main",
-        .x86,
-        try ctx.moduleByName(.x86, "kernel"),
-    );
+    // run it in QEMU. Since kernel imports arch, this covers all x86 tests.
+    const x86_test_exe = addKernelTest(&ctx, "test-kernel-x86", .x86, try ctx.moduleByName(.x86, "kernel"));
     const test_x86 = try buildQemu(&ctx, x86_test_exe, .x86);
-    const test_x86_step = ctx.b.step("test-x86", "Run tests on x86 in QEMU.");
+    const test_x86_step = ctx.b.step("test-x86", "Run x86 tests in QEMU.");
     test_x86_step.dependOn(&test_x86.step);
 
-    // Build test executable for x86 architecture with the arch root module run
-    // it in QEMU. This is to test that the architecture root.
-    const x86_test_arch_exe = addKernelTest(
-        &ctx,
-        "test-arch-x86-main",
-        .x86,
-        try ctx.moduleByName(.x86, "arch"),
-    );
+    const x86_test_arch_exe = addKernelTest(&ctx, "test-arch-x86", .x86, try ctx.moduleByName(.x86, "arch"));
     const test_arch_x86 = try buildQemu(&ctx, x86_test_arch_exe, .x86);
-    const test_arch_x86_step = ctx.b.step("test-arch-x86", "Run tests on x86 in QEMU.");
+    const test_arch_x86_step = ctx.b.step("test-arch-x86", "Run arch x86 tests in QEMU.");
     test_arch_x86_step.dependOn(&test_arch_x86.step);
 
     // Run unit tests for kernel module in hosted mode.
@@ -310,16 +298,10 @@ fn addKernelExecutable(
     path: []const u8,
     arch: Architecture,
 ) *std.Build.Step.Compile {
-    const kernel = ctx.b.addExecutable(.{
+    return finalizeKernelArtifact(ctx, arch, ctx.b.addExecutable(.{
         .name = name,
         .root_module = ctx.createKernelModule(arch, path),
-    });
-    for (ctx.dependencies) |dep| {
-        kernel.step.dependOn(dep);
-    }
-    kernel.setLinkerScript(ctx.b.path(ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" })));
-    ctx.b.installArtifact(kernel);
-    return kernel;
+    }));
 }
 
 fn addKernelTest(
@@ -328,20 +310,25 @@ fn addKernelTest(
     arch: Architecture,
     mod: *std.Build.Module,
 ) *std.Build.Step.Compile {
-    const kernel = ctx.b.addTest(.{
+    return finalizeKernelArtifact(ctx, arch, ctx.b.addTest(.{
         .name = name,
         .root_module = mod,
         .test_runner = .{
             .path = ctx.b.path("src/main.zig"),
             .mode = .simple,
         },
-    });
-    for (ctx.dependencies) |dep| {
-        kernel.step.dependOn(dep);
-    }
-    kernel.setLinkerScript(ctx.b.path(ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" })));
-    ctx.b.installArtifact(kernel);
-    return kernel;
+    }));
+}
+
+fn finalizeKernelArtifact(
+    ctx: *Context,
+    arch: Architecture,
+    artifact: *std.Build.Step.Compile,
+) *std.Build.Step.Compile {
+    for (ctx.dependencies) |dep| artifact.step.dependOn(dep);
+    artifact.setLinkerScript(ctx.b.path(ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" })));
+    ctx.b.installArtifact(artifact);
+    return artifact;
 }
 
 /// Adds source assets options to the given build step options for the
