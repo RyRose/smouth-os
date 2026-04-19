@@ -19,7 +19,7 @@ const ArchState = struct {
     target: std.Build.ResolvedTarget,
     /// The list of modules to be created as part of
     /// initializing this architecture state.
-    modules: std.ArrayList(std.Build.Module.Import) = undefined,
+    modules: std.ArrayListUnmanaged(std.Build.Module.Import) = .empty,
 
     /// Initialize the architecture state by creating modules from the
     /// provided libraries.
