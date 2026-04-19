@@ -241,37 +241,67 @@ pub fn build(b: *std.Build) !void {
 }
 
 fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*std.Build.Step.Run {
-    const qemu_binary_name = switch (arch) {
+
+    // Determine the appropriate QEMU executable based on the architecture. For
+    // hosted mode, we don't have a specific QEMU target, so we return an error
+    // indicating that QEMU is unsupported for hosted mode. For x86, we use
+    // "qemu-system-i386", which is the standard QEMU executable for emulating
+    // 32-bit x86 systems.
+    const qemu = switch (arch) {
         .hosted => return error.QEMUUnsupportedForHosted,
         .x86 => "qemu-system-i386",
     };
+    const cmd = ctx.b.addSystemCommand(&[_][]const u8{qemu});
 
-    // Select the audio backend based on the host OS.
-    // https://www.qemu.org/docs/master/system/devices/virtio/virtio-snd.html#examples
+    // Use the `-nographic` flag to disable QEMU's graphical output and redirect
+    // the serial port to the terminal, allowing us to see kernel output without
+    // needing to set up a virtual display or VNC connection.
+    cmd.addArg("-nographic");
+
+    // Allows exiting QEMU by writing to I/O port 0xf4 with a
+    // non-zero exit code.
+    cmd.addArgs(&.{ "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04" });
+
+    // Set up a virtio sound device with the appropriate backend for the host OS.
+    cmd.addArgs(&.{ "-device", "virtio-sound-pci,audiodev=snd0" });
+
+    // The `pcspk` (PC speaker) device is a simple legacy sound device that can
+    // be used for basic beep functionality. It doesn't require a complex audio
+    // backend and is widely supported, making it a good choice for testing
+    // basic sound output in the kernel.
+    cmd.addArgs(&.{ "-machine", "pcspk-audiodev=snd0" });
+
+    // The `intel-hda` (Intel High Definition Audio) device is a more modern
+    // sound device that supports higher-quality audio output and more advanced
+    // features. It is commonly used in contemporary PCs and is supported by
+    // QEMU, making it a good choice for testing more advanced audio
+    // functionality in the kernel.
+    cmd.addArgs(&.{ "-device", "intel-hda" });
+
+    // The `hda-duplex` (HD Audio duplex) device is a virtual sound card that
+    // supports both input and output audio streams. It is useful for testing
+    // full duplex audio functionality in the kernel, such as recording from a
+    // microphone while simultaneously playing audio through speakers. By
+    // configuring it with `audiodev=snd0`, we can route its audio through the
+    // same backend as the other sound devices, allowing for consistent testing
+    // across different audio hardware configurations.
+    cmd.addArgs(&.{ "-device", "hda-duplex,audiodev=snd0" });
+
+    // Configure the audio backend for the sound devices based on the host OS.
     const audio_backend = switch (ctx.b.graph.host.result.os.tag) {
         .macos => "coreaudio",
         else => "none",
     };
+    cmd.addArgs(&.{ "-audiodev", ctx.b.fmt("{s},id=snd0", .{audio_backend}) });
 
-    // zig fmt: off
-    const run_cmd = ctx.b.addSystemCommand(&[_][]const u8{
-        qemu_binary_name,
-         "-nographic",
-        // Allows exiting QEMU by writing to I/O port 0xf4 with a
-        // non-zero exit code.
-        "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
-        // Enables virtio sound device for audio output.
-        "-device", "virtio-sound-pci,audiodev=snd0",
-        "-machine", "pcspk-audiodev=speaker",
-        "-device", "intel-hda",
-        "-device", "hda-duplex,audiodev=snd0",
-    });
-    // zig fmt: on
-    run_cmd.addArgs(&.{ "-audiodev", ctx.b.fmt("{s},id=snd0", .{audio_backend}) });
-    run_cmd.addArgs(&.{ "-audiodev", ctx.b.fmt("{s},id=speaker", .{audio_backend}) });
-    run_cmd.addArg("-kernel");
-    run_cmd.addFileArg(exe.getEmittedBin());
-    return run_cmd;
+    // Use the `-kernel` flag to load the compiled kernel binary directly, which
+    // is necessary for freestanding targets that don't have a standard executable
+    // format with a proper entry point. This allows us to boot the kernel in QEMU
+    // without needing to set up a custom bootloader or disk image.
+    cmd.addArg("-kernel");
+    cmd.addFileArg(exe.getEmittedBin());
+
+    return cmd;
 }
 
 fn addKernelExecutable(
@@ -287,11 +317,7 @@ fn addKernelExecutable(
     for (ctx.dependencies) |dep| {
         kernel.step.dependOn(dep);
     }
-    kernel.setLinkerScript(
-        ctx.b.path(
-            ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" }),
-        ),
-    );
+    kernel.setLinkerScript(ctx.b.path(ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" })));
     ctx.b.installArtifact(kernel);
     return kernel;
 }
@@ -313,15 +339,19 @@ fn addKernelTest(
     for (ctx.dependencies) |dep| {
         kernel.step.dependOn(dep);
     }
-    kernel.setLinkerScript(
-        ctx.b.path(
-            ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" }),
-        ),
-    );
+    kernel.setLinkerScript(ctx.b.path(ctx.b.pathJoin(&.{ "src/arch", @tagName(arch), "linker.ld" })));
     ctx.b.installArtifact(kernel);
     return kernel;
 }
 
+/// Adds source assets options to the given build step options for the
+/// specified input paths. This function walks through the input paths,
+/// collects all `.zig` files, and adds their absolute and relative paths as
+/// options to the build step. The absolute paths are added under the
+/// "absolute" key, and the relative paths (relative to the input path) are
+/// added under the "relative" key. This allows the build step to access the
+/// source files as options during compilation, which can be useful for
+/// embedding source files or for other build-time processing of source assets.
 fn addSourceAssetsOption(
     b: *std.Build,
     options: *std.Build.Step.Options,
@@ -355,9 +385,7 @@ fn addSourceAssetsOption(
             );
             try rel_paths.append(
                 b.allocator,
-                b.dupe(
-                    b.pathJoin(&.{ std.fs.path.basename(in_path), file.path }),
-                ),
+                b.dupe(b.pathJoin(&.{ std.fs.path.basename(in_path), file.path })),
             );
         }
     }
