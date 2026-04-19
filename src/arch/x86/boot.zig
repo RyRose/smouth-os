@@ -50,11 +50,13 @@ var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
 export fn kmain() noreturn {
     root.main() catch |err| {
-        log.err("Kernel main failed: {}", .{err});
-        if (@errorReturnTrace()) |trace| {
-            std.debug.writeErrorReturnTrace(trace, kernel.serial.tty) catch |err2| {
-                log.warn("Failed to write error trace: {}.", .{err2});
-            };
+        if (err != error.TestFailed) {
+            log.err("Kernel main failed: {}", .{err});
+            if (@errorReturnTrace()) |trace| {
+                std.debug.writeErrorReturnTrace(trace, kernel.serial.tty) catch |err2| {
+                    log.warn("Failed to write error trace: {}.", .{err2});
+                };
+            }
         }
         insn.outw(0xF4, 0);
     };

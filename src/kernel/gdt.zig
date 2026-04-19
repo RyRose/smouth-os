@@ -335,7 +335,7 @@ pub fn Table(comptime N: usize) type {
                 return error.FirstGdtEntryNotNull;
 
             log.debug("Flushing GDT...", .{});
-            arch.x86.installAndFlushGDT(ptr, 8 * code_index, 8 * data_index);
+            arch.x86.gdt.installAndFlushGDT(ptr, 8 * code_index, 8 * data_index);
         }
     };
 }

@@ -11,7 +11,7 @@ var idt_table = kernel.idt.Table(256).init();
 
 /// Initializes the kernel subsystems. This should be called as early as
 /// possible in the boot process.
-pub fn init() !void {
+pub fn run() !void {
     kernel.serial.init();
     kernel.serial.write("\n");
 
@@ -54,7 +54,7 @@ pub fn init() !void {
     // using the LIDT instruction, which also flushes the old IDT and updates
     // the CPU's interrupt handling to use the new IDT.
     idt_table.register(.double_fault, kernel.idt.Descriptor.init(.{
-        .offset = @intFromPtr(&arch.x86.double_fault_handler),
+        .offset = @intFromPtr(&arch.x86.idt.double_fault_handler),
         .segment_selector = kernel.idt.SegmentSelector{ .index = 1 },
     }));
     idt_table.load();

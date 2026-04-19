@@ -31,7 +31,7 @@ comptime {
 }
 
 pub fn main() anyerror!void {
-    try kernel.init.init();
+    try kernel.init.run();
     if (builtin.is_test) {
         try runTests();
         return;
@@ -82,7 +82,6 @@ fn runTests() !void {
     var failed: usize = 0;
     var skipped: usize = 0;
     for (builtin.test_functions) |t| {
-        kernel.log.test_name = t.name;
         t.func() catch |err| {
             if (err == error.SkipZigTest) {
                 skipped += 1;

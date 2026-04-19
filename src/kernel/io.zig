@@ -14,18 +14,19 @@ const serial = @import("serial.zig");
 // ── Buffer mode capture ───────────────────────────────────────────────────────
 
 /// Buffer that captures stderr output in buffer mode.
-pub var buffer: [1000]u8 = undefined;
+/// TODO: Avoid allocating this for serial mode.
+var buffer: [1000]u8 = undefined;
 
 /// Fixed writer backed by buffer; reset .end to 0 between tests.
 pub var writer = std.Io.Writer.fixed(&buffer);
 
-fn drain(
+fn drainToGlobalBuffer(
     w: *std.Io.Writer,
     data: []const []const u8,
     splat: usize,
 ) std.Io.Writer.Error!usize {
     if (w.end > 0) {
-        _ = try writer.writeAll(w.buffer[0..w.end]);
+        try writer.writeAll(w.buffer[0..w.end]);
         w.end = 0;
     }
     var consumed: usize = 0;
@@ -38,12 +39,6 @@ fn drain(
     }
     return consumed;
 }
-
-var null_buffer: [0]u8 = undefined;
-const buffer_iface: std.Io.Writer = .{
-    .vtable = &.{ .drain = drain },
-    .buffer = &null_buffer,
-};
 
 // ── Shared vtable helpers (mode-independent) ──────────────────────────────────
 
@@ -97,7 +92,11 @@ fn Backed(comptime mode: Mode) type {
                     .file = .{ .handle = {}, .flags = .{ .nonblocking = false } },
                     .interface = switch (mode) {
                         .serial => serial.tty.writer.*,
-                        .buffer => buffer_iface,
+                        .buffer => .{
+                            .vtable = &.{ .drain = drainToGlobalBuffer },
+                            // Use zero-length buffer to force drain to global buffer on every write.
+                            .buffer = &[0]u8{},
+                        },
                     },
                 };
                 fw_ready = true;
