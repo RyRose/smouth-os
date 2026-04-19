@@ -257,7 +257,6 @@ fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*
     const run_cmd = ctx.b.addSystemCommand(&[_][]const u8{
         qemu_binary_name,
          "-nographic",
-        //  "-serial","mon:stdio",
         // Allows exiting QEMU by writing to I/O port 0xf4 with a
         // non-zero exit code.
         "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
@@ -307,7 +306,7 @@ fn addKernelTest(
         .name = name,
         .root_module = mod,
         .test_runner = .{
-            .path = ctx.b.path("src/testmain.zig"),
+            .path = ctx.b.path("src/main.zig"),
             .mode = .simple,
         },
     });

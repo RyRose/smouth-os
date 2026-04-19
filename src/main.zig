@@ -1,6 +1,5 @@
 //! Entry point for the kernel. This is where the kernel starts executing after
-//! boot.
-//!
+//! boot. Also serves as the test runner when built with testing enabled.
 
 const builtin = @import("builtin");
 const std = @import("std");
@@ -13,8 +12,9 @@ const log = std.log.scoped(.main);
 // Standard options for the kernel.
 pub const std_options: std.Options = kernel.std_options.default();
 
-/// Route std.debug / std.log output to the serial port.
-pub const std_options_debug_io: std.Io = kernel.io.make(.serial);
+/// Route std.debug / std.log output to the serial port in normal builds,
+/// or to the capture buffer in test builds.
+pub const std_options_debug_io: std.Io = kernel.io.make(if (builtin.is_test) .buffer else .serial);
 
 /// Overrides std.debug.SelfInfo for freestanding kernel DWARF stack traces.
 pub const debug = kernel.debug.self;
