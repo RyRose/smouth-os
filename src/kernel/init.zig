@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const arch = @import("arch");
+
 const kernel = @import("root.zig");
 
 const log = std.log.scoped(.kinit);

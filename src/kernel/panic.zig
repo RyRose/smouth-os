@@ -4,18 +4,16 @@
 //! which is emulated by QEMU to trigger a shutdown.
 //!
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
 const arch = @import("arch");
 
-const debug = @import("debug.zig");
-const dwarf = @import("dwarf.zig");
 const serial = @import("serial.zig");
 
 const log = std.log.scoped(.PANIC);
 
-pub const panic = std.debug.FullPanic(innerPanic);
+pub const handler = std.debug.FullPanic(innerPanic);
 
 fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     log.err("{s}", .{msg});

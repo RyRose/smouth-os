@@ -5,8 +5,8 @@
 //! In hosted environments, it falls back to std.log.
 //!
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
 const serial = @import("serial.zig");
 

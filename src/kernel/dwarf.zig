@@ -2,8 +2,8 @@
 //! root.debug.SelfInfo interface, allowing std.debug stack trace machinery to
 //! resolve kernel addresses to source locations.
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
 const native_endian = builtin.cpu.arch.endian();
 

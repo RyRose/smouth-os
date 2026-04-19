@@ -243,7 +243,7 @@ pub fn build(b: *std.Build) !void {
 fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*std.Build.Step.Run {
     const qemu_binary_name = switch (arch) {
         .hosted => return error.QEMUUnsupportedForHosted,
-        .x86 => "qemu-system-x86_64",
+        .x86 => "qemu-system-i386",
     };
 
     // zig fmt: off

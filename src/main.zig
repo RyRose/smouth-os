@@ -1,3 +1,7 @@
+//! Entry point for the kernel. This is where the kernel starts executing after
+//! boot.
+//!
+
 const builtin = @import("builtin");
 const std = @import("std");
 
@@ -7,7 +11,6 @@ const kernel = @import("kernel");
 const log = std.log.scoped(.main);
 
 // Standard options for the kernel.
-// Must match this specific signature to be used by Zig's standard library.
 pub const std_options: std.Options = kernel.std_options.default();
 
 /// Route std.debug / std.log output to the serial port.
@@ -17,15 +20,14 @@ pub const std_options_debug_io: std.Io = kernel.io.make(.serial);
 pub const debug = kernel.debug.self;
 
 /// Panic handler for the kernel.
-/// Must match this specific signature to be used by Zig's standard library.
-pub const panic = kernel.panic.panic;
-
-var gdt = kernel.gdt.Table(3).init();
-var idt = kernel.idt.Table(256).init();
+pub const panic = kernel.panic.handler;
 
 comptime {
     // Link initial boot code.
-    _ = arch.x86.boot;
+    switch (builtin.cpu.arch) {
+        .x86 => _ = arch.x86.boot,
+        else => @compileError("Unsupported architecture: " ++ @tagName(builtin.cpu.arch)),
+    }
 }
 
 pub fn main() anyerror!void {

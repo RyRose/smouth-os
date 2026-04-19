@@ -1,7 +1,7 @@
 //! Serial port communication for arch.x86 architecture.
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
 const arch = @import("arch");
 

@@ -1,3 +1,10 @@
+//! Debug utilities for the kernel, including support for embedded source files
+//! in debug info. This module provides a custom implementation of
+//! `std.debug.SelfInfo` that retrieves source lines from embedded files
+//! instead of the filesystem, which is necessary in a freestanding environment
+//! like a kernel.
+//!
+
 const std = @import("std");
 
 const embed = @import("embed");

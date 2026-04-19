@@ -6,7 +6,9 @@
 //! output with no separate runtime initialisation call required.
 
 const std = @import("std");
+
 const arch = @import("arch");
+
 const serial = @import("serial.zig");
 
 // ── Buffer mode capture ───────────────────────────────────────────────────────

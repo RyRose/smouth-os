@@ -4,8 +4,8 @@
 //! millisecond granularity. The TSC frequency is calibrated once at init
 //! time using PIT channel 2 as a reference.
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
 const arch = @import("arch");
 const insn = arch.x86.insn;
