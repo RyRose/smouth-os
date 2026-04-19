@@ -246,6 +246,13 @@ fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*
         .x86 => "qemu-system-i386",
     };
 
+    // Select the audio backend based on the host OS.
+    // https://www.qemu.org/docs/master/system/devices/virtio/virtio-snd.html#examples
+    const audio_backend = switch (ctx.b.graph.host.result.os.tag) {
+        .macos => "coreaudio",
+        else => "none",
+    };
+
     // zig fmt: off
     const run_cmd = ctx.b.addSystemCommand(&[_][]const u8{
         qemu_binary_name,
@@ -255,16 +262,14 @@ fn buildQemu(ctx: *Context, exe: *std.Build.Step.Compile, arch: Architecture) !*
         // non-zero exit code.
         "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
         // Enables virtio sound device for audio output.
-        // TODO: Make audio device configurable per OS. This assumes macOS.
-        // https://www.qemu.org/docs/master/system/devices/virtio/virtio-snd.html#examples
-        "-audiodev", "coreaudio,id=snd0",
         "-device", "virtio-sound-pci,audiodev=snd0",
-        "-audiodev", "coreaudio,id=speaker",
         "-machine", "pcspk-audiodev=speaker",
         "-device", "intel-hda",
         "-device", "hda-duplex,audiodev=snd0",
     });
     // zig fmt: on
+    run_cmd.addArgs(&.{ "-audiodev", ctx.b.fmt("{s},id=snd0", .{audio_backend}) });
+    run_cmd.addArgs(&.{ "-audiodev", ctx.b.fmt("{s},id=speaker", .{audio_backend}) });
     run_cmd.addArg("-kernel");
     run_cmd.addFileArg(exe.getEmittedBin());
     return run_cmd;
@@ -302,7 +307,7 @@ fn addKernelTest(
         .name = name,
         .root_module = mod,
         .test_runner = .{
-            .path = ctx.b.path("tools/testrunner.zig"),
+            .path = ctx.b.path("src/testmain.zig"),
             .mode = .simple,
         },
     });
