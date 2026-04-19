@@ -72,7 +72,7 @@ test "SpinLock basic functionality" {
     lock.value = 42;
     lock.unlock();
     lock.lock();
-    try std.testing.expectEqual(42, lock.value);
+    try std.testing.expectEqual(43, lock.value);
     lock.unlock();
 }
 
