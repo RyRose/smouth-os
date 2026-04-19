@@ -1,8 +1,5 @@
 //! Entry point for the x86 kernel in both normal and test mode.
-//!
-//! When built as a test binary (builtin.is_test), runs all test functions
-//! registered in the builtin module and reports results to the serial port.
-//! Otherwise delegates to root.main.
+//! Delegates entirely to root.main.
 
 const builtin = @import("builtin");
 const root = @import("root");
@@ -15,15 +12,13 @@ const insn = @import("insn.zig");
 const log = std.log.scoped(.boot);
 
 comptime {
-    if (!builtin.is_test) {
-        const actual = @TypeOf(root.main);
-        const expected = fn () anyerror!void;
-        if (actual != expected) {
-            @compileError(std.fmt.comptimePrint(
-                "main must have type `{}` but found `{}`",
-                .{ expected, actual },
-            ));
-        }
+    const actual = @TypeOf(root.main);
+    const expected = fn () anyerror!void;
+    if (actual != expected) {
+        @compileError(std.fmt.comptimePrint(
+            "main must have type `{}` but found `{}`",
+            .{ expected, actual },
+        ));
     }
 }
 
@@ -53,78 +48,13 @@ export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") 
 // Reserve 16 KiB stack for initial thread.
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
-fn testMain() anyerror!void {
-    try kernel.init.init();
-
-    const tty = kernel.serial.tty;
-    try tty.setColor(.dim);
-    try tty.writer.writeAll("start\n");
-    try tty.writer.print("└─ {d} tests\n", .{builtin.test_functions.len});
-    try tty.setColor(.reset);
-
-    var failed: usize = 0;
-    var skipped: usize = 0;
-    for (builtin.test_functions) |t| {
-        kernel.log.test_name = t.name;
-        t.func() catch |err| {
-            if (err == error.SkipZigTest) {
-                skipped += 1;
-                continue;
-            }
-            try tty.setColor(.bright_red);
-            try tty.writer.writeAll("error:");
-            try tty.setColor(.reset);
-            try tty.writer.writeAll(" '");
-            try tty.writer.writeAll(t.name);
-            try tty.writer.writeAll("' failed: ");
-            try tty.writer.writeAll(kernel.io.writer.buffer);
-            kernel.io.writer.end = 0;
-            try tty.writer.writeAll("\n");
-            if (@errorReturnTrace()) |trace| {
-                std.debug.writeErrorReturnTrace(trace, tty) catch |err2| {
-                    log.warn("Failed to write test error trace: {}.", .{err2});
-                };
-            }
-            failed += 1;
-        };
-    }
-    try tty.setColor(.dim);
-    try tty.writer.writeAll("end\n");
-    try tty.writer.print("└─ {d}/{d} passed", .{
-        builtin.test_functions.len - failed - skipped,
-        builtin.test_functions.len,
-    });
-
-    if (failed > 0) {
-        try tty.writer.writeAll(", ");
-        try tty.setColor(.red);
-        try tty.writer.print("{d} failed", .{failed});
-        try tty.setColor(.reset);
-    }
-
-    if (skipped > 0) {
-        try tty.writer.writeAll(", ");
-        try tty.setColor(.yellow);
-        try tty.writer.print("{d} skipped", .{skipped});
-        try tty.setColor(.reset);
-    }
-    try tty.setColor(.reset);
-    kernel.serial.write("\n");
-    if (failed > 0) {
-        return error.TestFailed;
-    }
-}
-
 export fn kmain() noreturn {
-    const result = if (comptime builtin.is_test) testMain() else root.main();
-    result catch |err| {
-        if (!(builtin.is_test and err == error.TestFailed)) {
-            log.err("Kernel main failed: {}", .{err});
-            if (@errorReturnTrace()) |trace| {
-                std.debug.writeErrorReturnTrace(trace, kernel.serial.tty) catch |err2| {
-                    log.warn("Failed to write error trace: {}.", .{err2});
-                };
-            }
+    root.main() catch |err| {
+        log.err("Kernel main failed: {}", .{err});
+        if (@errorReturnTrace()) |trace| {
+            std.debug.writeErrorReturnTrace(trace, kernel.serial.tty) catch |err2| {
+                log.warn("Failed to write error trace: {}.", .{err2});
+            };
         }
         insn.outw(0xF4, 0);
     };
