@@ -1,12 +1,9 @@
 //! A simple logging utility for freestanding Zig environments.
 //! Provides functions to log messages at various levels (info, warn, error, fatal).
 //! Logs are written to a serial port for output.
-//! Designed to work in both freestanding and hosted environments.
-//! In hosted environments, it falls back to std.log.
 //!
 
 const std = @import("std");
-const builtin = @import("builtin");
 
 const serial = @import("serial.zig");
 

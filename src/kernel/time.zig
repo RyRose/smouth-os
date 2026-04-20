@@ -51,7 +51,7 @@ const pit_ch2_oneshot_cmd: u8 = 0b10110000;
 ///
 /// Must be called once during kernel init before udelay(), ndelay(), or mdelay() are used.
 pub fn calibrate() void {
-    const pit_ticks: u16 = 11_932; // ~10 ms window at PIT frequency
+    const pit_ticks: u16 = pit_hz / 100; // ~10 ms window at PIT frequency
 
     ioport.outb(.pit_cmd, pit_ch2_oneshot_cmd);
     ioport.outb(.pit_ch2, @intCast(pit_ticks & 0xFF));
@@ -79,9 +79,7 @@ pub fn calibrate() void {
 pub fn ndelay(ns: u64) void {
     const start = insn.rdtsc();
     const target = start + ns * tsc_hz / 1_000_000_000;
-    while (insn.rdtsc() < target) {
-        std.atomic.spinLoopHint();
-    }
+    while (insn.rdtsc() < target) std.atomic.spinLoopHint();
 }
 
 /// Busy-wait for at least `us` microseconds.
@@ -89,13 +87,13 @@ pub fn ndelay(ns: u64) void {
 pub fn udelay(us: u64) void {
     const start = insn.rdtsc();
     const target = start + us * tsc_hz / 1_000_000;
-    while (insn.rdtsc() < target) {
-        std.atomic.spinLoopHint();
-    }
+    while (insn.rdtsc() < target) std.atomic.spinLoopHint();
 }
 
 /// Busy-wait for at least `ms` milliseconds.
 /// calibrate() must be called before using this function.
+/// TODO: Implement a more efficient millisecond delay that sleeps on a timer
+///       interrupt instead of busy-waiting.
 pub fn mdelay(ms: u64) void {
     udelay(ms * 1_000);
 }

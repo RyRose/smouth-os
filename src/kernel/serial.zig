@@ -71,18 +71,12 @@ fn writeByte(b: u8) void {
 
 /// Write a string to the serial port.
 pub fn write(s: []const u8) void {
-    for (s) |c| {
-        writeByte(c);
-    }
+    for (s) |c| writeByte(c);
 }
 
 /// Sends the buffered bytes and bytes provided in `data` to the serial port,
 /// repeating the last slice `splat` times.
-fn drain(
-    w: *std.Io.Writer,
-    data: []const []const u8,
-    splat: usize,
-) std.Io.Writer.Error!usize {
+fn drain(w: *std.Io.Writer, data: []const []const u8, splat: usize) std.Io.Writer.Error!usize {
     if (w.end > 0) {
         write(w.buffer[0..w.end]);
         w.end = 0;
