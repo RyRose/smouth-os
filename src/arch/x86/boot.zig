@@ -7,7 +7,7 @@ const std = @import("std");
 
 const kernel = @import("kernel");
 
-const insn = @import("insn.zig");
+const ioport = @import("ioport.zig");
 
 const log = std.log.scoped(.boot);
 
@@ -58,10 +58,10 @@ export fn kmain() noreturn {
                 };
             }
         }
-        insn.outw(0xF4, 0);
+        ioport.outw(.qemu_debug_exit, 0);
     };
 
-    insn.outw(0x604, 0x2000);
+    ioport.outw(.qemu_acpi_shutdown, 0x2000);
     while (true) {}
 }
 

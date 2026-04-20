@@ -9,6 +9,7 @@ const builtin = @import("builtin");
 
 const arch = @import("arch");
 const insn = arch.x86.insn;
+const ioport = arch.x86.ioport;
 
 const log = std.log.scoped(.time);
 
@@ -18,28 +19,13 @@ var tsc_hz: u64 = 0;
 /// PIT oscillator frequency in Hz.
 const pit_hz: u64 = 1_193_182;
 
-/// PIT mode/command register (write-only).
-/// Used to configure channel mode, access mode, and operating mode.
-/// Reference: https://wiki.osdev.org/PIT#I/O_Ports
-const pit_cmd_port: u16 = 0x43;
-
-/// PIT channel 2 data port (read/write).
-/// Used to load the initial countdown value (lobyte then hibyte).
-const pit_ch2_port: u16 = 0x42;
-
-/// PC speaker / NMI status port.
-/// Bit 0: channel 2 gate (1 = enabled). Bit 1: speaker output enable.
-/// Bit 5: channel 2 output state (1 = countdown reached zero).
-/// Reference: https://wiki.osdev.org/PC_Speaker
-const pc_speaker_port: u16 = 0x61;
-
-/// Bitmask for the channel 2 gate bit in pc_speaker_port.
+/// Bitmask for the channel 2 gate bit in the NMI status port.
 const ch2_gate_bit: u8 = 0x01;
 
-/// Bitmask for the speaker output enable bit in pc_speaker_port.
+/// Bitmask for the speaker output enable bit in the NMI status port.
 const speaker_enable_bit: u8 = 0x02;
 
-/// Bitmask for the channel 2 output status bit in pc_speaker_port.
+/// Bitmask for the channel 2 output status bit in the NMI status port.
 /// Goes high when the PIT channel 2 countdown reaches zero.
 const ch2_output_bit: u8 = 0x20;
 
@@ -67,16 +53,16 @@ const pit_ch2_oneshot_cmd: u8 = 0b10110000;
 pub fn calibrate() void {
     const pit_ticks: u16 = 11_932; // ~10 ms window at PIT frequency
 
-    insn.outb(pit_cmd_port, pit_ch2_oneshot_cmd);
-    insn.outb(pit_ch2_port, @intCast(pit_ticks & 0xFF));
-    insn.outb(pit_ch2_port, @intCast(pit_ticks >> 8));
+    ioport.outb(.pit_cmd, pit_ch2_oneshot_cmd);
+    ioport.outb(.pit_ch2, @intCast(pit_ticks & 0xFF));
+    ioport.outb(.pit_ch2, @intCast(pit_ticks >> 8));
 
-    const ctrl = insn.inb(pc_speaker_port);
-    insn.outb(pc_speaker_port, ctrl & ~ch2_gate_bit); // gate low
-    insn.outb(pc_speaker_port, (ctrl & ~speaker_enable_bit) | ch2_gate_bit); // gate high, speaker off
+    const ctrl = ioport.inb(.nmi_sc);
+    ioport.outb(.nmi_sc, ctrl & ~ch2_gate_bit); // gate low
+    ioport.outb(.nmi_sc, (ctrl & ~speaker_enable_bit) | ch2_gate_bit); // gate high, speaker off
 
     const start = insn.rdtsc();
-    while ((insn.inb(pc_speaker_port) & ch2_output_bit) == 0) {}
+    while ((ioport.inb(.nmi_sc) & ch2_output_bit) == 0) {}
     const end = insn.rdtsc();
 
     tsc_hz = (end - start) * pit_hz / pit_ticks;

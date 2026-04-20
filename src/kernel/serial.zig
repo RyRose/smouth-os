@@ -9,17 +9,9 @@ const sync = @import("sync.zig");
 
 const log = std.log.scoped(.serial);
 
-// COM1 base port
-const base: u16 = 0x3F8;
-
 /// SpinLock to provide thread-safe access to the serial port.
 /// Should be grabbed by any code wanting to write to the serial port.
 pub var lock = sync.SpinLock(bool).init(false);
-
-/// A buffer for the serial writer. This is unbuffered to ensure that writes to
-/// the serial port are not delayed, but it must still be provided to satisfy
-/// the Writer interface.
-const null_buffer: [0]u8 = undefined;
 
 /// A writer that writes to the serial port. This is used for logging and debugging.
 /// Not buffered to ensure that writes to the serial port are not delayed.
@@ -47,34 +39,34 @@ pub fn init() void {
     lock.value = true;
 
     // Disable interrupts
-    arch.x86.insn.outb(base + 1, 0x00);
+    arch.x86.ioport.outb(.com1_ier, 0x00);
 
     // Enable DLAB
-    arch.x86.insn.outb(base + 3, 0x80);
+    arch.x86.ioport.outb(.com1_lcr, 0x80);
 
     // Set baud rate divisor to 3 (38400)
-    arch.x86.insn.outb(base + 0, 0x03); // low byte
-    arch.x86.insn.outb(base + 1, 0x00); // high byte
+    arch.x86.ioport.outb(.com1_data, 0x03); // low byte
+    arch.x86.ioport.outb(.com1_ier, 0x00); // high byte
 
     // 8 bits, no parity, one stop bit
-    arch.x86.insn.outb(base + 3, 0x03);
+    arch.x86.ioport.outb(.com1_lcr, 0x03);
 
     // Enable FIFO, clear, 14-byte threshold
-    arch.x86.insn.outb(base + 2, 0xC7);
+    arch.x86.ioport.outb(.com1_iir_fcr, 0xC7);
 
     // IRQs enabled, RTS/DSR set
-    arch.x86.insn.outb(base + 4, 0x0B);
+    arch.x86.ioport.outb(.com1_mcr, 0x0B);
 }
 
 /// Check if the transmit buffer is empty.
 fn isTransmitEmpty() bool {
-    return (arch.x86.insn.inb(base + 5) & 0x20) == 0;
+    return (arch.x86.ioport.inb(.com1_lsr) & 0x20) == 0;
 }
 
 /// Write a byte to the serial port.
 fn writeByte(b: u8) void {
     while (isTransmitEmpty()) {}
-    arch.x86.insn.outb(base, b);
+    arch.x86.ioport.outb(.com1_data, b);
 }
 
 /// Write a string to the serial port.
@@ -109,8 +101,9 @@ fn drain(
 
 /// Options for creating a serial writer.
 pub const WriterOpts = struct {
-    /// A buffer for the writer. Defaults to unbuffered.
-    buffer: ?[]u8 = &null_buffer,
+    /// A buffer for the writer. Defaults to a zero-length slice, which means
+    /// the writer is unbuffered and writes directly to the serial port.
+    buffer: ?[]u8 = &[0]u8{},
     /// A flush function. Defaults to a function that repeatedly drains until
     /// the transmit buffer is empty, to ensure that all data is sent before
     /// returning from flush.

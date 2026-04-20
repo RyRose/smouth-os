@@ -45,7 +45,7 @@ fn drainToGlobalBuffer(
 fn crashHandler(userdata: ?*anyopaque) void {
     _ = userdata;
     // Trigger a QEMU shutdown then spin — same behaviour as kernel panic.
-    arch.x86.insn.outw(0xF4, 0);
+    arch.x86.ioport.outw(.qemu_debug_exit, 0);
     while (true) {}
 }
 
@@ -55,7 +55,7 @@ fn futexWaitUncancelableFn(
     expected: u32,
 ) void {
     _ = .{ userdata, ptr, expected };
-    arch.x86.insn.outw(0xF4, 0);
+    arch.x86.ioport.outw(.qemu_debug_exit, 0);
     while (true) {}
 }
 

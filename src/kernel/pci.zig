@@ -1,10 +1,11 @@
 const std = @import("std");
+const arch = @import("arch");
 
 /// IO port for addressing PCI configuration space.
-pub const ConfigurationAddressPort: u16 = 0xCF8;
+pub const ConfigurationAddressPort: u16 = arch.x86.ioport.Port.pci_config_addr.addr();
 
 /// IO port for accessing PCI configuration space.
-pub const ConfigurationDataPort: u16 = 0xCFC;
+pub const ConfigurationDataPort: u16 = arch.x86.ioport.Port.pci_config_data.addr();
 
 /// PCIConfigOffset represents offsets within the PCI configuration space.
 /// https://en.wikipedia.org/wiki/PCI_configuration_space#Standardized_registers

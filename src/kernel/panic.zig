@@ -38,6 +38,6 @@ fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
 
 // Use QEMU shutdown port to halt the system with a non-zero exit code.
 fn badShutdown() noreturn {
-    arch.x86.insn.outw(0xF4, 0);
+    arch.x86.ioport.outw(.qemu_debug_exit, 0);
     while (true) {}
 }

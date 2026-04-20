@@ -7,6 +7,7 @@ pub const boot = @import("boot.zig");
 pub const gdt = @import("gdt.zig");
 pub const idt = @import("idt.zig");
 pub const insn = @import("insn.zig");
+pub const ioport = @import("ioport.zig");
 
 // Ensure this code is only compiled for x86 freestanding targets.
 comptime {

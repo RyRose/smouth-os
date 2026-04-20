@@ -45,11 +45,8 @@ pub fn main() anyerror!void {
                 .function = 0,
                 .register_offset = .vendor_device,
             });
-            arch.x86.insn.outl(
-                kernel.pci.ConfigurationAddressPort,
-                @bitCast(address),
-            );
-            const raw = arch.x86.insn.inl(kernel.pci.ConfigurationDataPort);
+            arch.x86.ioport.outl(.pci_config_addr, @bitCast(address));
+            const raw = arch.x86.ioport.inl(.pci_config_data);
 
             if (raw == 0xFFFF_FFFF) continue;
             log.info("PCI Device found at bus {d}, device {d}", .{
