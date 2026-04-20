@@ -32,10 +32,7 @@ comptime {
 
 pub fn main() anyerror!void {
     try kernel.init.run();
-    if (builtin.is_test) {
-        try runTests();
-        return;
-    }
+    if (comptime builtin.is_test) return runTests();
 
     for (0..256) |bus| {
         for (0..8) |device| {
