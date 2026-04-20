@@ -122,8 +122,6 @@ fn runTests() !void {
         try tty.setColor(.reset);
     }
     try tty.setColor(.reset);
-    kernel.serial.write("\n");
-    if (failed > 0) {
-        return error.TestFailed;
-    }
+    try tty.writer.writeAll("\n");
+    if (failed > 0) return error.TestFailed;
 }
