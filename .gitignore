@@ -8,6 +8,7 @@ zig-out/
 *.raw
 *.wav
 *.mp3
+!assets/smouth.wav
 
 # Symlink to the Zig standard library, created by `zig build`.
 /std

@@ -11,10 +11,12 @@ project is designed to be extensible to additional architectures over time.
 ## Repository layout
 
 ```
+assets/    – binary assets embedded into the kernel (WAV files, etc.)
 src/
   main.zig   – kernel entry point and test runner
   arch/      – architecture-specific code (one sub-directory per arch)
   kernel/    – architecture-independent kernel code
+embed.zig  – embeds src, std, and assets files as pub consts; importable as the "embed" module
 ```
 
 ## Architecture vs kernel code
@@ -65,6 +67,15 @@ under a hosted target. New code should always have tests within reason.
 - **File-level doc comments** use `//!`; inline comments use `//`; doc comments use `///`.
 - Only comment code that genuinely needs clarification; do not add obvious
   comments.
+- **Doc comments are required** on all functions, structs, struct member
+  variables, and constants.
+- **Naming**: follow Zig's standard naming rules:
+  - `TitleCase` — types, and functions whose return type is `type`
+  - `camelCase` — other callable things (functions, methods)
+  - `snake_case` — everything else (variables, fields, constants, namespaces,
+    file names, directory names)
+  - Established external conventions (e.g. `ENOENT`, POSIX constants) take
+    precedence over the above.
 - **I/O ports** are always referenced through the `ioport.Port` enum rather
   than raw address literals.
 - **Scoped logging**: every file that logs uses

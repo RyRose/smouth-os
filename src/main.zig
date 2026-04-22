@@ -5,6 +5,7 @@ const builtin = @import("builtin");
 const std = @import("std");
 
 const arch = @import("arch");
+const embed = @import("embed");
 const kernel = @import("kernel");
 
 const log = std.log.scoped(.main);
@@ -34,6 +35,8 @@ pub fn main() anyerror!void {
     try kernel.init.run();
     if (comptime builtin.is_test) return runTests();
 
+    try kernel.virtio_sound.play(embed.smouth_wav);
+
     for (0..256) |bus| {
         for (0..8) |device| {
             const address = kernel.pci.ConfigurationAddress.init(.{
@@ -57,11 +60,6 @@ pub fn main() anyerror!void {
             } = @ptrCast(&raw);
             log.info("  Vendor ID: 0x{x}", .{value.vendor});
             log.info("  Device ID: 0x{x}", .{value.device});
-
-            if (raw != 0x1059_1AF4) {
-                continue;
-            }
-            log.info("VirtIO sound card detected.", .{});
         }
     }
 }

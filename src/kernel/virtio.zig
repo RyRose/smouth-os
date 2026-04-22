@@ -1,0 +1,267 @@
+//! General VirtIO PCI helpers: capability discovery, common configuration,
+//! and virtqueue types shared by all VirtIO device drivers.
+
+const std = @import("std");
+const pci = @import("pci.zig");
+
+const log = std.log.scoped(.virtio);
+
+// ── Device status bits (§2.1) ────────────────────────────────────────────────
+
+/// Device status bit: driver has noticed the device.
+pub const status_acknowledge: u8 = 1;
+/// Device status bit: driver knows how to drive the device.
+pub const status_driver: u8 = 2;
+/// Device status bit: driver is ready to drive the device.
+pub const status_driver_ok: u8 = 4;
+/// Device status bit: driver has accepted the negotiated feature set.
+pub const status_features_ok: u8 = 8;
+
+// ── Feature bits ─────────────────────────────────────────────────────────────
+
+/// Feature bit 32 (driver_feature_select=1, bit 0): required for modern VirtIO.
+pub const virtio_f_version_1: u32 = 1;
+
+// ── PCI capability identifiers ───────────────────────────────────────────────
+
+/// PCI capability vendor ID identifying a VirtIO vendor-specific capability.
+pub const pci_cap_vndr: u8 = 0x09;
+/// VirtIO capability type for the common configuration region.
+pub const cap_common_cfg: u8 = 1;
+/// VirtIO capability type for the queue notify region.
+pub const cap_notify_cfg: u8 = 2;
+
+// ── VirtIO PCI CommonCfg MMIO layout (§4.1.4.3) ──────────────────────────────
+
+/// MMIO layout of the VirtIO PCI common configuration structure (§4.1.4.3).
+/// Mapped directly from the BAR region identified by the CommonCfg capability.
+pub const CommonCfg = extern struct {
+    /// Selects which 32-bit bank of device feature bits to read via `device_feature`.
+    device_feature_select: u32, // +0
+    /// Device feature bits for the bank selected by `device_feature_select`.
+    device_feature: u32, // +4
+    /// Selects which 32-bit bank of driver feature bits to write via `driver_feature`.
+    driver_feature_select: u32, // +8
+    /// Driver feature bits accepted for the bank selected by `driver_feature_select`.
+    driver_feature: u32, // +12
+    /// MSI-X vector for configuration change events (0xFFFF = disabled).
+    config_msix_vector: u16, // +16
+    /// Number of virtqueues supported by the device.
+    num_queues: u16, // +18
+    /// Device status register; written by driver to progress the init handshake.
+    device_status: u8, // +20
+    /// Incremented by the device whenever its configuration space changes.
+    config_generation: u8, // +21
+    /// Selects which queue subsequent queue_* fields apply to.
+    queue_select: u16, // +22
+    /// Maximum (or negotiated) size of the selected queue.
+    queue_size: u16, // +24
+    /// MSI-X vector for the selected queue (0xFFFF = disabled).
+    queue_msix_vector: u16, // +26
+    /// Write 1 to activate the selected queue after populating its addresses.
+    queue_enable: u16, // +28
+    /// Per-queue multiplier index into the notify region for the selected queue.
+    queue_notify_off: u16, // +30
+    /// Physical address of the descriptor table for the selected queue.
+    queue_desc: u64, // +32
+    /// Physical address of the driver (available) ring for the selected queue.
+    queue_driver: u64, // +40
+    /// Physical address of the device (used) ring for the selected queue.
+    queue_device: u64, // +48
+};
+
+comptime {
+    std.debug.assert(@offsetOf(CommonCfg, "device_status") == 20);
+    std.debug.assert(@offsetOf(CommonCfg, "queue_notify_off") == 30);
+    std.debug.assert(@offsetOf(CommonCfg, "queue_desc") == 32);
+    std.debug.assert(@offsetOf(CommonCfg, "queue_driver") == 40);
+    std.debug.assert(@offsetOf(CommonCfg, "queue_device") == 48);
+}
+
+// ── Virtqueue types ───────────────────────────────────────────────────────────
+
+/// A single virtqueue descriptor table entry.
+pub const Desc = extern struct {
+    /// Physical address of the buffer.
+    addr: u64,
+    /// Length of the buffer in bytes.
+    len: u32,
+    /// Descriptor flags (NEXT, WRITE, etc.).
+    flags: u16,
+    /// Index of the next descriptor in a chained sequence (valid when NEXT is set).
+    next: u16,
+};
+
+/// Descriptor flag: this descriptor chains to the next (`.next` is valid).
+pub const virtq_desc_f_next: u16 = 1;
+/// Descriptor flag: this buffer is writable by the device (otherwise read-only).
+pub const virtq_desc_f_write: u16 = 2;
+
+/// Returns the type for a driver-side (available) ring with `size` descriptor slots.
+pub fn AvailRing(comptime size: u16) type {
+    return extern struct {
+        /// Ring flags (e.g. VIRTQ_AVAIL_F_NO_INTERRUPT).
+        flags: u16,
+        /// Index of the next slot the driver will write; wraps at 65535.
+        idx: u16,
+        /// Circular array of descriptor head indices made available to the device.
+        ring: [size]u16,
+    };
+}
+
+/// One entry in the device-side (used) ring, written by the device on completion.
+pub const UsedElem = extern struct {
+    /// Index of the descriptor chain head that was consumed.
+    id: u32,
+    /// Total bytes written into writable descriptors in the chain.
+    len: u32,
+};
+
+/// Returns the type for a device-side (used) ring with `size` descriptor slots.
+pub fn UsedRing(comptime size: u16) type {
+    return extern struct {
+        /// Ring flags (e.g. VIRTQ_USED_F_NO_NOTIFY).
+        flags: u16,
+        /// Index of the next slot the device will write; wraps at 65535.
+        idx: u16,
+        /// Circular array of completed descriptor entries written by the device.
+        ring: [size]UsedElem,
+    };
+}
+
+// ── Capability discovery ──────────────────────────────────────────────────────
+
+/// Resolved MMIO locations needed to drive a VirtIO PCI device.
+pub const Caps = struct {
+    /// Pointer to the CommonCfg MMIO region for queue and feature negotiation.
+    common: *volatile CommonCfg,
+    /// Base address of the notify region; individual queue doorbells are at
+    /// `notify_base + queue_notify_off * notify_mult`.
+    notify_base: usize,
+    /// Per-queue byte stride within the notify region.
+    notify_mult: u32,
+};
+
+/// Walk the PCI capability list for a VirtIO device and locate the CommonCfg
+/// and Notify MMIO regions. Returns null if either capability is missing.
+pub fn walkCaps(bus: u8, dev: u5) ?Caps {
+    // PCI status register bit 4 indicates a capability list is present.
+    const status: u16 = @truncate(pci.configRead32(bus, dev, 0, 0x04) >> 16);
+    if (status & 0x10 == 0) {
+        log.err("device has no PCI capability list", .{});
+        return null;
+    }
+
+    var common_addr: usize = 0;
+    var notify_addr: usize = 0;
+    var notify_mult: u32 = 0;
+
+    var cap_off = pci.configReadByte(bus, dev, 0, 0x34);
+    while (cap_off != 0) {
+        const cap_vndr = pci.configReadByte(bus, dev, 0, cap_off);
+        const cap_next = pci.configReadByte(bus, dev, 0, cap_off + 1);
+
+        if (cap_vndr == pci_cap_vndr) {
+            const cfg_type = pci.configReadByte(bus, dev, 0, cap_off + 3);
+            const bar_idx = pci.configReadByte(bus, dev, 0, cap_off + 4);
+            const cap_bar_offset = pci.configRead32(bus, dev, 0, cap_off + 8);
+
+            const bar_val = pci.configRead32(bus, dev, 0, 0x10 + @as(u8, bar_idx) * 4);
+            if (bar_val & 1 != 0) { // skip I/O BARs
+                cap_off = cap_next;
+                continue;
+            }
+            const bar_base = bar_val & 0xFFFF_FFF0;
+            const mmio = bar_base + cap_bar_offset;
+
+            switch (cfg_type) {
+                cap_common_cfg => {
+                    common_addr = mmio;
+                    log.debug("common_cfg MMIO=0x{X}", .{mmio});
+                },
+                cap_notify_cfg => {
+                    notify_addr = mmio;
+                    notify_mult = pci.configRead32(bus, dev, 0, cap_off + 16);
+                    log.debug("notify MMIO=0x{X} mult={}", .{ mmio, notify_mult });
+                },
+                else => {},
+            }
+        }
+
+        cap_off = cap_next;
+    }
+
+    if (common_addr == 0 or notify_addr == 0) {
+        log.err("missing common_cfg or notify capability", .{});
+        return null;
+    }
+
+    return .{
+        .common = @ptrFromInt(common_addr),
+        .notify_base = notify_addr,
+        .notify_mult = notify_mult,
+    };
+}
+
+// ── Device discovery ──────────────────────────────────────────────────────────
+
+/// PCI bus and device slot of a discovered PCI device.
+pub const DeviceAddr = struct {
+    /// PCI bus number (0–255).
+    bus: u8,
+    /// PCI device slot number (0–31).
+    dev: u5,
+};
+
+/// Scan all PCI buses and slots for a device matching `vendor_id` and `device_id`.
+/// Returns the bus and device number on success, null if not found.
+pub fn findDevice(vendor_id: u16, device_id: u16) ?DeviceAddr {
+    for (0..256) |bus| {
+        for (0..32) |dev| {
+            const id = pci.configRead32(@intCast(bus), @intCast(dev), 0, 0);
+            if (id == 0xFFFF_FFFF) continue;
+            const vendor: u16 = @truncate(id);
+            const device: u16 = @truncate(id >> 16);
+            if (vendor == vendor_id and device == device_id)
+                return .{ .bus = @intCast(bus), .dev = @intCast(dev) };
+        }
+    }
+    return null;
+}
+
+// ── Queue helpers ─────────────────────────────────────────────────────────────
+
+/// Register a virtqueue with the device via CommonCfg and enable it.
+/// Accepts the physical addresses of the descriptor table, available ring, and
+/// used ring. Returns the queue's notify offset for computing its doorbell address.
+pub fn setupQueue(
+    common: *volatile CommonCfg,
+    q_idx: u16,
+    size: u16,
+    desc_addr: usize,
+    avail_addr: usize,
+    used_addr: usize,
+) u16 {
+    common.queue_select = q_idx;
+    common.queue_size = size;
+    common.queue_msix_vector = 0xFFFF;
+    common.queue_desc = desc_addr;
+    common.queue_driver = avail_addr;
+    common.queue_device = used_addr;
+    const notify_off = common.queue_notify_off;
+    common.queue_enable = 1;
+    return notify_off;
+}
+
+/// Write the queue index to its doorbell register to notify the device.
+pub inline fn kickQueue(caps: *const Caps, notify_off: u16, q_idx: u16) void {
+    const addr = caps.notify_base + @as(usize, notify_off) * caps.notify_mult;
+    @as(*volatile u16, @ptrFromInt(addr)).* = q_idx;
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+test "CommonCfg layout" {
+    try std.testing.expectEqual(20, @offsetOf(CommonCfg, "device_status"));
+    try std.testing.expectEqual(32, @offsetOf(CommonCfg, "queue_desc"));
+}

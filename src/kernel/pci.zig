@@ -55,6 +55,36 @@ pub const ConfigurationAddress = packed struct {
     }
 };
 
+/// Read a 32-bit value from PCI configuration space.
+pub fn configRead32(bus: u8, device: u5, function: u3, offset: u8) u32 {
+    const addr: u32 = (1 << 31) |
+        (@as(u32, bus) << 16) |
+        (@as(u32, device) << 11) |
+        (@as(u32, function) << 8) |
+        (offset & 0xFC);
+    arch.x86.ioport.outl(.pci_config_addr, addr);
+    return arch.x86.ioport.inl(.pci_config_data);
+}
+
+/// Read a single byte from PCI configuration space at an arbitrary byte offset.
+/// PCI config reads are 32-bit aligned; the byte is extracted by masking and shifting.
+pub fn configReadByte(bus: u8, device: u5, function: u3, offset: u8) u8 {
+    const dword = configRead32(bus, device, function, offset & 0xFC);
+    const shift: u5 = @intCast((offset & 3) * 8);
+    return @truncate(dword >> shift);
+}
+
+/// Write a 32-bit value to PCI configuration space.
+pub fn configWrite32(bus: u8, device: u5, function: u3, offset: u8, value: u32) void {
+    const addr: u32 = (1 << 31) |
+        (@as(u32, bus) << 16) |
+        (@as(u32, device) << 11) |
+        (@as(u32, function) << 8) |
+        (offset & 0xFC);
+    arch.x86.ioport.outl(.pci_config_addr, addr);
+    arch.x86.ioport.outl(.pci_config_data, value);
+}
+
 test ConfigurationAddress {
     const size = @bitSizeOf(ConfigurationAddress);
     try std.testing.expectEqual(size, 32);

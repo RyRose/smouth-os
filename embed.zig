@@ -14,6 +14,8 @@ const EmbeddedAsset = struct {
 // declare a StaticStringMap and fill it with our filenames and data
 pub const srcFiles = std.StaticStringMap([]const u8).initComptime(genMap());
 
+pub const smouth_wav: []const u8 = @embedFile("assets/smouth.wav");
+
 fn genMap() [src.absolute.len]EmbeddedAsset {
     var embassets: [src.absolute.len]EmbeddedAsset = undefined;
     comptime var i = 0;
