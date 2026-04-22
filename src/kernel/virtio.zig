@@ -262,6 +262,83 @@ pub inline fn kickQueue(caps: *const Caps, notify_off: u16, q_idx: u16) void {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 test "CommonCfg layout" {
+    try std.testing.expectEqual(0, @offsetOf(CommonCfg, "device_feature_select"));
+    try std.testing.expectEqual(16, @offsetOf(CommonCfg, "config_msix_vector"));
     try std.testing.expectEqual(20, @offsetOf(CommonCfg, "device_status"));
+    try std.testing.expectEqual(22, @offsetOf(CommonCfg, "queue_select"));
+    try std.testing.expectEqual(30, @offsetOf(CommonCfg, "queue_notify_off"));
     try std.testing.expectEqual(32, @offsetOf(CommonCfg, "queue_desc"));
+    try std.testing.expectEqual(40, @offsetOf(CommonCfg, "queue_driver"));
+    try std.testing.expectEqual(48, @offsetOf(CommonCfg, "queue_device"));
+    try std.testing.expectEqual(56, @sizeOf(CommonCfg));
+}
+
+test "Desc size" {
+    try std.testing.expectEqual(16, @sizeOf(Desc));
+}
+
+test "AvailRing size" {
+    // flags(2) + idx(2) + ring(64*2=128) = 132
+    try std.testing.expectEqual(132, @sizeOf(AvailRing(64)));
+}
+
+test "UsedElem size" {
+    try std.testing.expectEqual(8, @sizeOf(UsedElem));
+}
+
+test "UsedRing size" {
+    // flags(2) + idx(2) + ring(64*8=512) = 516
+    try std.testing.expectEqual(516, @sizeOf(UsedRing(64)));
+}
+
+test "setupQueue writes fields and returns notify_off" {
+    var cfg = std.mem.zeroes(CommonCfg);
+    cfg.queue_notify_off = 3; // simulates the device having pre-set this
+    const notify_off = setupQueue(&cfg, 2, 64, 0x1000, 0x2000, 0x3000);
+    try std.testing.expectEqual(2, cfg.queue_select);
+    try std.testing.expectEqual(64, cfg.queue_size);
+    try std.testing.expectEqual(0xFFFF, cfg.queue_msix_vector);
+    try std.testing.expectEqual(0x1000, cfg.queue_desc);
+    try std.testing.expectEqual(0x2000, cfg.queue_driver);
+    try std.testing.expectEqual(0x3000, cfg.queue_device);
+    try std.testing.expectEqual(1, cfg.queue_enable);
+    try std.testing.expectEqual(3, notify_off);
+}
+
+test "kickQueue writes queue index to doorbell" {
+    var doorbells = [_]u16{ 0, 0, 0, 0 };
+    const caps = Caps{
+        .common = undefined,
+        .notify_base = @intFromPtr(&doorbells),
+        .notify_mult = @sizeOf(u16),
+    };
+    kickQueue(&caps, 1, 5); // addr = base + 1*2 → doorbells[1]
+    try std.testing.expectEqual(0, doorbells[0]);
+    try std.testing.expectEqual(5, doorbells[1]);
+    try std.testing.expectEqual(0, doorbells[2]);
+}
+
+test "findDevice returns null for nonexistent device" {
+    const arch = @import("arch");
+    try arch.freestanding();
+    try std.testing.expectEqual(null, findDevice(0xDEAD, 0xBEEF));
+}
+
+test "findDevice locates i440FX host bridge" {
+    const arch = @import("arch");
+    try arch.freestanding();
+    // QEMU i440FX machines always have an Intel i440FX host bridge.
+    const addr = findDevice(0x8086, 0x1237);
+    try std.testing.expect(addr != null);
+}
+
+test "walkCaps finds VirtIO sound common_cfg and notify regions" {
+    const arch = @import("arch");
+    try arch.freestanding();
+    // VirtIO sound: vendor=0x1AF4, device=0x1059 (0x1040 + VIRTIO_ID_SOUND=25).
+    const addr = findDevice(0x1AF4, 0x1059) orelse return error.SkipZigTest;
+    const caps = walkCaps(addr.bus, addr.dev);
+    try std.testing.expect(caps != null);
+    try std.testing.expect(caps.?.notify_base != 0);
+    try std.testing.expect(caps.?.notify_mult != 0);
 }

@@ -60,7 +60,7 @@ Run `zig build test-all` after completing all changes.
 
 Tests that exercise hardware (I/O ports, TSC, etc.) must call
 `try arch.freestanding()` as their first line; this skips them when running
-under a hosted target. New code should always have tests within reason.
+under a hosted target. New code should have tests.
 
 ## Code conventions
 

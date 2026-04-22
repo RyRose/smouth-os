@@ -333,6 +333,47 @@ pub fn play(data: []const u8) Error!void {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+test "SndHdr size" {
+    try std.testing.expectEqual(4, @sizeOf(SndHdr));
+}
+
+test "SndPcmHdr size" {
+    try std.testing.expectEqual(8, @sizeOf(SndPcmHdr));
+}
+
 test "SndPcmSetParams size" {
     try std.testing.expectEqual(24, @sizeOf(SndPcmSetParams));
+}
+
+test "SndPcmXfer size" {
+    try std.testing.expectEqual(4, @sizeOf(SndPcmXfer));
+}
+
+test "SndPcmStatus size" {
+    try std.testing.expectEqual(8, @sizeOf(SndPcmStatus));
+}
+
+test "play succeeds with minimal silent WAV" {
+    const arch = @import("arch");
+    try arch.freestanding();
+
+    // One period of 16-bit mono silence at 44100 Hz.
+    const pcm_len = 1024 * 2;
+    var wav_buf: [44 + pcm_len]u8 = undefined;
+    @memcpy(wav_buf[0..4], "RIFF");
+    std.mem.writeInt(u32, wav_buf[4..8], wav_buf.len - 8, .little);
+    @memcpy(wav_buf[8..12], "WAVE");
+    @memcpy(wav_buf[12..16], "fmt ");
+    std.mem.writeInt(u32, wav_buf[16..20], 16, .little);    // fmt chunk size
+    std.mem.writeInt(u16, wav_buf[20..22], 1, .little);     // PCM
+    std.mem.writeInt(u16, wav_buf[22..24], 1, .little);     // mono
+    std.mem.writeInt(u32, wav_buf[24..28], 44100, .little); // sample rate
+    std.mem.writeInt(u32, wav_buf[28..32], 88200, .little); // byte rate
+    std.mem.writeInt(u16, wav_buf[32..34], 2, .little);     // block align
+    std.mem.writeInt(u16, wav_buf[34..36], 16, .little);    // bits per sample
+    @memcpy(wav_buf[36..40], "data");
+    std.mem.writeInt(u32, wav_buf[40..44], pcm_len, .little);
+    @memset(wav_buf[44..], 0);
+
+    try play(&wav_buf);
 }
