@@ -13,8 +13,8 @@ jobs:
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
           version: 0.16.0
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+      - name: Install QEMU
+        run: sudo apt-get install -y qemu-system-x86
       - name: Build
         run: zig build
       - name: Test (unit)
