@@ -237,8 +237,9 @@ pub fn play(data: []const u8) Error!void {
     log.info("VirtIO sound at PCI bus={} dev={}", .{ found.bus, found.dev });
 
     // Enable memory decode (bit 1) and bus mastering (bit 2).
-    const cmd = pci.configRead32(found.bus, found.dev, 0, 0x04) & 0xFFFF;
-    pci.configWrite32(found.bus, found.dev, 0, 0x04, cmd | 0x0006);
+    const dev_addr = pci.ConfigurationAddress{ .bus = found.bus, .device = found.dev };
+    const cmd = pci.configRead32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.command))) & 0xFFFF;
+    pci.configWrite32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.command)), cmd | 0x0006);
 
     const caps = virtio.walkCaps(found.bus, found.dev) orelse return error.NoCaps;
     const common = caps.common;

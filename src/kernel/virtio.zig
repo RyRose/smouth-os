@@ -145,8 +145,10 @@ pub const Caps = struct {
 /// Walk the PCI capability list for a VirtIO device and locate the CommonCfg
 /// and Notify MMIO regions. Returns null if either capability is missing.
 pub fn walkCaps(bus: u8, dev: u5) ?Caps {
+    const dev_addr = pci.ConfigurationAddress{ .bus = bus, .device = dev };
+
     // PCI status register bit 4 indicates a capability list is present.
-    const status: u16 = @truncate(pci.configRead32(bus, dev, 0, 0x04) >> 16);
+    const status: u16 = @truncate(pci.configRead32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.command))) >> 16);
     if (status & 0x10 == 0) {
         log.err("device has no PCI capability list", .{});
         return null;
@@ -156,17 +158,23 @@ pub fn walkCaps(bus: u8, dev: u5) ?Caps {
     var notify_addr: usize = 0;
     var notify_mult: u32 = 0;
 
-    var cap_off = pci.configReadByte(bus, dev, 0, 0x34);
+    var cap_off = pci.configReadByte(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.capabilities_ptr)));
     while (cap_off != 0) {
-        const cap_vndr = pci.configReadByte(bus, dev, 0, cap_off);
-        const cap_next = pci.configReadByte(bus, dev, 0, cap_off + 1);
+        // cap_vndr is the PCI capability ID.
+        const cap_vndr = pci.configReadByte(dev_addr.at(cap_off));
+        // cap_next is the offset of the next capability in the list (0 if this is the last one).
+        const cap_next = pci.configReadByte(dev_addr.at(cap_off + 1));
 
         if (cap_vndr == pci_cap_vndr) {
-            const cfg_type = pci.configReadByte(bus, dev, 0, cap_off + 3);
-            const bar_idx = pci.configReadByte(bus, dev, 0, cap_off + 4);
-            const cap_bar_offset = pci.configRead32(bus, dev, 0, cap_off + 8);
+            // cfg_type is the VirtIO capability type (e.g. common_cfg, notify_cfg).
+            const cfg_type = pci.configReadByte(dev_addr.at(cap_off + 3));
+            // bar_idx is which BAR (0–5) the capability's MMIO region is located in.
+            const bar_idx = pci.configReadByte(dev_addr.at(cap_off + 4));
+            // cap_bar_offset is the offset within the BAR where the capability's MMIO region starts.
+            const cap_bar_offset = pci.configRead32(dev_addr.at(cap_off + 8));
 
-            const bar_val = pci.configRead32(bus, dev, 0, 0x10 + @as(u8, bar_idx) * 4);
+            // Read the BAR to find the MMIO base address for this capability. Skip if it's an I/O BAR.
+            const bar_val = pci.configRead32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.bar0) + @as(u8, bar_idx) * 4));
             if (bar_val & 1 != 0) { // skip I/O BARs
                 cap_off = cap_next;
                 continue;
@@ -181,7 +189,7 @@ pub fn walkCaps(bus: u8, dev: u5) ?Caps {
                 },
                 cap_notify_cfg => {
                     notify_addr = mmio;
-                    notify_mult = pci.configRead32(bus, dev, 0, cap_off + 16);
+                    notify_mult = pci.configRead32(dev_addr.at(cap_off + 16));
                     log.debug("notify MMIO=0x{X} mult={}", .{ mmio, notify_mult });
                 },
                 else => {},
@@ -218,7 +226,7 @@ pub const DeviceAddr = struct {
 pub fn findDevice(vendor_id: u16, device_id: u16) ?DeviceAddr {
     for (0..256) |bus| {
         for (0..32) |dev| {
-            const id = pci.configRead32(@intCast(bus), @intCast(dev), 0, 0);
+            const id = pci.configRead32(.{ .bus = @intCast(bus), .device = @intCast(dev), .register_offset = @intFromEnum(pci.ConfigurationOffset.vendor_device) });
             if (id == 0xFFFF_FFFF) continue;
             const vendor: u16 = @truncate(id);
             const device: u16 = @truncate(id >> 16);
