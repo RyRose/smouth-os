@@ -13,12 +13,14 @@ const serial = @import("serial.zig");
 
 const log = std.log.scoped(.PANIC);
 
+/// Panic handler for the kernel. Logs the panic message and stack trace, then
+/// halts the system.
 pub const handler = std.debug.FullPanic(innerPanic);
 
 fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     log.err("{s}", .{msg});
 
-    log.err("Panic stack trace: 0x{?x}", .{return_address});
+    log.err("Panic stack trace: {?x}", .{return_address});
     std.debug.writeCurrentStackTrace(
         .{ .allow_unsafe_unwind = true },
         serial.tty,
