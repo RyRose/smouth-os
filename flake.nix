@@ -14,11 +14,12 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        zigpkg = zig.packages.${system}."0.16.0";
       in
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            zig.packages.${system}."0.16.0"
+            zigpkg
             qemu
           ];
         };
@@ -26,7 +27,7 @@
         packages.default = pkgs.buildEnv {
           name = "smouth-os-env";
           paths = with pkgs; [
-            zig.packages.${system}."0.16.0"
+            zigpkg
             qemu
             bash
             coreutils
