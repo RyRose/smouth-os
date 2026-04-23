@@ -14,7 +14,10 @@ jobs:
         with:
           version: 0.16.0
       - name: Install QEMU
-        run: sudo apt-get install -y qemu-system-x86
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: qemu-system-x86
+          version: 1.0
       - name: Build
         run: zig build
       - name: Test (unit)
