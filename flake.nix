@@ -22,6 +22,16 @@
             qemu
           ];
         };
+
+        packages.default = pkgs.buildEnv {
+          name = "smouth-os-env";
+          paths = with pkgs; [
+            zig.packages.${system}."0.16.0"
+            qemu
+            bash
+            coreutils
+          ];
+        };
       }
     );
 }
