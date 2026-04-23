@@ -6,6 +6,7 @@ on:
       - Dockerfile
       - flake.nix
       - flake.lock
+      - .github/workflows/docker.yml
 jobs:
   push:
     runs-on: ubuntu-latest
@@ -14,10 +15,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
       - name: Set image name
         run: echo "IMAGE=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
