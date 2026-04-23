@@ -7,26 +7,22 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    # container:
-    #   image: ghcr.io/ryrose/smouth-os:latest@sha256:df8de936eef0988e1956ed5b7e92f3f7248f7b48ac87b20f1d64be9afdd7fcc9
-    #   credentials:
-    #     username: ${{ github.actor }}
-    #     password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: DeterminateSystems/nix-installer-action@v22
-      - uses: DeterminateSystems/magic-nix-cache-action@v13
-      # - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      #   with:
-      #     path: |
-      #       ~/.cache/zig
-      #       .zig-cache
-      #     key: zig-cache
+      - name: Install Zig 0.16.0
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.16.0
+      - name: Install QEMU
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: qemu-system-x86
+          version: 1.0
       - name: Build
-        run: nix develop -c zig build
+        run: zig build
       - name: Test (unit)
-        run: nix develop -c zig build test
+        run: zig build test
       - name: Test (kernel)
-        run: nix develop -c zig build test-x86
+        run: zig build test-x86
       - name: Test (arch)
-        run: nix develop -c zig build test-arch-x86
+        run: zig build test-arch-x86
