@@ -11,12 +11,18 @@ jobs:
       contents: read
       packages: read
     container:
-      image: ghcr.io/ryrose/smouth-os:latest
+      image: ghcr.io/ryrose/smouth-os:latest@sha256:df8de936eef0988e1956ed5b7e92f3f7248f7b48ac87b20f1d64be9afdd7fcc9
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cache/zig
+            .zig-cache
+          key: zig-cache
       - name: Build
         run: zig build
       - name: Test (unit)
