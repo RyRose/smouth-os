@@ -100,9 +100,16 @@ pub const ConfigurationAddress = packed struct(u32) {
     enable: bool = true,
 
     /// Returns a copy of this address with the register offset replaced.
-    pub fn at(self: ConfigurationAddress, offset: u8) ConfigurationAddress {
+    pub fn atOffsetRaw(self: ConfigurationAddress, offset: u8) ConfigurationAddress {
         var copy = self;
         copy.register_offset = offset;
+        return copy;
+    }
+
+    /// Returns a copy of this address with the register offset replaced.
+    pub fn atOffset(self: ConfigurationAddress, offset: ConfigurationOffset) ConfigurationAddress {
+        var copy = self;
+        copy.register_offset = @intFromEnum(offset);
         return copy;
     }
 };

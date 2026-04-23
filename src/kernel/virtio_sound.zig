@@ -149,13 +149,13 @@ fn ctrlSubmit(
     ctrl_descs[0] = .{
         .addr = @intFromPtr(req.ptr),
         .len = @intCast(req.len),
-        .flags = virtio.virtq_desc_f_next,
+        .flags = .{ .next = true },
         .next = 1,
     };
     ctrl_descs[1] = .{
         .addr = @intFromPtr(resp.ptr),
         .len = @intCast(resp.len),
-        .flags = virtio.virtq_desc_f_write,
+        .flags = .{ .write = true },
         .next = 0,
     };
 
@@ -183,19 +183,19 @@ fn txSubmit(
     tx_descs[0] = .{
         .addr = @intFromPtr(xfer),
         .len = @sizeOf(SndPcmXfer),
-        .flags = virtio.virtq_desc_f_next,
+        .flags = .{ .next = true },
         .next = 1,
     };
     tx_descs[1] = .{
         .addr = @intFromPtr(pcm.ptr),
         .len = @intCast(pcm.len),
-        .flags = virtio.virtq_desc_f_next,
+        .flags = .{ .next = true },
         .next = 2,
     };
     tx_descs[2] = .{
         .addr = @intFromPtr(status),
         .len = @sizeOf(SndPcmStatus),
-        .flags = virtio.virtq_desc_f_write,
+        .flags = .{ .write = true },
         .next = 0,
     };
 
@@ -238,34 +238,50 @@ pub fn play(data: []const u8) Error!void {
 
     // Enable memory decode (bit 1) and bus mastering (bit 2).
     const dev_addr = pci.ConfigurationAddress{ .bus = found.bus, .device = found.dev };
-    const cmd = pci.configRead32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.command))) & 0xFFFF;
-    pci.configWrite32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.command)), cmd | 0x0006);
+    var cs: pci.CommandStatus = @bitCast(pci.configRead32(dev_addr.atOffset(.command)));
+    cs.command.memory_space = true;
+    cs.command.bus_master = true;
+    pci.configWrite32(dev_addr.atOffset(.command), @bitCast(cs));
 
     const caps = virtio.walkCaps(found.bus, found.dev) orelse return error.NoCaps;
     const common = caps.common;
 
     // ── Device initialisation sequence (§3.1) ────────────────────────────────
-    common.device_status = 0; // reset
-    common.device_status = virtio.status_acknowledge | virtio.status_driver;
+    common.device_status = .{}; // reset
+    common.device_status = .{ .acknowledge = true, .driver = true };
 
     // Negotiate VIRTIO_F_VERSION_1 (feature bit 32 → select=1, bit 0).
     common.driver_feature_select = 0;
     common.driver_feature = 0;
     common.driver_feature_select = 1;
     common.driver_feature = virtio.virtio_f_version_1;
-    common.device_status = virtio.status_acknowledge | virtio.status_driver | virtio.status_features_ok;
-    if (common.device_status & virtio.status_features_ok == 0) {
+    common.device_status = .{ .acknowledge = true, .driver = true, .features_ok = true };
+    if (!common.device_status.features_ok) {
         log.err("device rejected VIRTIO_F_VERSION_1", .{});
         return error.FeaturesRejected;
     }
 
     // ── Queue setup ───────────────────────────────────────────────────────────
     zeroQueues();
-    const ctrl_notify_off = virtio.setupQueue(common, controlq, queue_size, @intFromPtr(&ctrl_descs), @intFromPtr(&ctrl_avail), @intFromPtr(&ctrl_used));
-    const tx_notify_off = virtio.setupQueue(common, txq, queue_size, @intFromPtr(&tx_descs), @intFromPtr(&tx_avail), @intFromPtr(&tx_used));
+    const ctrl_notify_off = virtio.setupQueue(
+        common,
+        controlq,
+        queue_size,
+        @intFromPtr(&ctrl_descs),
+        @intFromPtr(&ctrl_avail),
+        @intFromPtr(&ctrl_used),
+    );
+    const tx_notify_off = virtio.setupQueue(
+        common,
+        txq,
+        queue_size,
+        @intFromPtr(&tx_descs),
+        @intFromPtr(&tx_avail),
+        @intFromPtr(&tx_used),
+    );
     log.debug("controlq notify_off={} txq notify_off={}", .{ ctrl_notify_off, tx_notify_off });
 
-    common.device_status = virtio.status_acknowledge | virtio.status_driver | virtio.status_features_ok | virtio.status_driver_ok;
+    common.device_status = .{ .acknowledge = true, .driver = true, .features_ok = true, .driver_ok = true };
 
     // ── PCM_SET_PARAMS ────────────────────────────────────────────────────────
     const fmt_code: u8 = if (fmt.bits_per_sample == 8) virtio_snd_pcm_fmt_u8 else virtio_snd_pcm_fmt_s16;
@@ -365,13 +381,13 @@ test "play succeeds with minimal silent WAV" {
     std.mem.writeInt(u32, wav_buf[4..8], wav_buf.len - 8, .little);
     @memcpy(wav_buf[8..12], "WAVE");
     @memcpy(wav_buf[12..16], "fmt ");
-    std.mem.writeInt(u32, wav_buf[16..20], 16, .little);    // fmt chunk size
-    std.mem.writeInt(u16, wav_buf[20..22], 1, .little);     // PCM
-    std.mem.writeInt(u16, wav_buf[22..24], 1, .little);     // mono
+    std.mem.writeInt(u32, wav_buf[16..20], 16, .little); // fmt chunk size
+    std.mem.writeInt(u16, wav_buf[20..22], 1, .little); // PCM
+    std.mem.writeInt(u16, wav_buf[22..24], 1, .little); // mono
     std.mem.writeInt(u32, wav_buf[24..28], 44100, .little); // sample rate
     std.mem.writeInt(u32, wav_buf[28..32], 88200, .little); // byte rate
-    std.mem.writeInt(u16, wav_buf[32..34], 2, .little);     // block align
-    std.mem.writeInt(u16, wav_buf[34..36], 16, .little);    // bits per sample
+    std.mem.writeInt(u16, wav_buf[32..34], 2, .little); // block align
+    std.mem.writeInt(u16, wav_buf[34..36], 16, .little); // bits per sample
     @memcpy(wav_buf[36..40], "data");
     std.mem.writeInt(u32, wav_buf[40..44], pcm_len, .little);
     @memset(wav_buf[44..], 0);

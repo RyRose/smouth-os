@@ -38,28 +38,17 @@ pub fn main() anyerror!void {
     try kernel.virtio_sound.play(embed.smouth_wav);
 
     for (0..256) |bus| {
-        for (0..8) |device| {
-            const address = kernel.pci.ConfigurationAddress.init(.{
+        for (0..32) |device| {
+            const addr = kernel.pci.ConfigurationAddress{
                 .bus = @intCast(bus),
                 .device = @intCast(device),
-                .function = 0,
-                .register_offset = .vendor_device,
-            });
-            arch.x86.ioport.outl(.pci_config_addr, @bitCast(address));
-            const raw = arch.x86.ioport.inl(.pci_config_data);
-
-            if (raw == 0xFFFF_FFFF) continue;
-            log.info("PCI Device found at bus {d}, device {d}", .{
-                bus,
-                device,
-            });
-
-            const value: *const packed struct {
-                vendor: u16,
-                device: u16,
-            } = @ptrCast(&raw);
-            log.info("  Vendor ID: 0x{x}", .{value.vendor});
-            log.info("  Device ID: 0x{x}", .{value.device});
+                .register_offset = @intFromEnum(kernel.pci.ConfigurationOffset.vendor_device),
+            };
+            const vd: kernel.pci.VendorDevice = @bitCast(kernel.pci.configRead32(addr));
+            if (vd.vendor_id == 0xFFFF) continue;
+            log.info("PCI Device found at bus {d}, device {d}", .{ bus, device });
+            log.info("  Vendor ID: 0x{x}", .{vd.vendor_id});
+            log.info("  Device ID: 0x{x}", .{vd.device_id});
         }
     }
 }

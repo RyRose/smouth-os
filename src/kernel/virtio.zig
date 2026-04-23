@@ -8,14 +8,18 @@ const log = std.log.scoped(.virtio);
 
 // ── Device status bits (§2.1) ────────────────────────────────────────────────
 
-/// Device status bit: driver has noticed the device.
-pub const status_acknowledge: u8 = 1;
-/// Device status bit: driver knows how to drive the device.
-pub const status_driver: u8 = 2;
-/// Device status bit: driver is ready to drive the device.
-pub const status_driver_ok: u8 = 4;
-/// Device status bit: driver has accepted the negotiated feature set.
-pub const status_features_ok: u8 = 8;
+/// VirtIO device status register (§2.1).
+pub const DeviceStatus = packed struct(u8) {
+    /// Driver has noticed the device.
+    acknowledge: bool = false,
+    /// Driver knows how to drive the device.
+    driver: bool = false,
+    /// Driver is ready to drive the device.
+    driver_ok: bool = false,
+    /// Driver has accepted the negotiated feature set.
+    features_ok: bool = false,
+    _reserved: u4 = 0,
+};
 
 // ── Feature bits ─────────────────────────────────────────────────────────────
 
@@ -49,7 +53,7 @@ pub const CommonCfg = extern struct {
     /// Number of virtqueues supported by the device.
     num_queues: u16, // +18
     /// Device status register; written by driver to progress the init handshake.
-    device_status: u8, // +20
+    device_status: DeviceStatus, // +20
     /// Incremented by the device whenever its configuration space changes.
     config_generation: u8, // +21
     /// Selects which queue subsequent queue_* fields apply to.
@@ -87,15 +91,19 @@ pub const Desc = extern struct {
     /// Length of the buffer in bytes.
     len: u32,
     /// Descriptor flags (NEXT, WRITE, etc.).
-    flags: u16,
+    flags: DescFlags,
     /// Index of the next descriptor in a chained sequence (valid when NEXT is set).
     next: u16,
 };
 
-/// Descriptor flag: this descriptor chains to the next (`.next` is valid).
-pub const virtq_desc_f_next: u16 = 1;
-/// Descriptor flag: this buffer is writable by the device (otherwise read-only).
-pub const virtq_desc_f_write: u16 = 2;
+/// Virtqueue descriptor flags (§2.7.5).
+pub const DescFlags = packed struct(u16) {
+    /// Descriptor chains to the next (`.next` is valid).
+    next: bool = false,
+    /// Buffer is writable by the device (otherwise read-only).
+    write: bool = false,
+    _reserved: u14 = 0,
+};
 
 /// Returns the type for a driver-side (available) ring with `size` descriptor slots.
 pub fn AvailRing(comptime size: u16) type {
@@ -148,8 +156,8 @@ pub fn walkCaps(bus: u8, dev: u5) ?Caps {
     const dev_addr = pci.ConfigurationAddress{ .bus = bus, .device = dev };
 
     // PCI status register bit 4 indicates a capability list is present.
-    const status: u16 = @truncate(pci.configRead32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.command))) >> 16);
-    if (status & 0x10 == 0) {
+    const cs: pci.CommandStatus = @bitCast(pci.configRead32(dev_addr.atOffset(.command)));
+    if (!cs.status.capabilities_list) {
         log.err("device has no PCI capability list", .{});
         return null;
     }
@@ -158,29 +166,30 @@ pub fn walkCaps(bus: u8, dev: u5) ?Caps {
     var notify_addr: usize = 0;
     var notify_mult: u32 = 0;
 
-    var cap_off = pci.configReadByte(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.capabilities_ptr)));
-    while (cap_off != 0) {
+    var cap_offset = pci.configReadByte(dev_addr.atOffset(.capabilities_ptr));
+    while (cap_offset != 0) {
         // cap_vndr is the PCI capability ID.
-        const cap_vndr = pci.configReadByte(dev_addr.at(cap_off));
+        const cap_vndr = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset));
         // cap_next is the offset of the next capability in the list (0 if this is the last one).
-        const cap_next = pci.configReadByte(dev_addr.at(cap_off + 1));
+        const cap_next = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 1));
 
         if (cap_vndr == pci_cap_vndr) {
             // cfg_type is the VirtIO capability type (e.g. common_cfg, notify_cfg).
-            const cfg_type = pci.configReadByte(dev_addr.at(cap_off + 3));
+            const cfg_type = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 3));
             // bar_idx is which BAR (0–5) the capability's MMIO region is located in.
-            const bar_idx = pci.configReadByte(dev_addr.at(cap_off + 4));
+            const bar_idx = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 4));
             // cap_bar_offset is the offset within the BAR where the capability's MMIO region starts.
-            const cap_bar_offset = pci.configRead32(dev_addr.at(cap_off + 8));
+            const cap_bar_offset = pci.configRead32(dev_addr.atOffsetRaw(cap_offset + 8));
 
             // Read the BAR to find the MMIO base address for this capability. Skip if it's an I/O BAR.
-            const bar_val = pci.configRead32(dev_addr.at(@intFromEnum(pci.ConfigurationOffset.bar0) + @as(u8, bar_idx) * 4));
-            if (bar_val & 1 != 0) { // skip I/O BARs
-                cap_off = cap_next;
+            const bar: pci.Bar32 = @bitCast(pci.configRead32(dev_addr.atOffsetRaw(
+                @intFromEnum(pci.ConfigurationOffset.bar0) + @as(u8, bar_idx) * 4,
+            )));
+            if (bar.is_io) {
+                cap_offset = cap_next;
                 continue;
             }
-            const bar_base = bar_val & 0xFFFF_FFF0;
-            const mmio = bar_base + cap_bar_offset;
+            const mmio = bar.mmioBase() + cap_bar_offset;
 
             switch (cfg_type) {
                 cap_common_cfg => {
@@ -189,14 +198,14 @@ pub fn walkCaps(bus: u8, dev: u5) ?Caps {
                 },
                 cap_notify_cfg => {
                     notify_addr = mmio;
-                    notify_mult = pci.configRead32(dev_addr.at(cap_off + 16));
+                    notify_mult = pci.configRead32(dev_addr.atOffsetRaw(cap_offset + 16));
                     log.debug("notify MMIO=0x{X} mult={}", .{ mmio, notify_mult });
                 },
                 else => {},
             }
         }
 
-        cap_off = cap_next;
+        cap_offset = cap_next;
     }
 
     if (common_addr == 0 or notify_addr == 0) {
@@ -226,11 +235,13 @@ pub const DeviceAddr = struct {
 pub fn findDevice(vendor_id: u16, device_id: u16) ?DeviceAddr {
     for (0..256) |bus| {
         for (0..32) |dev| {
-            const id = pci.configRead32(.{ .bus = @intCast(bus), .device = @intCast(dev), .register_offset = @intFromEnum(pci.ConfigurationOffset.vendor_device) });
-            if (id == 0xFFFF_FFFF) continue;
-            const vendor: u16 = @truncate(id);
-            const device: u16 = @truncate(id >> 16);
-            if (vendor == vendor_id and device == device_id)
+            const vd: pci.VendorDevice = @bitCast(pci.configRead32(.{
+                .bus = @intCast(bus),
+                .device = @intCast(dev),
+                .register_offset = @intFromEnum(pci.ConfigurationOffset.vendor_device),
+            }));
+            if (vd.vendor_id == 0xFFFF) continue;
+            if (vd.vendor_id == vendor_id and vd.device_id == device_id)
                 return .{ .bus = @intCast(bus), .dev = @intCast(dev) };
         }
     }
@@ -268,6 +279,20 @@ pub inline fn kickQueue(caps: *const Caps, notify_off: u16, q_idx: u16) void {
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
+
+test "DeviceStatus layout" {
+    try std.testing.expectEqual(8, @bitSizeOf(DeviceStatus));
+    const s = DeviceStatus{ .acknowledge = true, .driver = true };
+    try std.testing.expectEqual(@as(u8, 0x03), @as(u8, @bitCast(s)));
+    const s2 = DeviceStatus{ .acknowledge = true, .driver = true, .driver_ok = true, .features_ok = true };
+    try std.testing.expectEqual(@as(u8, 0x0F), @as(u8, @bitCast(s2)));
+}
+
+test "DescFlags layout" {
+    try std.testing.expectEqual(16, @bitSizeOf(DescFlags));
+    try std.testing.expectEqual(@as(u16, 0x0001), @as(u16, @bitCast(DescFlags{ .next = true })));
+    try std.testing.expectEqual(@as(u16, 0x0002), @as(u16, @bitCast(DescFlags{ .write = true })));
+}
 
 test "CommonCfg layout" {
     try std.testing.expectEqual(0, @offsetOf(CommonCfg, "device_feature_select"));
