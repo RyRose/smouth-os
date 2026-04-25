@@ -59,14 +59,10 @@ const virtio_snd_pcm_rate_48000: u8 = 7;
 /// Number of descriptors per virtqueue. Must be a power of two.
 const queue_size: u16 = 64;
 
-// Static queue memory (BSS-allocated, no heap needed).
-var ctrl_descs: [queue_size]virtio.Desc align(16) = undefined;
-var ctrl_avail: virtio.AvailRing(queue_size) align(2) = undefined;
-var ctrl_used: virtio.UsedRing(queue_size) align(4) = undefined;
-
-var tx_descs: [queue_size]virtio.Desc align(16) = undefined;
-var tx_avail: virtio.AvailRing(queue_size) align(2) = undefined;
-var tx_used: virtio.UsedRing(queue_size) align(4) = undefined;
+/// Control queue: carries command requests and responses.
+var ctrl_queue: virtio.Virtqueue(queue_size) = .{};
+/// TX queue: carries PCM audio frames from the driver to the device.
+var tx_queue: virtio.Virtqueue(queue_size) = .{};
 
 // ── VirtIO Sound message structures ──────────────────────────────────────────
 
@@ -128,12 +124,8 @@ comptime {
 
 /// Zero all virtqueue memory before handing addresses to the device.
 fn zeroQueues() void {
-    ctrl_descs = std.mem.zeroes(@TypeOf(ctrl_descs));
-    ctrl_avail = std.mem.zeroes(@TypeOf(ctrl_avail));
-    ctrl_used = std.mem.zeroes(@TypeOf(ctrl_used));
-    tx_descs = std.mem.zeroes(@TypeOf(tx_descs));
-    tx_avail = std.mem.zeroes(@TypeOf(tx_avail));
-    tx_used = std.mem.zeroes(@TypeOf(tx_used));
+    ctrl_queue.zero();
+    tx_queue.zero();
 }
 
 // ── Control queue submit (polling, chain always starts at desc 0) ─────────────
@@ -144,29 +136,11 @@ fn ctrlSubmit(
     req: []const u8,
     resp: []u8,
     caps: *const virtio.Caps,
-    ctrl_notify_off: u16,
 ) void {
-    ctrl_descs[0] = .{
-        .addr = @intFromPtr(req.ptr),
-        .len = @intCast(req.len),
-        .flags = .{ .next = true },
-        .next = 1,
-    };
-    ctrl_descs[1] = .{
-        .addr = @intFromPtr(resp.ptr),
-        .len = @intCast(resp.len),
-        .flags = .{ .write = true },
-        .next = 0,
-    };
-
-    const idx = ctrl_avail.idx;
-    ctrl_avail.ring[idx % queue_size] = 0;
-    @as(*volatile u16, &ctrl_avail.idx).* = idx +% 1;
-
-    virtio.kickQueue(caps, ctrl_notify_off, controlq);
-
-    while (@as(*volatile u16, &ctrl_used.idx).* != idx +% 1)
-        std.atomic.spinLoopHint();
+    ctrl_queue.submit(caps, &[_]virtio.Desc{
+        .{ .addr = @intFromPtr(req.ptr), .len = @intCast(req.len), .flags = .{ .next = true }, .next = 1 },
+        .{ .addr = @intFromPtr(resp.ptr), .len = @intCast(resp.len), .flags = .{ .write = true }, .next = 0 },
+    });
 }
 
 // ── TX queue submit (polling, chain always starts at desc 0) ──────────────────
@@ -178,35 +152,12 @@ fn txSubmit(
     pcm: []const u8,
     status: *SndPcmStatus,
     caps: *const virtio.Caps,
-    tx_notify_off: u16,
 ) void {
-    tx_descs[0] = .{
-        .addr = @intFromPtr(xfer),
-        .len = @sizeOf(SndPcmXfer),
-        .flags = .{ .next = true },
-        .next = 1,
-    };
-    tx_descs[1] = .{
-        .addr = @intFromPtr(pcm.ptr),
-        .len = @intCast(pcm.len),
-        .flags = .{ .next = true },
-        .next = 2,
-    };
-    tx_descs[2] = .{
-        .addr = @intFromPtr(status),
-        .len = @sizeOf(SndPcmStatus),
-        .flags = .{ .write = true },
-        .next = 0,
-    };
-
-    const idx = tx_avail.idx;
-    tx_avail.ring[idx % queue_size] = 0;
-    @as(*volatile u16, &tx_avail.idx).* = idx +% 1;
-
-    virtio.kickQueue(caps, tx_notify_off, txq);
-
-    while (@as(*volatile u16, &tx_used.idx).* != idx +% 1)
-        std.atomic.spinLoopHint();
+    tx_queue.submit(caps, &[_]virtio.Desc{
+        .{ .addr = @intFromPtr(xfer), .len = @sizeOf(SndPcmXfer), .flags = .{ .next = true }, .next = 1 },
+        .{ .addr = @intFromPtr(pcm.ptr), .len = @intCast(pcm.len), .flags = .{ .next = true }, .next = 2 },
+        .{ .addr = @intFromPtr(status), .len = @sizeOf(SndPcmStatus), .flags = .{ .write = true }, .next = 0 },
+    });
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -253,23 +204,9 @@ pub fn play(data: []const u8) !void {
 
     // ── Queue setup ───────────────────────────────────────────────────────────
     zeroQueues();
-    const ctrl_notify_off = virtio.setupQueue(
-        common,
-        controlq,
-        queue_size,
-        @intFromPtr(&ctrl_descs),
-        @intFromPtr(&ctrl_avail),
-        @intFromPtr(&ctrl_used),
-    );
-    const tx_notify_off = virtio.setupQueue(
-        common,
-        txq,
-        queue_size,
-        @intFromPtr(&tx_descs),
-        @intFromPtr(&tx_avail),
-        @intFromPtr(&tx_used),
-    );
-    log.debug("controlq notify_off={} txq notify_off={}", .{ ctrl_notify_off, tx_notify_off });
+    ctrl_queue.setup(common, controlq);
+    tx_queue.setup(common, txq);
+    log.debug("controlq notify_off={} txq notify_off={}", .{ ctrl_queue.notify_off, tx_queue.notify_off });
 
     common.device_status = .{ .acknowledge = true, .driver = true, .features_ok = true, .driver_ok = true };
 
@@ -299,21 +236,21 @@ pub fn play(data: []const u8) !void {
         .padding = 0,
     };
     var ctrl_resp = SndHdr{ .code = 0 };
-    ctrlSubmit(std.mem.asBytes(&set_params), std.mem.asBytes(&ctrl_resp), &caps, ctrl_notify_off);
+    ctrlSubmit(std.mem.asBytes(&set_params), std.mem.asBytes(&ctrl_resp), &caps);
     log.info("SET_PARAMS resp=0x{X}", .{ctrl_resp.code});
     if (ctrl_resp.code != virtio_snd_s_ok) return error.SetParamsFailed;
 
     // ── PCM_PREPARE ───────────────────────────────────────────────────────────
     var prepare_req = SndPcmHdr{ .code = virtio_snd_r_pcm_prepare, .stream_id = 0 };
     ctrl_resp.code = 0;
-    ctrlSubmit(std.mem.asBytes(&prepare_req), std.mem.asBytes(&ctrl_resp), &caps, ctrl_notify_off);
+    ctrlSubmit(std.mem.asBytes(&prepare_req), std.mem.asBytes(&ctrl_resp), &caps);
     log.info("PREPARE resp=0x{X}", .{ctrl_resp.code});
     if (ctrl_resp.code != virtio_snd_s_ok) return error.PrepareFailed;
 
     // ── PCM_START ─────────────────────────────────────────────────────────────
     var start_req = SndPcmHdr{ .code = virtio_snd_r_pcm_start, .stream_id = 0 };
     ctrl_resp.code = 0;
-    ctrlSubmit(std.mem.asBytes(&start_req), std.mem.asBytes(&ctrl_resp), &caps, ctrl_notify_off);
+    ctrlSubmit(std.mem.asBytes(&start_req), std.mem.asBytes(&ctrl_resp), &caps);
     log.info("START resp=0x{X}", .{ctrl_resp.code});
     if (ctrl_resp.code != virtio_snd_s_ok) return error.StartFailed;
 
@@ -325,7 +262,7 @@ pub fn play(data: []const u8) !void {
     const total_chunks = (parsed.pcm.len + period_bytes - 1) / period_bytes;
     while (offset < parsed.pcm.len) {
         const end = @min(offset + period_bytes, parsed.pcm.len);
-        txSubmit(&xfer, parsed.pcm[offset..end], &tx_status, &caps, tx_notify_off);
+        txSubmit(&xfer, parsed.pcm[offset..end], &tx_status, &caps);
         if (tx_status.status != virtio_snd_s_ok) {
             log.err("TX chunk {} failed: status=0x{X}", .{ chunk, tx_status.status });
             return error.TxFailed;

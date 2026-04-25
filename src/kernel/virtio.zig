@@ -248,6 +248,68 @@ pub fn findDevice(vendor_id: u16, device_id: u16) ?DeviceAddr {
     return null;
 }
 
+// ── Virtqueue abstraction ─────────────────────────────────────────────────────
+
+/// A complete virtqueue: descriptor table, available ring, used ring, and the
+/// device-assigned notify offset. `size` must be a power of two and match the
+/// value negotiated with the device.
+pub fn Virtqueue(comptime size: u16) type {
+    return struct {
+        /// Descriptor table; holds the buffer list exposed to the device.
+        descs: [size]Desc align(16) = undefined,
+        /// Driver (available) ring; driver writes head indices here.
+        avail: AvailRing(size) align(2) = undefined,
+        /// Device (used) ring; device writes completed chain indices here.
+        used: UsedRing(size) align(4) = undefined,
+        /// Per-queue notify offset returned by the device during setup.
+        notify_off: u16 = 0,
+        /// Queue index registered with the device.
+        q_idx: u16 = 0,
+
+        const Self = @This();
+
+        /// Zero all DMA-visible queue memory (descriptor table, available ring,
+        /// used ring). Call this before handing queue addresses to the device.
+        pub fn zero(self: *Self) void {
+            self.descs = std.mem.zeroes([size]Desc);
+            self.avail = std.mem.zeroes(AvailRing(size));
+            self.used = std.mem.zeroes(UsedRing(size));
+        }
+
+        /// Register this queue with the device via `common` and record the
+        /// notify offset. Call `zero` first, then `setup`, then mark the device
+        /// DRIVER_OK.
+        pub fn setup(self: *Self, common: *volatile CommonCfg, q_idx: u16) void {
+            self.q_idx = q_idx;
+            self.notify_off = setupQueue(
+                common,
+                q_idx,
+                size,
+                @intFromPtr(&self.descs),
+                @intFromPtr(&self.avail),
+                @intFromPtr(&self.used),
+            );
+        }
+
+        /// Copy `chain` into the descriptor table starting at index 0, enqueue
+        /// the head, notify the device, and spin-poll the used ring until the
+        /// device marks the chain complete. The caller must set each descriptor's
+        /// `next` field to form the correct chain.
+        pub fn submit(self: *Self, caps: *const Caps, chain: []const Desc) void {
+            std.debug.assert(chain.len <= size);
+            for (chain, 0..) |desc, i| {
+                self.descs[i] = desc;
+            }
+            const idx = self.avail.idx;
+            self.avail.ring[idx % size] = 0;
+            @as(*volatile u16, &self.avail.idx).* = idx +% 1;
+            kickQueue(caps, self.notify_off, self.q_idx);
+            while (@as(*volatile u16, &self.used.idx).* != idx +% 1)
+                std.atomic.spinLoopHint();
+        }
+    };
+}
+
 // ── Queue helpers ─────────────────────────────────────────────────────────────
 
 /// Register a virtqueue with the device via CommonCfg and enable it.
@@ -336,6 +398,29 @@ test "setupQueue writes fields and returns notify_off" {
     try std.testing.expectEqual(0x3000, cfg.queue_device);
     try std.testing.expectEqual(1, cfg.queue_enable);
     try std.testing.expectEqual(3, notify_off);
+}
+
+test "Virtqueue zero clears rings" {
+    var q: Virtqueue(4) = .{};
+    q.avail.idx = 42;
+    q.used.idx = 7;
+    q.descs[0].addr = 0xDEAD;
+    q.zero();
+    try std.testing.expectEqual(0, q.avail.idx);
+    try std.testing.expectEqual(0, q.used.idx);
+    try std.testing.expectEqual(0, q.descs[0].addr);
+}
+
+test "Virtqueue setup records q_idx and notify_off" {
+    var cfg = std.mem.zeroes(CommonCfg);
+    cfg.queue_notify_off = 5;
+    var q: Virtqueue(4) = .{};
+    q.setup(&cfg, 3);
+    try std.testing.expectEqual(3, q.q_idx);
+    try std.testing.expectEqual(5, q.notify_off);
+    try std.testing.expectEqual(3, cfg.queue_select);
+    try std.testing.expectEqual(4, cfg.queue_size);
+    try std.testing.expectEqual(1, cfg.queue_enable);
 }
 
 test "kickQueue writes queue index to doorbell" {
