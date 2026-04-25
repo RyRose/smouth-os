@@ -211,18 +211,8 @@ fn txSubmit(
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-pub const Error = error{
-    NoDevice,
-    NoCaps,
-    FeaturesRejected,
-    SetParamsFailed,
-    PrepareFailed,
-    StartFailed,
-    TxFailed,
-} || wav.Error;
-
 /// Parse `data` as a WAV file and stream it through the VirtIO sound device.
-pub fn play(data: []const u8) Error!void {
+pub fn play(data: []const u8) !void {
     const parsed = try wav.parse(data);
     const fmt = parsed.fmt;
 

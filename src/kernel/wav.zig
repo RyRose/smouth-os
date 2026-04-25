@@ -11,22 +11,6 @@
 
 const std = @import("std");
 
-pub const Error = error{
-    /// The file does not begin with the "RIFF" magic bytes.
-    InvalidRiff,
-    /// The RIFF form type is not "WAVE".
-    InvalidWave,
-    /// No "fmt " chunk was found, or it is smaller than 16 bytes.
-    MissingFmt,
-    /// The audio format is not PCM (format tag != 1), or bits-per-sample is
-    /// not 8 or 16.
-    UnsupportedFormat,
-    /// No "data" chunk was found.
-    MissingData,
-    /// The file is shorter than expected based on its internal size fields.
-    Truncated,
-};
-
 /// WAV format parameters extracted from the "fmt " chunk.
 pub const Format = struct {
     /// Number of audio channels (e.g. 1 for mono, 2 for stereo).
@@ -47,17 +31,24 @@ pub const Wav = struct {
     pcm: []const u8,
 };
 
+const Tag = enum { fmt, data, other };
+
+const tags = std.StaticStringMap(Tag).initComptime(.{
+    .{ "fmt ", .fmt },
+    .{ "data", .data },
+});
+
 /// Parse the RIFF/WAVE header from `data` and return format + PCM slice.
 /// Scans all chunks so extra metadata chunks between "fmt " and "data" are
 /// skipped safely.
-pub fn parse(data: []const u8) Error!Wav {
+pub fn parse(data: []const u8) !Wav {
     var r: std.Io.Reader = .fixed(data);
 
     // Read the RIFF file header: "RIFF", 4-byte file size (ignored), "WAVE".
-    const riff = r.takeArray(4) catch return error.Truncated;
+    const riff = try r.takeArray(4);
     if (!std.mem.eql(u8, riff, "RIFF")) return error.InvalidRiff;
-    r.discardAll(4) catch return error.Truncated;
-    const wave = r.takeArray(4) catch return error.Truncated;
+    try r.discardAll(4);
+    const wave = try r.takeArray(4);
     if (!std.mem.eql(u8, wave, "WAVE")) return error.InvalidWave;
 
     var fmt: ?Format = null;
@@ -68,26 +59,25 @@ pub fn parse(data: []const u8) Error!Wav {
     while (true) {
         const tag = r.takeArray(4) catch break;
         const size = r.takeInt(u32, .little) catch break;
-
-        switch (std.mem.readInt(u32, tag, .big)) {
-            std.mem.readInt(u32, "fmt ", .big) => {
+        switch (tags.get(tag) orelse .other) {
+            .fmt => {
                 if (size < 16) return error.MissingFmt;
-                const audio_format = r.takeInt(u16, .little) catch return error.Truncated;
+                const audio_format = try r.takeInt(u16, .little);
                 if (audio_format != 1) return error.UnsupportedFormat;
-                const channels = r.takeInt(u16, .little) catch return error.Truncated;
-                const sample_rate = r.takeInt(u32, .little) catch return error.Truncated;
-                r.discardAll(6) catch return error.Truncated; // byte_rate (4) + block_align (2)
-                const bits_per_sample = r.takeInt(u16, .little) catch return error.Truncated;
+                const channels = try r.takeInt(u16, .little);
+                const sample_rate = try r.takeInt(u32, .little);
+                try r.discardAll(6); // byte_rate (4) + block_align (2)
+                const bits_per_sample = try r.takeInt(u16, .little);
                 if (bits_per_sample != 8 and bits_per_sample != 16) return error.UnsupportedFormat;
                 fmt = .{ .channels = channels, .sample_rate = sample_rate, .bits_per_sample = bits_per_sample };
-                r.discardAll(size - 16 + (size & 1)) catch return error.Truncated;
+                try r.discardAll(size - 16 + (size & 1));
             },
-            std.mem.readInt(u32, "data", .big) => {
+            .data => {
                 if (r.seek + @as(usize, size) > data.len) return error.Truncated;
                 pcm = data[r.seek..][0..size];
-                r.discardAll(size + (size & 1)) catch return error.Truncated;
+                try r.discardAll(size + (size & 1));
             },
-            else => r.discardAll(size + (size & 1)) catch return error.Truncated,
+            .other => try r.discardAll(size + (size & 1)),
         }
     }
 
