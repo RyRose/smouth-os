@@ -29,8 +29,6 @@
           paths = with pkgs; [
             zigpkg
             qemu
-            bash
-            coreutils
           ];
         };
       }

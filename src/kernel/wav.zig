@@ -28,7 +28,7 @@ pub const Error = error{
 };
 
 /// WAV format parameters extracted from the "fmt " chunk.
-pub const Fmt = struct {
+pub const Format = struct {
     /// Number of audio channels (e.g. 1 for mono, 2 for stereo).
     channels: u16,
     /// Sample rate in samples per second (e.g. 44100).
@@ -39,7 +39,7 @@ pub const Fmt = struct {
 
 /// Parsed WAV contents: format and a slice of raw PCM sample bytes.
 pub const Wav = struct {
-    fmt: Fmt,
+    fmt: Format,
     /// Raw PCM sample bytes from the "data" chunk. For 8-bit audio, each byte is an unsigned
     /// sample value in the range [0, 255] with 128 as the zero point. For 16-bit audio, each
     /// pair of bytes is a signed little-endian sample value in the range [-32768, 32767] with 0 as
@@ -47,73 +47,52 @@ pub const Wav = struct {
     pcm: []const u8,
 };
 
-/// Helper to read a little-endian u32 from `data` at `offset`, with bounds
-/// checking.
-fn readU32(data: []const u8, offset: usize) Error!u32 {
-    if (offset + 4 > data.len) return error.Truncated;
-    return std.mem.readInt(u32, data[offset..][0..4], .little);
-}
-
-/// Helper to read a little-endian u16 from `data` at `offset`, with bounds
-/// checking.
-fn readU16(data: []const u8, offset: usize) Error!u16 {
-    if (offset + 2 > data.len) return error.Truncated;
-    return std.mem.readInt(u16, data[offset..][0..2], .little);
-}
-
 /// Parse the RIFF/WAVE header from `data` and return format + PCM slice.
 /// Scans all chunks so extra metadata chunks between "fmt " and "data" are
 /// skipped safely.
 pub fn parse(data: []const u8) Error!Wav {
-    if (data.len < 12) return error.Truncated;
-    if (!std.mem.eql(u8, data[0..4], "RIFF")) return error.InvalidRiff;
-    if (!std.mem.eql(u8, data[8..12], "WAVE")) return error.InvalidWave;
+    var r: std.Io.Reader = .fixed(data);
 
-    // Start of first chunk is always at offset 12, right after the RIFF header.
-    var pos: usize = 12;
-    var fmt: ?Fmt = null;
+    // Read the RIFF file header: "RIFF", 4-byte file size (ignored), "WAVE".
+    const riff = r.takeArray(4) catch return error.Truncated;
+    if (!std.mem.eql(u8, riff, "RIFF")) return error.InvalidRiff;
+    r.discardAll(4) catch return error.Truncated;
+    const wave = r.takeArray(4) catch return error.Truncated;
+    if (!std.mem.eql(u8, wave, "WAVE")) return error.InvalidWave;
+
+    var fmt: ?Format = null;
     var pcm: ?[]const u8 = null;
 
     // Each chunk has an 8-byte header: 4-byte tag + 4-byte size, followed by `size`
-    // bytes of payload. Chunks are padded to even byte boundaries, so the next chunk
-    // starts at offset `pos + 8 + size`, rounded up to the next even number.
-    //
-    // Tag is a 4-byte ASCII string (e.g. "fmt ", "data", "LIST", etc.). Size is the length of
-    // the payload in bytes, not including the 8-byte header or any padding. Payload is the
-    // raw bytes of the chunk, whose format depends on the tag. The "fmt " chunk contains
-    // the audio format parameters, and the "data" chunk contains the raw PCM sample bytes.
-    //
-    while (pos + 8 <= data.len) {
-        const tag = data[pos..][0..4];
-        const size = try readU32(data, pos + 4);
-        const chunk_start = pos + 8;
-        const chunk_end = chunk_start + size;
-        if (chunk_end > data.len) return error.Truncated;
+    // bytes of payload. Chunks are padded to even byte boundaries.
+    while (true) {
+        const tag = r.takeArray(4) catch break;
+        const size = r.takeInt(u32, .little) catch break;
 
-        if (std.mem.eql(u8, tag, "fmt ")) {
-            if (size < 16) return error.MissingFmt;
-            const audio_format = try readU16(data, chunk_start);
-            if (audio_format != 1) return error.UnsupportedFormat;
-            const channels = try readU16(data, chunk_start + 2);
-            const sample_rate = try readU32(data, chunk_start + 4);
-            const bits_per_sample = try readU16(data, chunk_start + 14);
-            if (bits_per_sample != 8 and bits_per_sample != 16) return error.UnsupportedFormat;
-            fmt = .{
-                .channels = channels,
-                .sample_rate = sample_rate,
-                .bits_per_sample = bits_per_sample,
-            };
-        } else if (std.mem.eql(u8, tag, "data")) {
-            pcm = data[chunk_start..chunk_end];
+        switch (std.mem.readInt(u32, tag, .big)) {
+            std.mem.readInt(u32, "fmt ", .big) => {
+                if (size < 16) return error.MissingFmt;
+                const audio_format = r.takeInt(u16, .little) catch return error.Truncated;
+                if (audio_format != 1) return error.UnsupportedFormat;
+                const channels = r.takeInt(u16, .little) catch return error.Truncated;
+                const sample_rate = r.takeInt(u32, .little) catch return error.Truncated;
+                r.discardAll(6) catch return error.Truncated; // byte_rate (4) + block_align (2)
+                const bits_per_sample = r.takeInt(u16, .little) catch return error.Truncated;
+                if (bits_per_sample != 8 and bits_per_sample != 16) return error.UnsupportedFormat;
+                fmt = .{ .channels = channels, .sample_rate = sample_rate, .bits_per_sample = bits_per_sample };
+                r.discardAll(size - 16 + (size & 1)) catch return error.Truncated;
+            },
+            std.mem.readInt(u32, "data", .big) => {
+                if (r.seek + @as(usize, size) > data.len) return error.Truncated;
+                pcm = data[r.seek..][0..size];
+                r.discardAll(size + (size & 1)) catch return error.Truncated;
+            },
+            else => r.discardAll(size + (size & 1)) catch return error.Truncated,
         }
-
-        // Chunks are padded to even byte boundaries.
-        pos = chunk_end + (size & 1);
     }
 
     if (fmt == null) return error.MissingFmt;
     if (pcm == null) return error.MissingData;
-
     return .{ .fmt = fmt.?, .pcm = pcm.? };
 }
 
