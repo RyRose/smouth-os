@@ -23,17 +23,33 @@ pub const DeviceStatus = packed struct(u8) {
 
 // ── Feature bits ─────────────────────────────────────────────────────────────
 
-/// Feature bit 32 (driver_feature_select=1, bit 0): required for modern VirtIO.
-pub const virtio_f_version_1: u32 = 1;
+/// Feature bits written to `CommonCfg.driver_feature` (§6).
+/// The register is banked: bank 0 holds bits 0–31, bank 1 holds bits 32–63.
+/// Select the bank first via `driver_feature_select`, then write this struct
+/// cast to `u32`.
+pub const DriverFeatures = packed struct(u32) {
+    /// VIRTIO_F_VERSION_1 (bit 32, bank 1 bit 0): required for the modern interface.
+    version_1: bool = false,
+    _reserved: u31 = 0,
+};
 
-// ── PCI capability identifiers ───────────────────────────────────────────────
-
-/// PCI capability vendor ID identifying a VirtIO vendor-specific capability.
-pub const pci_cap_vndr: u8 = 0x09;
-/// VirtIO capability type for the common configuration region.
-pub const cap_common_cfg: u8 = 1;
-/// VirtIO capability type for the queue notify region.
-pub const cap_notify_cfg: u8 = 2;
+/// VirtIO PCI capability type (cfg_type field in the vendor capability structure, §4.1.4).
+pub const CfgType = enum(u8) {
+    /// Common configuration: device/driver feature bits, queue setup, device status.
+    common_cfg = 1,
+    /// Notification region: queue doorbell addresses are computed from this BAR region.
+    notify_cfg = 2,
+    /// ISR status: polled by the driver to determine which virtqueue triggered an interrupt.
+    isr_cfg = 3,
+    /// Device-specific configuration: layout is defined per device type.
+    device_cfg = 4,
+    /// PCI configuration access: allows reading/writing any capability field via PCI config space.
+    pci_cfg = 5,
+    /// Shared memory region (e.g. used by the VirtIO GPU for blob resources).
+    shared_memory_cfg = 8,
+    /// Vendor-specific capability.
+    vendor_cfg = 9,
+};
 
 // ── VirtIO PCI CommonCfg MMIO layout (§4.1.4.3) ──────────────────────────────
 
@@ -47,7 +63,7 @@ pub const CommonCfg = extern struct {
     /// Selects which 32-bit bank of driver feature bits to write via `driver_feature`.
     driver_feature_select: u32, // +8
     /// Driver feature bits accepted for the bank selected by `driver_feature_select`.
-    driver_feature: u32, // +12
+    driver_feature: DriverFeatures, // +12
     /// MSI-X vector for configuration change events (0xFFFF = disabled).
     config_msix_vector: u16, // +16
     /// Number of virtqueues supported by the device.
@@ -152,14 +168,14 @@ pub const Caps = struct {
 
 /// Walk the PCI capability list for a VirtIO device and locate the CommonCfg
 /// and Notify MMIO regions. Returns null if either capability is missing.
-pub fn walkCaps(bus: u8, dev: u5) ?Caps {
+pub fn walkCaps(bus: u8, dev: u5) !Caps {
     const dev_addr = pci.ConfigurationAddress{ .bus = bus, .device = dev };
 
     // PCI status register bit 4 indicates a capability list is present.
     const cs: pci.CommandStatus = @bitCast(pci.configRead32(dev_addr.atOffset(.command)));
     if (!cs.status.capabilities_list) {
         log.err("device has no PCI capability list", .{});
-        return null;
+        return error.NoCaps;
     }
 
     var common_addr: usize = 0;
@@ -168,49 +184,51 @@ pub fn walkCaps(bus: u8, dev: u5) ?Caps {
 
     var cap_offset = pci.configReadByte(dev_addr.atOffset(.capabilities_ptr));
     while (cap_offset != 0) {
-        // cap_vndr is the PCI capability ID.
-        const cap_vndr = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset));
-        // cap_next is the offset of the next capability in the list (0 if this is the last one).
         const cap_next = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 1));
+        defer cap_offset = cap_next;
 
-        if (cap_vndr == pci_cap_vndr) {
-            // cfg_type is the VirtIO capability type (e.g. common_cfg, notify_cfg).
-            const cfg_type = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 3));
-            // bar_idx is which BAR (0–5) the capability's MMIO region is located in.
-            const bar_idx = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 4));
-            // cap_bar_offset is the offset within the BAR where the capability's MMIO region starts.
-            const cap_bar_offset = pci.configRead32(dev_addr.atOffsetRaw(cap_offset + 8));
+        // cap_id is the PCI capability ID; skip non-vendor-specific capabilities.
+        const cap_id = std.enums.fromInt(
+            pci.CapabilityId,
+            pci.configReadByte(dev_addr.atOffsetRaw(cap_offset)),
+        ) orelse continue;
+        if (cap_id != .vendor_specific) continue;
 
-            // Read the BAR to find the MMIO base address for this capability. Skip if it's an I/O BAR.
-            const bar: pci.Bar32 = @bitCast(pci.configRead32(dev_addr.atOffsetRaw(
-                @intFromEnum(pci.ConfigurationOffset.bar0) + @as(u8, bar_idx) * 4,
-            )));
-            if (bar.is_io) {
-                cap_offset = cap_next;
-                continue;
-            }
-            const mmio = bar.mmioBase() + cap_bar_offset;
+        // cfg_type is the VirtIO capability type (e.g. common_cfg, notify_cfg).
+        const cfg_type = std.enums.fromInt(CfgType, pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 3))) orelse continue;
 
-            switch (cfg_type) {
-                cap_common_cfg => {
-                    common_addr = mmio;
-                    log.debug("common_cfg MMIO=0x{X}", .{mmio});
-                },
-                cap_notify_cfg => {
-                    notify_addr = mmio;
-                    notify_mult = pci.configRead32(dev_addr.atOffsetRaw(cap_offset + 16));
-                    log.debug("notify MMIO=0x{X} mult={}", .{ mmio, notify_mult });
-                },
-                else => {},
-            }
+        // bar_idx is which BAR (0–5) the capability's MMIO region is located in.
+        const bar_idx = pci.configReadByte(dev_addr.atOffsetRaw(cap_offset + 4));
+
+        // cap_bar_offset is the offset within the BAR where the capability's MMIO region starts.
+        const cap_bar_offset = pci.configRead32(dev_addr.atOffsetRaw(cap_offset + 8));
+
+        // Read the BAR to find the MMIO base address for this capability. Skip if it's an I/O BAR.
+        const bar: pci.Bar32 = @bitCast(pci.configRead32(dev_addr.atOffsetRaw(
+            @intFromEnum(pci.ConfigurationOffset.bar0) + @as(u8, bar_idx) * 4,
+        )));
+        if (bar.is_io) {
+            continue;
         }
 
-        cap_offset = cap_next;
+        const mmio = bar.mmioBase() + cap_bar_offset;
+        switch (cfg_type) {
+            .common_cfg => {
+                common_addr = mmio;
+                log.debug("common_cfg MMIO=0x{X}", .{mmio});
+            },
+            .notify_cfg => {
+                notify_addr = mmio;
+                notify_mult = pci.configRead32(dev_addr.atOffsetRaw(cap_offset + 16));
+                log.debug("notify MMIO=0x{X} mult={}", .{ mmio, notify_mult });
+            },
+            else => {},
+        }
     }
 
     if (common_addr == 0 or notify_addr == 0) {
         log.err("missing common_cfg or notify capability", .{});
-        return null;
+        return error.MissingCaps;
     }
 
     return .{
@@ -269,17 +287,18 @@ pub fn Virtqueue(comptime size: u16) type {
         const Self = @This();
 
         /// Zero all DMA-visible queue memory (descriptor table, available ring,
-        /// used ring). Call this before handing queue addresses to the device.
-        pub fn zero(self: *Self) void {
+        /// used ring).
+        fn zero(self: *Self) void {
             self.descs = std.mem.zeroes([size]Desc);
             self.avail = std.mem.zeroes(AvailRing(size));
             self.used = std.mem.zeroes(UsedRing(size));
         }
 
-        /// Register this queue with the device via `common` and record the
-        /// notify offset. Call `zero` first, then `setup`, then mark the device
-        /// DRIVER_OK.
+        /// Zero queue memory, then register this queue with the device via
+        /// `common` and record the notify offset. Call before marking the
+        /// device DRIVER_OK.
         pub fn setup(self: *Self, common: *volatile CommonCfg, q_idx: u16) void {
+            self.zero();
             self.q_idx = q_idx;
             self.notify_off = setupQueue(
                 common,
@@ -455,8 +474,7 @@ test "walkCaps finds VirtIO sound common_cfg and notify regions" {
     try arch.freestanding();
     // VirtIO sound: vendor=0x1AF4, device=0x1059 (0x1040 + VIRTIO_ID_SOUND=25).
     const addr = findDevice(0x1AF4, 0x1059) orelse return error.SkipZigTest;
-    const caps = walkCaps(addr.bus, addr.dev);
-    try std.testing.expect(caps != null);
-    try std.testing.expect(caps.?.notify_base != 0);
-    try std.testing.expect(caps.?.notify_mult != 0);
+    const caps = try walkCaps(addr.bus, addr.dev);
+    try std.testing.expect(caps.notify_base != 0);
+    try std.testing.expect(caps.notify_mult != 0);
 }

@@ -21,14 +21,7 @@
           buildInputs = with pkgs; [
             zigpkg
             qemu
-          ];
-        };
-
-        packages.default = pkgs.buildEnv {
-          name = "smouth-os-env";
-          paths = with pkgs; [
-            zigpkg
-            qemu
+            just
           ];
         };
       }

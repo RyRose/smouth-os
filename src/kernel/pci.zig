@@ -1,6 +1,13 @@
 const std = @import("std");
 const arch = @import("arch");
 
+/// Standard PCI capability IDs: the `cap_id` byte at the start of each
+/// capability structure in the linked list rooted at `capabilities_ptr`.
+pub const CapabilityId = enum(u8) {
+    /// Vendor-specific capability (used by VirtIO to embed its own sub-capabilities).
+    vendor_specific = 0x09,
+};
+
 /// Well-known offsets within the PCI configuration space header.
 /// https://en.wikipedia.org/wiki/PCI_configuration_space#Standardized_registers
 pub const ConfigurationOffset = enum(u8) {
