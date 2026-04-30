@@ -23,6 +23,15 @@ pub const DeviceStatus = packed struct(u8) {
 
 // ── Feature bits ─────────────────────────────────────────────────────────────
 
+/// Selects which 32-bit bank of feature bits to access.
+/// Written to `CommonCfg.device_feature_select` or `CommonCfg.driver_feature_select`.
+pub const FeatureBank = enum(u32) {
+    /// Bits 0–31.
+    low = 0,
+    /// Bits 32–63.
+    high = 1,
+};
+
 /// Feature bits written to `CommonCfg.driver_feature` (§6).
 /// The register is banked: bank 0 holds bits 0–31, bank 1 holds bits 32–63.
 /// Select the bank first via `driver_feature_select`, then write this struct
@@ -57,11 +66,11 @@ pub const CfgType = enum(u8) {
 /// Mapped directly from the BAR region identified by the CommonCfg capability.
 pub const CommonCfg = extern struct {
     /// Selects which 32-bit bank of device feature bits to read via `device_feature`.
-    device_feature_select: u32, // +0
+    device_feature_select: FeatureBank, // +0
     /// Device feature bits for the bank selected by `device_feature_select`.
     device_feature: u32, // +4
     /// Selects which 32-bit bank of driver feature bits to write via `driver_feature`.
-    driver_feature_select: u32, // +8
+    driver_feature_select: FeatureBank, // +8
     /// Driver feature bits accepted for the bank selected by `driver_feature_select`.
     driver_feature: DriverFeatures, // +12
     /// MSI-X vector for configuration change events (0xFFFF = disabled).
@@ -282,7 +291,7 @@ pub fn Virtqueue(comptime size: u16) type {
         /// Per-queue notify offset returned by the device during setup.
         notify_off: u16 = 0,
         /// Queue index registered with the device.
-        q_idx: u16 = 0,
+        idx: u16 = 0,
 
         const Self = @This();
 
@@ -297,12 +306,12 @@ pub fn Virtqueue(comptime size: u16) type {
         /// Zero queue memory, then register this queue with the device via
         /// `common` and record the notify offset. Call before marking the
         /// device DRIVER_OK.
-        pub fn setup(self: *Self, common: *volatile CommonCfg, q_idx: u16) void {
+        pub fn setup(self: *Self, common: *volatile CommonCfg, idx: u16) void {
             self.zero();
-            self.q_idx = q_idx;
+            self.idx = idx;
             self.notify_off = setupQueue(
                 common,
-                q_idx,
+                idx,
                 size,
                 @intFromPtr(&self.descs),
                 @intFromPtr(&self.avail),
@@ -322,7 +331,7 @@ pub fn Virtqueue(comptime size: u16) type {
             const idx = self.avail.idx;
             self.avail.ring[idx % size] = 0;
             @as(*volatile u16, &self.avail.idx).* = idx +% 1;
-            kickQueue(caps, self.notify_off, self.q_idx);
+            kickQueue(caps, self.notify_off, self.idx);
             while (@as(*volatile u16, &self.used.idx).* != idx +% 1)
                 std.atomic.spinLoopHint();
         }
@@ -435,7 +444,7 @@ test "Virtqueue setup records q_idx and notify_off" {
     cfg.queue_notify_off = 5;
     var q: Virtqueue(4) = .{};
     q.setup(&cfg, 3);
-    try std.testing.expectEqual(3, q.q_idx);
+    try std.testing.expectEqual(3, q.idx);
     try std.testing.expectEqual(5, q.notify_off);
     try std.testing.expectEqual(3, cfg.queue_select);
     try std.testing.expectEqual(4, cfg.queue_size);

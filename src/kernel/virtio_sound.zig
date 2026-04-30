@@ -199,9 +199,9 @@ pub fn play(data: []const u8) !void {
     common.device_status = .{ .acknowledge = true, .driver = true };
 
     // Negotiate VIRTIO_F_VERSION_1 (feature bit 32 → select=1, bit 0).
-    common.driver_feature_select = 0;
+    common.driver_feature_select = .low;
     common.driver_feature = .{};
-    common.driver_feature_select = 1;
+    common.driver_feature_select = .high;
     common.driver_feature = .{ .version_1 = true };
     common.device_status = .{ .acknowledge = true, .driver = true, .features_ok = true };
     if (!common.device_status.features_ok) {
@@ -275,8 +275,7 @@ pub fn play(data: []const u8) !void {
         }
         offset = end;
         chunk += 1;
-        if (chunk % 256 == 0)
-            log.debug("TX {}/{} chunks", .{ chunk, total_chunks });
+        if (chunk % 256 == 0) log.debug("TX {}/{} chunks", .{ chunk, total_chunks });
     }
     log.info("playback complete ({} chunks)", .{chunk});
 }
