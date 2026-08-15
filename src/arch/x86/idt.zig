@@ -2,7 +2,7 @@
 
 const std = @import("std");
 
-const kernel = @import("kernel");
+const kernel = @import("smouth").kernel;
 
 const log = std.log.scoped(.x86);
 

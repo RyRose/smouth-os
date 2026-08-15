@@ -12,8 +12,7 @@ pub fn build(b: *std.Build) !void {
     prepare.dependOn(&std_link.step);
     const optimize = b.standardOptimizeOption(.{});
     const module_definitions: []const base.ModuleDefinition = &.{
-        .{ .name = "arch", .root_source_file = b.path("src/arch/root.zig") },
-        .{ .name = "kernel", .root_source_file = b.path("src/kernel/root.zig") },
+        .{ .name = "smouth", .root_source_file = b.path("src/root.zig") },
         .{ .name = "embed", .root_source_file = b.path("embed.zig"), .source_paths = &.{ "src", stdlib_std_path } },
     };
 
@@ -44,34 +43,22 @@ pub fn build(b: *std.Build) !void {
     b.step("run-x86", "Run the x86 kernel in QEMU.").dependOn(&x86_run.step);
 
     const x86_test_artifact = b.addTest(.{
-        .name = "test-kernel-x86",
-        .root_module = try base.getModule(x86_modules, "kernel"),
+        .name = "test-smouth-x86",
+        .root_module = try base.getModule(x86_modules, "smouth"),
         .test_runner = .{ .path = b.path("src/main.zig"), .mode = .simple },
     });
     x86_test_artifact.step.dependOn(prepare);
     x86_test_artifact.setLinkerScript(b.path("src/arch/x86/linker.ld"));
     b.installArtifact(x86_test_artifact);
     const x86_test = base.buildQemu(b, x86_test_artifact);
-    b.step("test-x86", "Run kernel x86 tests in QEMU.").dependOn(&x86_test.step);
+    b.step("test-x86", "Run source module tests in QEMU on x86.").dependOn(&x86_test.step);
 
-    const arch_test_artifact = b.addTest(.{
-        .name = "test-arch-x86",
-        .root_module = try base.getModule(x86_modules, "arch"),
-        .test_runner = .{ .path = b.path("src/main.zig"), .mode = .simple },
-    });
-    arch_test_artifact.step.dependOn(prepare);
-    arch_test_artifact.setLinkerScript(b.path("src/arch/x86/linker.ld"));
-    b.installArtifact(arch_test_artifact);
-    const arch_test = base.buildQemu(b, arch_test_artifact);
-    b.step("test-arch-x86", "Run arch x86 tests in QEMU.").dependOn(&arch_test.step);
-
-    const unit_test = b.addTest(.{ .root_module = try base.getModule(hosted_modules, "kernel") });
+    const unit_test = b.addTest(.{ .root_module = try base.getModule(hosted_modules, "smouth") });
     unit_test.step.dependOn(prepare);
     const run_unit = b.addRunArtifact(unit_test);
     b.step("test", "Run unit tests.").dependOn(&run_unit.step);
 
     const test_all = b.step("test-all", "Run all tests.");
     test_all.dependOn(&x86_test.step);
-    test_all.dependOn(&arch_test.step);
     test_all.dependOn(&run_unit.step);
 }

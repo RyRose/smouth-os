@@ -4,9 +4,10 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-const arch = @import("arch");
 const embed = @import("embed");
-const kernel = @import("kernel");
+const smouth = @import("smouth");
+const arch = smouth.arch;
+const kernel = smouth.kernel;
 
 const log = std.log.scoped(.main);
 

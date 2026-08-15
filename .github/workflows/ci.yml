@@ -22,7 +22,5 @@ jobs:
         run: zig build
       - name: Test (unit)
         run: zig build test
-      - name: Test (kernel)
+      - name: Test (x86)
         run: zig build test-x86
-      - name: Test (arch)
-        run: zig build test-arch-x86

@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const arch = @import("arch");
+const arch = @import("smouth").arch;
 
 const kernel = @import("root.zig");
 

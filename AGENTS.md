@@ -14,6 +14,7 @@ project is designed to be extensible to additional architectures over time.
 assets/    – binary assets embedded into the kernel (WAV files, etc.)
 src/
   main.zig   – kernel entry point and test runner
+  root.zig   – top-level `smouth` source module
   arch/      – architecture-specific code (one sub-directory per arch)
   kernel/    – architecture-independent kernel code
 embed.zig  – embeds src, std, and assets files as pub consts; importable as the "embed" module
@@ -28,14 +29,15 @@ embed.zig  – embeds src, std, and assets files as pub consts; importable as th
   architecture: higher-level drivers, data structures, utilities, and init
   sequences that call into arch abstractions.
 
-When adding new code, prefer `src/kernel/` unless it is inherently tied to a
-specific architecture.
+`src/` is one Zig module, named `smouth`. The directories remain separate to
+make architecture-specific boundaries clear. When adding new code, prefer
+`src/kernel/` unless it is inherently tied to a specific architecture.
 
 ## Module exports
 
 Every new file must be exported as a `pub const` in its directory's `root.zig`
-so it is reachable through the module hierarchy and picked up by
-`std.testing.refAllDecls` automatically.
+and through `src/root.zig` so it is reachable through the module hierarchy and
+picked up by `std.testing.refAllDecls` automatically.
 
 ## Build and run
 
@@ -52,8 +54,7 @@ zig build run-x86
 | Command | What it runs |
 |---|---|
 | `zig build test` | Hosted unit tests (no QEMU required) |
-| `zig build test-x86` | Tests under `src/kernel/` only, in QEMU on x86 |
-| `zig build test-arch-x86` | Tests under `src/arch/` only, in QEMU on x86 |
+| `zig build test-x86` | All source-module tests in QEMU on x86 |
 | `zig build test-all` | All of the above |
 
 Run `zig build test-all` after completing all changes.
