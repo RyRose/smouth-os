@@ -8,13 +8,12 @@ pub fn build(b: *std.Build) !void {
     const stdlib_std_path = b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" });
     const std_link = b.addSystemCommand(&.{ "ln", "-sfn", stdlib_std_path, "src/std" });
 
-    const prepare = b.step("prepare", "Prepare build inputs.");
-    prepare.dependOn(&std_link.step);
+    const prepare_freestanding = b.step("prepare-freestanding", "Prepare freestanding build inputs.");
+    prepare_freestanding.dependOn(&std_link.step);
+
     const optimize = b.standardOptimizeOption(.{});
     const source_paths: []const []const u8 = &.{ "src", stdlib_std_path };
-
-    const hosted_target = b.standardTargetOptions(.{});
-    const hosted_smouth = try addSmouthModule(b, hosted_target, optimize, source_paths);
+    const x86_linker_path = b.path("src/arch/x86/linker.ld");
 
     const x86_target = b.resolveTargetQuery(.{
         .cpu_arch = .x86,
@@ -26,48 +25,55 @@ pub fn build(b: *std.Build) !void {
         .cpu_features_add = std.Target.x86.featureSet(&.{.soft_float}),
         .cpu_features_sub = std.Target.x86.featureSet(&.{ .avx, .avx2, .sse, .sse2, .mmx }),
     });
-    const x86_smouth = try addSmouthModule(b, x86_target, optimize, source_paths);
+    const x86_module = try addRootModule(b, x86_target, optimize, source_paths);
 
-    // Build the x86 kernel executable and install it as an artifact.
-    const x86_main = b.createModule(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = x86_target,
-        .optimize = optimize,
+    // Create the main x86 kernel executable.
+    const x86_main_compile = b.addExecutable(.{
+        .name = "kernel-main-x86",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = x86_target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "smouth", .module = x86_module },
+            },
+        }),
     });
-    x86_main.addImport("smouth", x86_smouth);
-    const x86_exe = b.addExecutable(.{
-        .name = "kernel-x86-main",
-        .root_module = x86_main,
-    });
-    x86_exe.step.dependOn(prepare);
-    x86_exe.setLinkerScript(b.path("src/arch/x86/linker.ld"));
-    b.installArtifact(x86_exe);
-    const x86_run = base.buildQemu(b, x86_exe);
-    b.step("run-x86", "Run the x86 kernel in QEMU.").dependOn(&x86_run.step);
+    x86_main_compile.step.dependOn(prepare_freestanding);
+    x86_main_compile.setLinkerScript(x86_linker_path);
+    b.installArtifact(x86_main_compile);
+    const x86_main_run = base.addQemuRun(b, x86_main_compile);
+    b.step("run-x86", "Run the x86 kernel in QEMU.").dependOn(&x86_main_run.step);
 
-    const x86_test_artifact = b.addTest(.{
-        .name = "test-smouth-x86",
-        .root_module = x86_smouth,
+    // Create the x86 kernel test executable and run it in QEMU.
+    // This runs all x86-compatible tests in QEMU.
+    const x86_test_compile = b.addTest(.{
+        .name = "kernel-test-x86",
+        .root_module = x86_module,
         .test_runner = .{ .path = b.path("src/main.zig"), .mode = .simple },
     });
-    x86_test_artifact.step.dependOn(prepare);
-    x86_test_artifact.setLinkerScript(b.path("src/arch/x86/linker.ld"));
-    b.installArtifact(x86_test_artifact);
-    const x86_test = base.buildQemu(b, x86_test_artifact);
-    b.step("test-x86", "Run source module tests in QEMU on x86.").dependOn(&x86_test.step);
+    x86_test_compile.step.dependOn(prepare_freestanding);
+    x86_test_compile.setLinkerScript(x86_linker_path);
+    b.installArtifact(x86_test_compile);
+    const x86_test_run = base.addQemuRun(b, x86_test_compile);
+    b.step("test-x86", "Run source module tests in QEMU on x86.").dependOn(&x86_test_run.step);
 
-    const unit_test = b.addTest(.{ .root_module = hosted_smouth });
-    unit_test.step.dependOn(prepare);
-    const run_unit = b.addRunArtifact(unit_test);
-    b.step("test", "Run unit tests.").dependOn(&run_unit.step);
+    // Create the hosted unit test executable and run it natively. Source paths
+    // are excluded to improve build times since they are only used for stack
+    // traces in freestanding environments.
+    const hosted_target = b.standardTargetOptions(.{});
+    const hosted_module = try addRootModule(b, hosted_target, optimize, &.{});
+    const unit_test_compile = b.addTest(.{ .root_module = hosted_module });
+    const unit_test_run = b.addRunArtifact(unit_test_compile);
+    b.step("test", "Run unit tests.").dependOn(&unit_test_run.step);
 
     const test_all = b.step("test-all", "Run all tests.");
-    test_all.dependOn(&x86_test.step);
-    test_all.dependOn(&run_unit.step);
+    test_all.dependOn(&x86_test_run.step);
+    test_all.dependOn(&unit_test_run.step);
 }
 
-/// Creates the smouth source module for a build target.
-fn addSmouthModule(
+/// Creates the root smouth module for a build target, optimize mode, and source paths.
+fn addRootModule(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
@@ -81,6 +87,8 @@ fn addSmouthModule(
     const options = b.addOptions();
     try base.addSourceFileOptions(b, options, source_paths);
     module.addOptions("src", options);
+    // Allow the module to import itself as "smouth" so that source files can
+    // be compiled with the same root module.
     module.addImport("smouth", module);
     return module;
 }

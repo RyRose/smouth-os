@@ -3,7 +3,7 @@
 const std = @import("std");
 
 /// Runs an x86 kernel executable in QEMU.
-pub fn buildQemu(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step.Run {
+pub fn addQemuRun(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step.Run {
     const cmd = b.addSystemCommand(&.{"qemu-system-i386"});
     cmd.addArg("-nographic");
     cmd.addArgs(&.{ "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04" });
