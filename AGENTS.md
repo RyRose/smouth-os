@@ -13,7 +13,8 @@ project is designed to be extensible to additional architectures over time.
 ```
 src/
   main.zig   – kernel entry point and test runner
-  root.zig   – top-level `smouth` source module and embedded source assets
+  root.zig   – top-level `smouth` source module
+  embed.zig  – compile-time embedded source files and binary assets
   assets/    – binary assets embedded into the kernel
   arch/      – architecture-specific code (one sub-directory per arch)
   kernel/    – architecture-independent kernel code

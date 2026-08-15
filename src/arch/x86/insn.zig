@@ -2,6 +2,9 @@
 //! These functions use inline assembly to execute specific x86 instructions
 //! and return their results in a safe and ergonomic way.
 
+const arch = @import("smouth").arch;
+const std = @import("std");
+
 /// Read the Time Stamp Counter (TSC) value.
 pub fn rdtsc() u64 {
     var hi: u32 = 0;
@@ -12,6 +15,19 @@ pub fn rdtsc() u64 {
           [hi] "={edx}" (hi),
     );
     return (@as(u64, hi) << 32) | @as(u64, lo);
+}
+
+test "rdtsc is monotonic and advances" {
+    try arch.freestanding();
+
+    const initial = rdtsc();
+    var previous = initial;
+    for (0..100) |_| {
+        const current = rdtsc();
+        try std.testing.expect(current >= previous);
+        previous = current;
+    }
+    try std.testing.expect(previous > initial);
 }
 
 /// Read a Model-Specific Register (MSR) value.

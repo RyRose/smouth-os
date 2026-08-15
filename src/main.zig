@@ -35,7 +35,7 @@ pub fn main() anyerror!void {
     try kernel.init.run();
     if (comptime builtin.is_test) return runTests();
 
-    try kernel.virtio_sound.play(smouth.smouth_wav);
+    try kernel.virtio_sound.play(smouth.embed.smouth_wav);
 
     for (0..256) |bus| {
         for (0..32) |device| {

@@ -20,7 +20,11 @@ pub const handler = std.debug.FullPanic(innerPanic);
 fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     log.err("{s}", .{msg});
 
-    log.err("Panic stack trace: {?x}", .{return_address});
+    if (return_address) |addr| {
+        log.err("Panic stack trace: {x}", .{addr});
+    } else {
+        log.err("Panic stack trace:", .{});
+    }
     std.debug.writeCurrentStackTrace(
         .{ .allow_unsafe_unwind = true },
         serial.tty,

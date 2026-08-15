@@ -26,7 +26,7 @@ pub const self = struct {
         source_location: std.debug.SourceLocation,
     ) !void {
         _ = io;
-        const data = smouth.source_files.get(source_location.file_name) orelse
+        const data = smouth.embed.source_files.get(source_location.file_name) orelse
             return error.MissingDebugInfo;
 
         var line: usize = 1;

@@ -144,7 +144,7 @@ pub const SelfInfo = struct {
         // Because all debug sections share one LOAD segment the linker assigns
         // them consecutive addresses.  For example:
         //
-        // .rodata           .debug_abbrev   .debug_str     .debug_info
+        // .rodata           .debug_abbrev    .debug_str       .debug_info
         // |-----------------|----------------|----------------|----------------|
         // 0x1000            0x2000         0x3000         0x4000
         //
