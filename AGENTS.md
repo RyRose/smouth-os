@@ -11,13 +11,12 @@ project is designed to be extensible to additional architectures over time.
 ## Repository layout
 
 ```
-assets/    – binary assets embedded into the kernel (WAV files, etc.)
 src/
   main.zig   – kernel entry point and test runner
-  root.zig   – top-level `smouth` source module
+  root.zig   – top-level `smouth` source module and embedded source assets
+  assets/    – binary assets embedded into the kernel
   arch/      – architecture-specific code (one sub-directory per arch)
   kernel/    – architecture-independent kernel code
-embed.zig  – embeds src, std, and assets files as pub consts; importable as the "embed" module
 ```
 
 ## Architecture vs kernel code
@@ -36,8 +35,8 @@ make architecture-specific boundaries clear. When adding new code, prefer
 ## Module exports
 
 Every new file must be exported as a `pub const` in its directory's `root.zig`
-and through `src/root.zig` so it is reachable through the module hierarchy and
-picked up by `std.testing.refAllDecls` automatically.
+so it is reachable through the module hierarchy and picked up by
+`std.testing.refAllDecls` automatically.
 
 ## Build and run
 

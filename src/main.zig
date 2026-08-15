@@ -4,7 +4,6 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-const embed = @import("embed");
 const smouth = @import("smouth");
 const arch = smouth.arch;
 const kernel = smouth.kernel;
@@ -36,7 +35,7 @@ pub fn main() anyerror!void {
     try kernel.init.run();
     if (comptime builtin.is_test) return runTests();
 
-    try kernel.virtio_sound.play(embed.smouth_wav);
+    try kernel.virtio_sound.play(smouth.smouth_wav);
 
     for (0..256) |bus| {
         for (0..32) |device| {

@@ -11,5 +11,6 @@ pub inline fn freestanding() !void {
 }
 
 test {
-    std.testing.refAllDecls(@This());
+    try freestanding();
+    if (builtin.target.cpu.arch == .x86) std.testing.refAllDecls(x86);
 }

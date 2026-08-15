@@ -3,17 +3,16 @@ const base = @import("build/base.zig");
 
 pub fn build(b: *std.Build) !void {
 
-    // Create a symlink `std -> <zig_lib_dir>/std` at the project root so that
-    // embed.zig can @embedFile("std/...") without copying the standard library.
+    // Create a symlink `src/std -> <zig_lib_dir>/std` so source files can be
+    // embedded without copying the standard library.
     const stdlib_std_path = b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" });
-    const std_link = b.addSystemCommand(&.{ "ln", "-sfn", stdlib_std_path, "std" });
+    const std_link = b.addSystemCommand(&.{ "ln", "-sfn", stdlib_std_path, "src/std" });
 
     const prepare = b.step("prepare", "Prepare build inputs.");
     prepare.dependOn(&std_link.step);
     const optimize = b.standardOptimizeOption(.{});
     const module_definitions: []const base.ModuleDefinition = &.{
-        .{ .name = "smouth", .root_source_file = b.path("src/root.zig") },
-        .{ .name = "embed", .root_source_file = b.path("embed.zig"), .source_paths = &.{ "src", stdlib_std_path } },
+        .{ .name = "smouth", .root_source_file = b.path("src/root.zig"), .source_paths = &.{ "src", stdlib_std_path } },
     };
 
     const hosted_target = b.standardTargetOptions(.{});

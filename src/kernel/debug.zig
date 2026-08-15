@@ -7,7 +7,7 @@
 
 const std = @import("std");
 
-const embed = @import("embed");
+const smouth = @import("smouth");
 
 const dwarf = @import("dwarf.zig");
 const serial = @import("serial.zig");
@@ -26,7 +26,7 @@ pub const self = struct {
         source_location: std.debug.SourceLocation,
     ) !void {
         _ = io;
-        const data = embed.srcFiles.get(source_location.file_name) orelse
+        const data = smouth.source_files.get(source_location.file_name) orelse
             return error.MissingDebugInfo;
 
         var line: usize = 1;
