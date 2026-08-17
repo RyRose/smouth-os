@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) !void {
         .cpu_features_add = std.Target.x86.featureSet(&.{.soft_float}),
         .cpu_features_sub = std.Target.x86.featureSet(&.{ .avx, .avx2, .sse, .sse2, .mmx }),
     });
-    const x86_module = try addRootModule(b, x86_target, optimize, source_paths);
+    const x86_module = try base.createRootModule(b, x86_target, optimize, source_paths);
 
     // Create the main x86 kernel executable.
     const x86_main_compile = b.addExecutable(.{
@@ -62,7 +62,7 @@ pub fn build(b: *std.Build) !void {
     // are excluded to improve build times since they are only used for stack
     // traces in freestanding environments.
     const hosted_target = b.standardTargetOptions(.{});
-    const hosted_module = try addRootModule(b, hosted_target, optimize, &.{});
+    const hosted_module = try base.createRootModule(b, hosted_target, optimize, &.{});
     const unit_test_compile = b.addTest(.{ .root_module = hosted_module });
     const unit_test_run = b.addRunArtifact(unit_test_compile);
     b.step("test", "Run unit tests.").dependOn(&unit_test_run.step);
@@ -70,25 +70,4 @@ pub fn build(b: *std.Build) !void {
     const test_all = b.step("test-all", "Run all tests.");
     test_all.dependOn(&x86_test_run.step);
     test_all.dependOn(&unit_test_run.step);
-}
-
-/// Creates the root smouth module for a build target, optimize mode, and source paths.
-fn addRootModule(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-    source_paths: []const []const u8,
-) !*std.Build.Module {
-    const module = b.createModule(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    const options = b.addOptions();
-    try base.addSourceFileOptions(b, options, source_paths);
-    module.addOptions("src", options);
-    // Allow the module to import itself as "smouth" so that source files can
-    // be compiled with the same root module.
-    module.addImport("smouth", module);
-    return module;
 }

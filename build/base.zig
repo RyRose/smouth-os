@@ -23,7 +23,7 @@ pub fn addQemuRun(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step.R
 }
 
 /// Adds the absolute and relative paths of all Zig files below `paths` as options.
-pub fn addSourceFileOptions(b: *std.Build, options: *std.Build.Step.Options, paths: []const []const u8) !void {
+fn addSourceFileOptions(b: *std.Build, options: *std.Build.Step.Options, paths: []const []const u8) !void {
     const io = b.graph.io;
     var absolute_paths = try std.ArrayList([]const u8).initCapacity(b.allocator, 10);
     defer absolute_paths.deinit(b.allocator);
@@ -46,4 +46,25 @@ pub fn addSourceFileOptions(b: *std.Build, options: *std.Build.Step.Options, pat
     }
     options.addOption([]const []const u8, "absolute", absolute_paths.items);
     options.addOption([]const []const u8, "relative", relative_paths.items);
+}
+
+/// Creates the root smouth module for a build target, optimize mode, and source paths.
+pub fn createRootModule(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    source_paths: []const []const u8,
+) !*std.Build.Module {
+    const module = b.createModule(.{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const options = b.addOptions();
+    try addSourceFileOptions(b, options, source_paths);
+    module.addOptions("src", options);
+    // Allow the module to import itself as "os" so that source files can
+    // be compiled with the same root module.
+    module.addImport("os", module);
+    return module;
 }

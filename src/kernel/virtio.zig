@@ -465,13 +465,13 @@ test "kickQueue writes queue index to doorbell" {
 }
 
 test "findDevice returns null for nonexistent device" {
-    const arch = @import("smouth").arch;
+    const arch = @import("os").arch;
     try arch.freestanding();
     try std.testing.expectEqual(null, findDevice(0xDEAD, 0xBEEF));
 }
 
 test "findDevice locates i440FX host bridge" {
-    const arch = @import("smouth").arch;
+    const arch = @import("os").arch;
     try arch.freestanding();
     // QEMU i440FX machines always have an Intel i440FX host bridge.
     const addr = findDevice(0x8086, 0x1237);
@@ -479,7 +479,7 @@ test "findDevice locates i440FX host bridge" {
 }
 
 test "walkCaps finds VirtIO sound common_cfg and notify regions" {
-    const arch = @import("smouth").arch;
+    const arch = @import("os").arch;
     try arch.freestanding();
     // VirtIO sound: vendor=0x1AF4, device=0x1059 (0x1040 + VIRTIO_ID_SOUND=25).
     const addr = findDevice(0x1AF4, 0x1059) orelse return error.SkipZigTest;

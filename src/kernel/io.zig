@@ -7,7 +7,7 @@
 
 const std = @import("std");
 
-const arch = @import("smouth").arch;
+const arch = @import("os").arch;
 
 const serial = @import("serial.zig");
 

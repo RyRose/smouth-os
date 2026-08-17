@@ -7,7 +7,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const arch = @import("smouth").arch;
+const arch = @import("os").arch;
 const insn = arch.x86.insn;
 const ioport = arch.x86.ioport;
 

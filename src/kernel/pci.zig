@@ -1,5 +1,5 @@
 const std = @import("std");
-const arch = @import("smouth").arch;
+const arch = @import("os").arch;
 
 /// Standard PCI capability IDs: the `cap_id` byte at the start of each
 /// capability structure in the linked list rooted at `capabilities_ptr`.

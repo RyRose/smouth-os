@@ -3,7 +3,7 @@
 
 const std = @import("std");
 
-const arch = @import("smouth").arch;
+const arch = @import("os").arch;
 
 const log = std.log.scoped(.gdt);
 

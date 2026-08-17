@@ -5,7 +5,7 @@ const builtin = @import("builtin");
 const root = @import("root");
 const std = @import("std");
 
-const kernel = @import("smouth").kernel;
+const kernel = @import("os").kernel;
 
 const ioport = @import("ioport.zig");
 

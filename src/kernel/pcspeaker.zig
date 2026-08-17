@@ -12,7 +12,7 @@
 
 const std = @import("std");
 
-const arch = @import("smouth").arch;
+const arch = @import("os").arch;
 const time = @import("time.zig");
 
 const ioport = arch.x86.ioport;

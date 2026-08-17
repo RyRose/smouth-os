@@ -303,7 +303,7 @@ test "SndPcmStatus size" {
 }
 
 test "play succeeds with minimal silent WAV" {
-    const arch = @import("smouth").arch;
+    const arch = @import("os").arch;
     try arch.freestanding();
 
     // One period of 16-bit mono silence at 44100 Hz.

@@ -2,7 +2,7 @@
 //! These functions use inline assembly to execute specific x86 instructions
 //! and return their results in a safe and ergonomic way.
 
-const arch = @import("smouth").arch;
+const arch = @import("os").arch;
 const std = @import("std");
 
 /// Read the Time Stamp Counter (TSC) value.
