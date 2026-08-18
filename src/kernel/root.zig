@@ -8,6 +8,7 @@ pub const init = @import("init.zig");
 pub const intelhda = @import("intelhda.zig");
 pub const io = @import("io.zig");
 pub const log = @import("log.zig");
+pub const main = @import("main.zig");
 pub const panic = @import("panic.zig");
 pub const pci = @import("pci.zig");
 pub const pcspeaker = @import("pcspeaker.zig");

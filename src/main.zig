@@ -32,5 +32,5 @@ comptime {
 pub fn main() anyerror!void {
     try kernel.init.run();
     if (comptime builtin.is_test) return kernel.tests.run();
-    try kernel.virtio_sound.play(os.embed.smouth_wav);
+    try kernel.main.run();
 }

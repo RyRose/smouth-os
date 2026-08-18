@@ -1,7 +1,14 @@
 //! Compile-time embedded source files and binary assets.
+//!
+//! This must be located at the root of the source tree so that the
+//! `@embedFile` calls can resolve relative source paths correctly.
+//!
 
 const src = @import("src");
 const std = @import("std");
+
+/// The startup audio clip embedded in the kernel image.
+pub const smouth_wav: []const u8 = @embedFile("assets/smouth.wav");
 
 /// A source file embedded in the kernel image.
 const EmbeddedSource = struct {
@@ -11,9 +18,6 @@ const EmbeddedSource = struct {
 
 /// Source files keyed by their absolute build-time paths for DWARF lookup.
 pub const source_files = std.StaticStringMap([]const u8).initComptime(genSourceFiles());
-
-/// The startup audio clip embedded in the kernel image.
-pub const smouth_wav: []const u8 = @embedFile("assets/smouth.wav");
 
 /// Generates the source path-to-contents map used by DWARF lookup.
 fn genSourceFiles() [src.absolute.len]EmbeddedSource {

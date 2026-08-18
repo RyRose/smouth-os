@@ -48,7 +48,7 @@ export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") 
 // Reserve 16 KiB stack for initial thread.
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 
-export fn kmain() noreturn {
+export fn arch_main() noreturn {
     root.main() catch |err| {
         if (err != error.TestFailed) {
             log.err("Kernel main failed: {}", .{err});
@@ -74,7 +74,7 @@ export fn _start() callconv(.naked) noreturn {
     asm volatile (
         \\ movl %[stack_top], %esp
         \\ movl %esp, %ebp
-        \\ call %[kmain:P]
+        \\ call %[arch_main:P]
         :
         // The stack grows downwards on x86, so we need to point ESP register
         // to one element past the end of `stack_bytes`.
@@ -88,6 +88,6 @@ export fn _start() callconv(.naked) noreturn {
         // multiboot
         // to hold special values (e.g. EAX).
         : [stack_top] "i" (stack_bytes[stack_bytes.len..].ptr),
-          [kmain] "X" (&kmain),
+          [arch_main] "X" (&arch_main),
     );
 }

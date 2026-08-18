@@ -32,13 +32,15 @@ pub const self = struct {
         var line: usize = 1;
         var start: usize = 0;
         while (line < source_location.line) {
-            if (std.mem.indexOfScalar(u8, data[start..], '\n')) |pos| {
+            if (std.mem.findScalar(u8, data[start..], '\n')) |pos| {
                 start += pos + 1;
                 line += 1;
-            } else return error.MissingDebugInfo;
+            } else {
+                return error.MissingDebugInfo;
+            }
         }
         const rest = data[start..];
-        if (std.mem.indexOfScalar(u8, rest, '\n')) |pos| {
+        if (std.mem.findScalar(u8, rest, '\n')) |pos| {
             try writer.writeAll(rest[0 .. pos + 1]);
         } else {
             try writer.writeAll(rest);
