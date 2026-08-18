@@ -21,6 +21,8 @@ jobs:
       - name: Build
         run: zig build
       - name: Test (unit)
+        timeout-minutes: 2
         run: zig build test
       - name: Test (x86)
+        timeout-minutes: 2
         run: zig build test-x86

@@ -53,11 +53,13 @@ zig build run-x86
 
 | Command | What it runs |
 |---|---|
-| `zig build test` | Hosted unit tests (no QEMU required) |
-| `zig build test-x86` | All source-module tests in QEMU on x86 |
+| `zig build --test-timeout 5s test` | Hosted unit tests (no QEMU required), with a 5-second timeout per test |
+| `timeout 5s zig build test-x86` | All source-module tests in QEMU on x86, with a 5-second timeout |
 | `zig build test-all` | All of the above |
 
-Run `zig build test-all` after completing all changes.
+CI limits each test command to two minutes. Run `zig build --test-timeout 5s test`
+or `timeout 5s zig build test-x86` locally so a stalled test
+fails promptly.
 
 Tests that exercise hardware (I/O ports, TSC, etc.) must call
 `try arch.freestanding()` as their first line; this skips them when running
