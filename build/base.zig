@@ -48,23 +48,31 @@ fn addSourceFileOptions(b: *std.Build, options: *std.Build.Step.Options, paths: 
     options.addOption([]const []const u8, "relative", relative_paths.items);
 }
 
+pub const ModuleOptions = struct {
+    /// Options for creating a new module.
+    /// This is used as-is to `std.Build.createModule`.
+    create: std.Build.Module.CreateOptions,
+    /// Optional source paths to add to the module as options.
+    /// If unset, no source paths will be added to the module.
+    source_paths: ?[]const []const u8 = null,
+    /// Optional self-import path to add to the module.
+    /// If unset, the module will not be self-imported.
+    self_import: ?[]const u8 = null,
+};
+
 /// Creates the root smouth module for a build target, optimize mode, and source paths.
-pub fn createRootModule(
+pub fn createModule(
     b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-    source_paths: []const []const u8,
+    module_opts: ModuleOptions,
 ) !*std.Build.Module {
-    const module = b.createModule(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    const options = b.addOptions();
-    try addSourceFileOptions(b, options, source_paths);
-    module.addOptions("src", options);
-    // Allow the module to import itself as "os" so that source files can
-    // be compiled with the same root module.
-    module.addImport("os", module);
+    const module = b.createModule(module_opts.create);
+    if (module_opts.source_paths) |source_paths| {
+        const options = b.addOptions();
+        try addSourceFileOptions(b, options, source_paths);
+        module.addOptions("src", options);
+    }
+    if (module_opts.self_import) |self_import| {
+        module.addImport(self_import, module);
+    }
     return module;
 }

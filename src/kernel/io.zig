@@ -44,9 +44,7 @@ fn drainToGlobalBuffer(
 
 fn crashHandler(userdata: ?*anyopaque) void {
     _ = userdata;
-    // Trigger a QEMU shutdown then spin — same behaviour as kernel panic.
-    arch.x86.ioport.outw(.qemu_debug_exit, 0);
-    while (true) {}
+    std.debug.panic("IO: crashHandler", .{});
 }
 
 fn futexWaitUncancelableFn(
@@ -55,8 +53,7 @@ fn futexWaitUncancelableFn(
     expected: u32,
 ) void {
     _ = .{ userdata, ptr, expected };
-    arch.x86.ioport.outw(.qemu_debug_exit, 0);
-    while (true) {}
+    std.debug.panic("IO: futexWaitUncancelableFn", .{});
 }
 
 // The kernel is single-threaded with no async cancellation support.

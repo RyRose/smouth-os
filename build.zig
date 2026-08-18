@@ -7,9 +7,20 @@ pub fn build(b: *std.Build) !void {
     // embedded without copying the standard library.
     const stdlib_std_path = b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" });
     const std_link = b.addSystemCommand(&.{ "ln", "-sfn", stdlib_std_path, "src/std" });
-
     const prepare_freestanding = b.step("prepare-freestanding", "Prepare freestanding build inputs.");
     prepare_freestanding.dependOn(&std_link.step);
+
+    // Path to the root source file for the kernel module.
+    // This is the entry point to the kernel as a library.
+    const root_path = b.path("src/root.zig");
+
+    // Path to the main source file for the kernel executable.
+    // This is used as the entry point to the kernel as an executable.
+    const main_path = b.path("src/main.zig");
+
+    // Name of the self-import module for the kernel. This is used to import
+    // the kernel into itself.
+    const root_import = "os";
 
     const optimize = b.standardOptimizeOption(.{});
     const source_paths: []const []const u8 = &.{ "src", stdlib_std_path };
@@ -25,17 +36,25 @@ pub fn build(b: *std.Build) !void {
         .cpu_features_add = std.Target.x86.featureSet(&.{.soft_float}),
         .cpu_features_sub = std.Target.x86.featureSet(&.{ .avx, .avx2, .sse, .sse2, .mmx }),
     });
-    const x86_module = try base.createRootModule(b, x86_target, optimize, source_paths);
+    const x86_module = try base.createModule(b, .{
+        .create = .{
+            .root_source_file = root_path,
+            .target = x86_target,
+            .optimize = optimize,
+        },
+        .source_paths = source_paths,
+        .self_import = root_import,
+    });
 
     // Create the main x86 kernel executable.
     const x86_main_compile = b.addExecutable(.{
         .name = "kernel-main-x86",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = x86_target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "smouth", .module = x86_module },
+        .root_module = try base.createModule(b, .{
+            .create = .{
+                .root_source_file = main_path,
+                .target = x86_target,
+                .optimize = optimize,
+                .imports = &.{.{ .name = root_import, .module = x86_module }},
             },
         }),
     });
@@ -50,7 +69,7 @@ pub fn build(b: *std.Build) !void {
     const x86_test_compile = b.addTest(.{
         .name = "kernel-test-x86",
         .root_module = x86_module,
-        .test_runner = .{ .path = b.path("src/main.zig"), .mode = .simple },
+        .test_runner = .{ .path = main_path, .mode = .simple },
     });
     x86_test_compile.step.dependOn(prepare_freestanding);
     x86_test_compile.setLinkerScript(x86_linker_path);
@@ -61,8 +80,14 @@ pub fn build(b: *std.Build) !void {
     // Create the hosted unit test executable and run it natively. Source paths
     // are excluded to improve build times since they are only used for stack
     // traces in freestanding environments.
-    const hosted_target = b.standardTargetOptions(.{});
-    const hosted_module = try base.createRootModule(b, hosted_target, optimize, &.{});
+    const hosted_module = try base.createModule(b, .{
+        .create = .{
+            .root_source_file = root_path,
+            .target = b.standardTargetOptions(.{}),
+            .optimize = optimize,
+        },
+        .self_import = root_import,
+    });
     const unit_test_compile = b.addTest(.{ .root_module = hosted_module });
     const unit_test_run = b.addRunArtifact(unit_test_compile);
     b.step("test", "Run unit tests.").dependOn(&unit_test_run.step);

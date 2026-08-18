@@ -60,4 +60,19 @@ pub fn run() !void {
     idt_table.load();
 
     kernel.time.calibrate();
+
+    for (0..256) |bus| {
+        for (0..32) |device| {
+            const addr = kernel.pci.ConfigurationAddress{
+                .bus = @intCast(bus),
+                .device = @intCast(device),
+                .register_offset = @intFromEnum(kernel.pci.ConfigurationOffset.vendor_device),
+            };
+            const vd: kernel.pci.VendorDevice = @bitCast(kernel.pci.configRead32(addr));
+            if (vd.vendor_id == 0xFFFF) continue;
+            log.info("PCI Device found at bus {d}, device {d}", .{ bus, device });
+            log.info("  Vendor ID: 0x{x}", .{vd.vendor_id});
+            log.info("  Device ID: 0x{x}", .{vd.device_id});
+        }
+    }
 }
