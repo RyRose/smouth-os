@@ -57,9 +57,9 @@ zig build run-x86
 | `timeout 5s zig build test-x86` | All source-module tests in QEMU on x86, with a 5-second timeout |
 | `zig build test-all` | All of the above |
 
-CI limits each test command to two minutes. Run `zig build --test-timeout 5s test`
-or `timeout 5s zig build test-x86` locally so a stalled test
-fails promptly.
+CI applies a five-second per-test timeout to hosted tests and a five-second
+process timeout to x86 QEMU tests. Run the commands above locally so a stalled
+test fails promptly.
 
 Tests that exercise hardware (I/O ports, TSC, etc.) must call
 `try arch.freestanding()` as their first line; this skips them when running

@@ -45,6 +45,11 @@ export var multiboot_header: MultibootHeader align(4) linksection(".multiboot") 
     .checksum = ~@as(u32, (multiboot_header_magic + multiboot_flags)) + 1,
 };
 
+test "multiboot header checksum makes required fields sum to zero" {
+    const sum = multiboot_header.magic +% multiboot_header.flags +% multiboot_header.checksum;
+    try std.testing.expectEqual(@as(u32, 0), sum);
+}
+
 // Reserve 16 KiB stack for initial thread.
 var stack_bytes: [16 * 1024]u8 align(16) linksection(".bss") = undefined;
 

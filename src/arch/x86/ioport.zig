@@ -7,6 +7,8 @@
 //! The helper functions (inb, outb, inw, outw, inl, outl) accept Port enum
 //! values directly, eliminating raw address literals at call sites.
 
+const std = @import("std");
+const arch = @import("os").arch;
 const insn = @import("insn.zig");
 
 /// x86 I/O port addresses.
@@ -137,4 +139,52 @@ pub fn inl(port: Port) u32 {
 /// Write a 32-bit doubleword to the given port.
 pub fn outl(port: Port, value: u32) void {
     insn.outl(port.addr(), value);
+}
+
+test "port addresses match the x86 platform specification" {
+    try std.testing.expectEqual(@as(u16, 0x40), Port.pit_ch0.addr());
+    try std.testing.expectEqual(@as(u16, 0x41), Port.pit_ch1.addr());
+    try std.testing.expectEqual(@as(u16, 0x42), Port.pit_ch2.addr());
+    try std.testing.expectEqual(@as(u16, 0x43), Port.pit_cmd.addr());
+    try std.testing.expectEqual(@as(u16, 0x61), Port.nmi_sc.addr());
+    try std.testing.expectEqual(@as(u16, 0x3F8), Port.com1_data.addr());
+    try std.testing.expectEqual(@as(u16, 0x3F9), Port.com1_ier.addr());
+    try std.testing.expectEqual(@as(u16, 0x3FA), Port.com1_iir_fcr.addr());
+    try std.testing.expectEqual(@as(u16, 0x3FB), Port.com1_lcr.addr());
+    try std.testing.expectEqual(@as(u16, 0x3FC), Port.com1_mcr.addr());
+    try std.testing.expectEqual(@as(u16, 0x3FD), Port.com1_lsr.addr());
+    try std.testing.expectEqual(@as(u16, 0x3FE), Port.com1_msr.addr());
+    try std.testing.expectEqual(@as(u16, 0x3FF), Port.com1_scr.addr());
+    try std.testing.expectEqual(@as(u16, 0xCF8), Port.pci_config_addr.addr());
+    try std.testing.expectEqual(@as(u16, 0xCFC), Port.pci_config_data.addr());
+    try std.testing.expectEqual(@as(u16, 0xF4), Port.qemu_debug_exit.addr());
+    try std.testing.expectEqual(@as(u16, 0x604), Port.qemu_acpi_shutdown.addr());
+}
+
+test "COM1 loopback echoes transmitted bytes" {
+    try arch.freestanding();
+
+    const modem_control = inb(.com1_mcr);
+    defer outb(.com1_mcr, modem_control);
+
+    outb(.com1_mcr, modem_control | 0x10);
+    outb(.com1_data, 0xA5);
+
+    for (0..1_000) |_| {
+        if ((inb(.com1_lsr) & 0x01) != 0) {
+            try std.testing.expectEqual(@as(u8, 0xA5), inb(.com1_data));
+            return;
+        }
+    }
+    return std.testing.expect(false);
+}
+
+test "PCI configuration access finds the QEMU host bridge" {
+    try arch.freestanding();
+
+    outl(.pci_config_addr, 0x8000_0000);
+    const vendor_device = inl(.pci_config_data);
+    const vendor_id: u16 = @truncate(vendor_device);
+
+    try std.testing.expectEqual(@as(u16, 0x8086), vendor_id);
 }

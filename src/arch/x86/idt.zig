@@ -1,10 +1,12 @@
 //! x86-specific IDT interrupt handlers.
 
+const os = @import("os");
 const std = @import("std");
 
-const kernel = @import("os").kernel;
-
 const log = std.log.scoped(.x86);
+
+/// Whether the test breakpoint handler has executed.
+export var arch_x86_idt_breakpoint_handler_called: u8 = 0;
 
 /// Interrupt stack frame passed to x86 interrupt handlers.
 const InterruptStackFrame = extern struct {
@@ -14,6 +16,14 @@ const InterruptStackFrame = extern struct {
     stack_pointer: u64,
     stack_segment: u64,
 };
+
+/// Records invocation of the test breakpoint interrupt handler.
+fn breakpoint_handler() callconv(.naked) noreturn {
+    asm volatile (
+        \\ movb $1, arch_x86_idt_breakpoint_handler_called
+        \\ iret
+    );
+}
 
 pub fn double_fault_handler(
     frame: *InterruptStackFrame,
@@ -27,8 +37,33 @@ pub fn double_fault_handler(
         .skipped = .none,
     };
     log.err("Double fault occurred at:", .{});
-    std.debug.writeStackTrace(&trace, kernel.serial.tty) catch |err| {
+    std.debug.writeStackTrace(&trace, os.kernel.serial.tty) catch |err| {
         log.err("Failed to print stack trace for double fault: {}", .{err});
     };
     std.debug.panic("Double fault occurred!", .{});
+}
+
+test "breakpoint interrupt invokes its handler" {
+    try os.arch.freestanding();
+
+    var original_idtr: u64 = 0;
+    asm volatile ("sidt (%[idtr])"
+        :
+        : [idtr] "rax" (&original_idtr),
+    );
+    defer asm volatile ("lidt (%[idtr])"
+        :
+        : [idtr] "rax" (&original_idtr),
+    );
+
+    arch_x86_idt_breakpoint_handler_called = 0;
+    var table = os.kernel.idt.Table(256).init();
+    table.register(.breakpoint, os.kernel.idt.Descriptor.init(.{
+        .offset = @intCast(@intFromPtr(&breakpoint_handler)),
+        .segment_selector = .{ .index = 1 },
+    }));
+    table.load();
+
+    asm volatile ("int $3");
+    try std.testing.expectEqual(@as(u8, 1), arch_x86_idt_breakpoint_handler_called);
 }

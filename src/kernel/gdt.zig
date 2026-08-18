@@ -299,7 +299,7 @@ pub fn Table(comptime N: usize) type {
         pub fn pointer(self: *Self) u64 {
             var gdt_ptr: u64 = @intFromPtr(&self.table);
             gdt_ptr <<= 16;
-            gdt_ptr |= (3 * @sizeOf(u64)) & 0xFFFF;
+            gdt_ptr |= @sizeOf([N]Descriptor) - 1;
             return gdt_ptr;
         }
 
@@ -338,4 +338,47 @@ pub fn Table(comptime N: usize) type {
             arch.x86.gdt.installAndFlushGDT(ptr, 8 * code_index, 8 * data_index);
         }
     };
+}
+
+test "install and flush loads descriptors into the CPU" {
+    try arch.freestanding();
+
+    const original_pointer = arch.x86.gdt.currentTablePointer();
+    const original_selectors = arch.x86.gdt.currentSegmentSelectors();
+    try std.testing.expectEqual(@as(u16, 0x8), original_selectors.cs);
+    try std.testing.expectEqual(@as(u16, 0x10), original_selectors.ds);
+    try std.testing.expectEqual(@as(u16, 0x10), original_selectors.es);
+    try std.testing.expectEqual(@as(u16, 0x10), original_selectors.fs);
+    try std.testing.expectEqual(@as(u16, 0x10), original_selectors.gs);
+    try std.testing.expectEqual(@as(u16, 0x10), original_selectors.ss);
+    defer arch.x86.gdt.installAndFlushGDT(original_pointer, 0x8, 0x10);
+
+    var table = Table(3).init();
+    table.register(1, Descriptor.init(.{
+        .base = 0,
+        .limit = 0xFFFFF,
+        .segment_type = SegmentType.init(.{ .segment_class = .code }),
+        .db = true,
+        .granularity = true,
+    }));
+    table.register(2, Descriptor.init(.{
+        .base = 0,
+        .limit = 0xFFFFF,
+        .segment_type = SegmentType.init(.{ .segment_class = .data }),
+        .db = true,
+        .granularity = true,
+    }));
+
+    const expected_pointer = table.pointer();
+    try table.installAndFlush(1, 2);
+
+    try std.testing.expectEqual(expected_pointer, arch.x86.gdt.currentTablePointer());
+
+    const selectors = arch.x86.gdt.currentSegmentSelectors();
+    try std.testing.expectEqual(@as(u16, 0x8), selectors.cs);
+    try std.testing.expectEqual(@as(u16, 0x10), selectors.ds);
+    try std.testing.expectEqual(@as(u16, 0x10), selectors.es);
+    try std.testing.expectEqual(@as(u16, 0x10), selectors.fs);
+    try std.testing.expectEqual(@as(u16, 0x10), selectors.gs);
+    try std.testing.expectEqual(@as(u16, 0x10), selectors.ss);
 }

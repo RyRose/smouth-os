@@ -22,7 +22,7 @@ jobs:
         run: zig build
       - name: Test (unit)
         timeout-minutes: 2
-        run: zig build test
+        run: zig build --test-timeout 5s test
       - name: Test (x86)
         timeout-minutes: 2
-        run: zig build test-x86
+        run: timeout 5s zig build test-x86

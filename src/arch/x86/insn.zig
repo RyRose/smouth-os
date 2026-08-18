@@ -2,7 +2,7 @@
 //! These functions use inline assembly to execute specific x86 instructions
 //! and return their results in a safe and ergonomic way.
 
-const arch = @import("os").arch;
+const os = @import("os");
 const std = @import("std");
 
 /// Read the Time Stamp Counter (TSC) value.
@@ -18,7 +18,7 @@ pub fn rdtsc() u64 {
 }
 
 test "rdtsc is monotonic and advances" {
-    try arch.freestanding();
+    try os.arch.freestanding();
 
     const initial = rdtsc();
     var previous = initial;
@@ -28,6 +28,16 @@ test "rdtsc is monotonic and advances" {
         previous = current;
     }
     try std.testing.expect(previous > initial);
+}
+
+test "cpuid reports basic processor information" {
+    try os.arch.freestanding();
+
+    const info = cpuid(0, 0);
+    try std.testing.expect(info.eax > 0);
+    try std.testing.expect(info.ebx != 0);
+    try std.testing.expect(info.ecx != 0);
+    try std.testing.expect(info.edx != 0);
 }
 
 /// Read a Model-Specific Register (MSR) value.
@@ -176,7 +186,7 @@ pub inline fn esp() usize {
     var value: usize = 0;
     asm volatile (
         \\ mov %%esp, %[value]
-        : [value] "={r}" (value),
+        : [value] "={eax}" (value),
     );
     return value;
 }
@@ -187,7 +197,16 @@ pub inline fn ebp() usize {
     var value: usize = 0;
     asm volatile (
         \\ mov %%ebp, %[value]
-        : [value] "={r}" (value),
+        : [value] "={eax}" (value),
     );
     return value;
+}
+
+test "stack register values are aligned and nonzero" {
+    try os.arch.freestanding();
+
+    try std.testing.expect(esp() != 0);
+    try std.testing.expect(ebp() != 0);
+    try std.testing.expectEqual(@as(usize, 0), esp() % @alignOf(usize));
+    try std.testing.expectEqual(@as(usize, 0), ebp() % @alignOf(usize));
 }
