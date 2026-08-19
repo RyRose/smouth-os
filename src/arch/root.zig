@@ -4,6 +4,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+pub const util = @import("util.zig");
+
 /// Re-export the AArch64 architecture modules.
 pub const aarch64 = @import("aarch64/root.zig");
 
@@ -20,6 +22,7 @@ pub const self = switch (builtin.cpu.arch) {
 };
 
 test {
+    std.testing.refAllDecls(util);
     if (builtin.os.tag != .freestanding) return error.SkipZigTest;
     std.testing.refAllDecls(self);
 }

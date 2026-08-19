@@ -5,8 +5,6 @@ const kernel = @import("os").kernel;
 const log = std.log.scoped(.tests);
 
 pub fn run() !void {
-    if (comptime builtin.cpu.arch == .aarch64) return runPlain();
-
     const tty = kernel.serial.tty;
     try tty.setColor(.dim);
     try tty.writer.writeAll("start\n");
@@ -61,43 +59,4 @@ pub fn run() !void {
     try tty.setColor(.reset);
     try tty.writer.writeAll("\n");
     if (failed > 0) return error.TestFailed;
-}
-
-/// Runs tests without terminal formatting on AArch64.
-///
-/// The AArch64 test-function table has 8-byte entries. Avoid copying its
-/// 24-byte records because Zig's vectorized aggregate copy requires stricter
-/// alignment than every table entry provides.
-fn runPlain() !void {
-    kernel.serial.write("start\n");
-
-    var failed: usize = 0;
-    var skipped: usize = 0;
-    for (0..builtin.test_functions.len) |index| {
-        const test_function = &builtin.test_functions[index];
-        kernel.serial.write("test: ");
-        kernel.serial.write(test_function.name);
-        kernel.serial.write("\n");
-        test_function.func() catch |err| {
-            if (err == error.SkipZigTest) {
-                skipped += 1;
-                continue;
-            }
-            failed += 1;
-            kernel.serial.write("failed: ");
-            kernel.serial.write(test_function.name);
-            kernel.serial.write("\n");
-        };
-    }
-
-    if (failed == 0) {
-        if (skipped == 0) {
-            kernel.serial.write("end: passed\n");
-        } else {
-            kernel.serial.write("end: passed (hardware tests skipped)\n");
-        }
-        return;
-    }
-    kernel.serial.write("end: failed\n");
-    return error.TestFailed;
 }
