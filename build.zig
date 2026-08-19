@@ -25,6 +25,7 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const source_paths: []const []const u8 = &.{ "src", stdlib_std_path };
     const x86_linker_path = b.path("src/arch/x86/linker.ld");
+    const aarch64_linker_path = b.path("src/arch/aarch64/linker.ld");
 
     const x86_target = b.resolveTargetQuery(.{
         .cpu_arch = .x86,
@@ -64,6 +65,50 @@ pub fn build(b: *std.Build) !void {
     const x86_main_run = base.addQemuRun(b, x86_main_compile);
     b.step("run-x86", "Run the x86 kernel in QEMU.").dependOn(&x86_main_run.step);
 
+    const aarch64_target = b.resolveTargetQuery(.{
+        .cpu_arch = .aarch64,
+        .os_tag = .freestanding,
+        .abi = .none,
+        .cpu_features_sub = std.Target.aarch64.featureSet(&.{.neon}),
+    });
+    const aarch64_module = try base.createModule(b, .{
+        .create = .{
+            .root_source_file = root_path,
+            .target = aarch64_target,
+            .optimize = optimize,
+        },
+        .source_paths = source_paths,
+        .self_import = root_import,
+    });
+    const aarch64_main_compile = b.addExecutable(.{
+        .name = "kernel-main-aarch64",
+        .root_module = try base.createModule(b, .{
+            .create = .{
+                .root_source_file = main_path,
+                .target = aarch64_target,
+                .optimize = optimize,
+                .imports = &.{.{ .name = root_import, .module = aarch64_module }},
+            },
+        }),
+    });
+    aarch64_main_compile.step.dependOn(prepare_freestanding);
+    aarch64_main_compile.setLinkerScript(aarch64_linker_path);
+    b.installArtifact(aarch64_main_compile);
+    const aarch64_main_run = base.addAarch64QemuRun(b, aarch64_main_compile);
+    b.step("run-aarch64", "Run the AArch64 kernel on QEMU virt.").dependOn(&aarch64_main_run.step);
+
+    // Create the AArch64 source-module test executable and run it in QEMU.
+    const aarch64_test_compile = b.addTest(.{
+        .name = "kernel-test-aarch64",
+        .root_module = aarch64_module,
+        .test_runner = .{ .path = main_path, .mode = .simple },
+    });
+    aarch64_test_compile.step.dependOn(prepare_freestanding);
+    aarch64_test_compile.setLinkerScript(aarch64_linker_path);
+    b.installArtifact(aarch64_test_compile);
+    const aarch64_test_run = base.addAarch64QemuRun(b, aarch64_test_compile);
+    b.step("test-aarch64", "Run source module tests in QEMU on AArch64.").dependOn(&aarch64_test_run.step);
+
     // Create the x86 kernel test executable and run it in QEMU.
     // This runs all x86-compatible tests in QEMU.
     const x86_test_compile = b.addTest(.{
@@ -94,5 +139,6 @@ pub fn build(b: *std.Build) !void {
 
     const test_all = b.step("test-all", "Run all tests.");
     test_all.dependOn(&x86_test_run.step);
+    test_all.dependOn(&aarch64_test_run.step);
     test_all.dependOn(&unit_test_run.step);
 }

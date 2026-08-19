@@ -1,5 +1,5 @@
 const std = @import("std");
-const arch = @import("os").arch;
+const ioport = @import("ioport.zig");
 
 /// Standard PCI capability IDs: the `cap_id` byte at the start of each
 /// capability structure in the linked list rooted at `capabilities_ptr`.
@@ -128,8 +128,8 @@ pub const ConfigurationAddress = packed struct(u32) {
 pub fn configRead32(addr: ConfigurationAddress) u32 {
     var aligned = addr;
     aligned.register_offset &= 0xFC;
-    arch.x86.ioport.outl(.pci_config_addr, @bitCast(aligned));
-    return arch.x86.ioport.inl(.pci_config_data);
+    ioport.outl(.pci_config_addr, @bitCast(aligned));
+    return ioport.inl(.pci_config_data);
 }
 
 /// Read a single byte from PCI configuration space.
@@ -146,8 +146,8 @@ pub fn configReadByte(addr: ConfigurationAddress) u8 {
 pub fn configWrite32(addr: ConfigurationAddress, value: u32) void {
     var aligned = addr;
     aligned.register_offset &= 0xFC;
-    arch.x86.ioport.outl(.pci_config_addr, @bitCast(aligned));
-    arch.x86.ioport.outl(.pci_config_data, value);
+    ioport.outl(.pci_config_addr, @bitCast(aligned));
+    ioport.outl(.pci_config_data, value);
 }
 
 test ConfigurationAddress {

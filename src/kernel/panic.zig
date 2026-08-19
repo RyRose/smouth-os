@@ -1,12 +1,9 @@
 //! Panic handling for the kernel.
 //! Dumps panic information to the log and halts the system.
-//! Halts the system by writing to the appropriate I/O port,
-//! which is emulated by QEMU to trigger a shutdown.
+//! Terminates the active QEMU platform with a failure status.
 //!
 
 const std = @import("std");
-const builtin = @import("builtin");
-
 const arch = @import("os").arch;
 
 const serial = @import("serial.zig");
@@ -42,8 +39,7 @@ fn innerPanic(msg: []const u8, return_address: ?usize) noreturn {
     badShutdown();
 }
 
-// Use QEMU shutdown port to halt the system with a non-zero exit code.
+/// Terminates the active QEMU platform with a nonzero status.
 fn badShutdown() noreturn {
-    arch.x86.ioport.outw(.qemu_debug_exit, 0);
-    while (true) {}
+    arch.self.shutdown.run(false);
 }

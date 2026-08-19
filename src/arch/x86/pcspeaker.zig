@@ -10,12 +10,13 @@
 //!   0x43 - PIT mode/command register (write-only)
 //!   0x61 - PC speaker / NMI status port (bits 0 and 1 control output)
 
+const builtin = @import("builtin");
 const std = @import("std");
 
-const arch = @import("os").arch;
+const ioport = @import("ioport.zig");
 const time = @import("time.zig");
 
-const ioport = arch.x86.ioport;
+const arch = @import("os").arch;
 
 const log = std.log.scoped(.pcspeaker);
 
@@ -73,7 +74,7 @@ pub fn beep(freq_hz: u32, duration_ms: u64) void {
 }
 
 test "play enables channel 2 gate and speaker output" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
     play(440);
     defer stop();
     const ctrl = ioport.inb(.nmi_sc);
@@ -82,7 +83,7 @@ test "play enables channel 2 gate and speaker output" {
 }
 
 test "stop clears channel 2 gate and speaker output" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
     play(440);
     stop();
     const ctrl = ioport.inb(.nmi_sc);
@@ -91,7 +92,7 @@ test "stop clears channel 2 gate and speaker output" {
 }
 
 test "play with zero frequency stops speaker" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
     play(440);
     play(0);
     const ctrl = ioport.inb(.nmi_sc);
@@ -100,7 +101,7 @@ test "play with zero frequency stops speaker" {
 }
 
 test "beep plays then stops" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
     beep(440, 10);
     const ctrl = ioport.inb(.nmi_sc);
     try std.testing.expect(ctrl & ch2_gate_bit == 0);

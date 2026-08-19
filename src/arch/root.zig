@@ -1,16 +1,25 @@
+//! This file is the root of the architecture-specific code. It re-exports the
+//! architecture-specific modules based on the target architecture.
+
 const std = @import("std");
 const builtin = @import("builtin");
 
+/// Re-export the AArch64 architecture modules.
+pub const aarch64 = @import("aarch64/root.zig");
+
+/// Re-export the x86 architecture modules.
 pub const x86 = @import("x86/root.zig");
 
-/// Returns error.SkipZigTest if the current target is not a freestanding
-/// target, otherwise returns void. Inlined to allow compile-time evaluation
-/// and optimization out of the check on non-freestanding targets.
-pub inline fn freestanding() !void {
-    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
-}
+/// Re-export the architecture-specific modules based on the target architecture.
+/// This allows the rest of the kernel code to use `arch` as a single entry
+/// point for architecture-specific functionality.
+pub const self = switch (builtin.cpu.arch) {
+    .aarch64 => aarch64,
+    .x86 => x86,
+    else => @compileError("Unsupported architecture: " ++ @tagName(builtin.cpu.arch)),
+};
 
 test {
-    try freestanding();
-    if (builtin.target.cpu.arch == .x86) std.testing.refAllDecls(x86);
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
+    std.testing.refAllDecls(self);
 }

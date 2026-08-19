@@ -1,6 +1,7 @@
 //! Global Descriptor Table (GDT) code for i386 architecture.
 //!
 
+const builtin = @import("builtin");
 const std = @import("std");
 
 const arch = @import("os").arch;
@@ -341,7 +342,7 @@ pub fn Table(comptime N: usize) type {
 }
 
 test "install and flush loads descriptors into the CPU" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     const original_pointer = arch.x86.gdt.currentTablePointer();
     const original_selectors = arch.x86.gdt.currentSegmentSelectors();

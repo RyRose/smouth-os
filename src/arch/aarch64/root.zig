@@ -1,28 +1,19 @@
-//! Root module for x86 architecture.
+//! Root module for the AArch64 architecture.
 
 const std = @import("std");
 const builtin = @import("builtin");
 
 pub const boot = @import("boot.zig");
-pub const gdt = @import("gdt.zig");
-pub const gdt_table = @import("gdt_table.zig");
-pub const idt = @import("idt.zig");
-pub const idt_table = @import("idt_table.zig");
 pub const init = @import("init.zig");
-pub const insn = @import("insn.zig");
-pub const ioport = @import("ioport.zig");
-pub const pci = @import("pci.zig");
-pub const pcspeaker = @import("pcspeaker.zig");
 pub const serial = @import("serial.zig");
 pub const shutdown = @import("shutdown.zig");
-pub const time = @import("time.zig");
 pub const virtio = @import("virtio.zig");
 
 // Ensure this code is only compiled for x86 freestanding targets.
 comptime {
-    if (builtin.target.cpu.arch != .x86) {
+    if (builtin.target.cpu.arch != .aarch64) {
         @compileError(std.fmt.comptimePrint(
-            "This code is only supported on x86 architecture but found {}",
+            "This code is only supported on AArch64 architecture but found {}",
             .{builtin.target.cpu.arch},
         ));
     }

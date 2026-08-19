@@ -1,5 +1,6 @@
 //! x86-specific IDT interrupt handlers.
 
+const builtin = @import("builtin");
 const os = @import("os");
 const std = @import("std");
 
@@ -44,7 +45,7 @@ pub fn double_fault_handler(
 }
 
 test "breakpoint interrupt invokes its handler" {
-    try os.arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     var original_idtr: u64 = 0;
     asm volatile ("sidt (%[idtr])"
@@ -57,8 +58,9 @@ test "breakpoint interrupt invokes its handler" {
     );
 
     arch_x86_idt_breakpoint_handler_called = 0;
-    var table = os.kernel.idt.Table(256).init();
-    table.register(.breakpoint, os.kernel.idt.Descriptor.init(.{
+    const idt = @import("idt_table.zig");
+    var table = idt.Table(256).init();
+    table.register(.breakpoint, idt.Descriptor.init(.{
         .offset = @intCast(@intFromPtr(&breakpoint_handler)),
         .segment_selector = .{ .index = 1 },
     }));

@@ -2,35 +2,29 @@
 //! boot. Also serves as the test runner when built with testing enabled.
 
 const builtin = @import("builtin");
+const os = @import("os");
 const std = @import("std");
 
-const os = @import("os");
-const arch = os.arch;
-const kernel = os.kernel;
-
 // Standard options for the kernel.
-pub const std_options: std.Options = kernel.std_options.default();
+pub const std_options: std.Options = os.kernel.std_options.default();
 
 /// Route std.debug / std.log output to the serial port in normal builds,
 /// or to the capture buffer in test builds.
-pub const std_options_debug_io: std.Io = kernel.io.make(if (builtin.is_test) .buffer else .serial);
+pub const std_options_debug_io: std.Io = os.kernel.io.make(if (builtin.is_test) .buffer else .serial);
 
 /// Overrides std.debug.SelfInfo for freestanding kernel DWARF stack traces.
-pub const debug = kernel.debug.self;
+pub const debug = os.kernel.debug.self;
 
 /// Panic handler for the kernel.
-pub const panic = kernel.panic.handler;
+pub const panic = os.kernel.panic.handler;
 
+// Link arch-specific boot code at compile time to load initial entrypoint.
 comptime {
-    // Link initial boot code.
-    switch (builtin.cpu.arch) {
-        .x86 => _ = arch.x86.boot,
-        else => @compileError("Unsupported architecture: " ++ @tagName(builtin.cpu.arch)),
-    }
+    _ = os.arch.self.boot;
 }
 
 pub fn main() anyerror!void {
-    try kernel.init.run();
-    if (comptime builtin.is_test) return kernel.tests.run();
-    try kernel.main.run();
+    try os.kernel.init.run();
+    if (comptime builtin.is_test) return os.kernel.tests.run();
+    try os.kernel.main.run();
 }

@@ -2,6 +2,7 @@
 //! These functions use inline assembly to execute specific x86 instructions
 //! and return their results in a safe and ergonomic way.
 
+const builtin = @import("builtin");
 const os = @import("os");
 const std = @import("std");
 
@@ -18,7 +19,7 @@ pub fn rdtsc() u64 {
 }
 
 test "rdtsc is monotonic and advances" {
-    try os.arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     const initial = rdtsc();
     var previous = initial;
@@ -31,7 +32,7 @@ test "rdtsc is monotonic and advances" {
 }
 
 test "cpuid reports basic processor information" {
-    try os.arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     const info = cpuid(0, 0);
     try std.testing.expect(info.eax > 0);
@@ -203,7 +204,7 @@ pub inline fn ebp() usize {
 }
 
 test "stack register values are aligned and nonzero" {
-    try os.arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     try std.testing.expect(esp() != 0);
     try std.testing.expect(ebp() != 0);

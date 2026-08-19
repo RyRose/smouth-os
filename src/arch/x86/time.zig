@@ -8,8 +8,8 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 const arch = @import("os").arch;
-const insn = arch.x86.insn;
-const ioport = arch.x86.ioport;
+const insn = @import("insn.zig");
+const ioport = @import("ioport.zig");
 
 const log = std.log.scoped(.time);
 
@@ -99,7 +99,8 @@ pub fn mdelay(ms: u64) void {
 }
 
 test "ndelay waits at least the requested duration" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
+
     try std.testing.expect(tsc_hz > 0);
 
     const ns: u64 = 500_000; // 500 µs
@@ -111,7 +112,8 @@ test "ndelay waits at least the requested duration" {
 }
 
 test "udelay waits at least the requested duration" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
+
     try std.testing.expect(tsc_hz > 0);
 
     const us: u64 = 1_000; // 1 ms
@@ -123,7 +125,8 @@ test "udelay waits at least the requested duration" {
 }
 
 test "mdelay waits at least the requested duration" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
+
     try std.testing.expect(tsc_hz > 0);
 
     const ms: u64 = 1;

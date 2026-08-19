@@ -4,9 +4,8 @@ Guidance for AI agents working in this repository.
 
 ## Project overview
 
-`smouth-os` is a bare-metal hobby OS kernel written in Zig. It currently
-targets 32-bit x86 and runs under QEMU for both development and testing. The
-project is designed to be extensible to additional architectures over time.
+`smouth-os` is a bare-metal hobby OS kernel written in Zig. It targets 32-bit
+x86 and AArch64 QEMU `virt`, and runs under QEMU for development and testing.
 
 ## Repository layout
 
@@ -47,6 +46,7 @@ zig build
 
 # Run the kernel in QEMU
 zig build run-x86
+zig build run-aarch64
 ```
 
 ## Testing
@@ -55,11 +55,12 @@ zig build run-x86
 |---|---|
 | `zig build --test-timeout 5s test` | Hosted unit tests (no QEMU required), with a 5-second timeout per test |
 | `timeout 5s zig build test-x86` | All source-module tests in QEMU on x86, with a 5-second timeout |
+| `timeout 5s zig build test-aarch64` | Architecture-independent source-module tests in AArch64 QEMU |
 | `zig build test-all` | All of the above |
 
 CI applies a five-second per-test timeout to hosted tests and a five-second
-process timeout to x86 QEMU tests. Run the commands above locally so a stalled
-test fails promptly.
+process timeout to each QEMU test target. Run the commands above locally so a
+stalled test fails promptly.
 
 Tests that exercise hardware (I/O ports, TSC, etc.) must call
 `try arch.freestanding()` as their first line; this skips them when running
@@ -86,11 +87,12 @@ under a hosted target. New code should have tests.
 - **No dynamic allocation**: no heap allocator is available by default.
   Prefer fixed-size buffers and comptime structures.
 - **No floating point**: do not use float types in kernel code. The x86 target
-  disables SIMD and uses soft-float.
+  disables SIMD and uses soft-float. AArch64 enables its FP/SIMD unit during
+  boot solely because Zig emits vector register moves for aggregate copies.
 
 ## QEMU environment
 
-QEMU is invoked with:
+The x86 QEMU machine is invoked with:
 
 - `-nographic` — serial output only
 - `isa-debug-exit` at port `0xF4` — non-zero write exits QEMU with error
@@ -99,3 +101,11 @@ QEMU is invoked with:
 - `virtio-sound-pci` — VirtIO sound device
 
 The audio backend is `coreaudio` on macOS and `none` elsewhere.
+
+The AArch64 QEMU `virt` machine is invoked with:
+
+- `-nographic` and the PL011 UART at `0x09000000` for serial output
+- `virtio-sound-device` on QEMU's VirtIO MMIO transport, with
+  `virtio-mmio.force-legacy=false` for the modern version-2 register layout
+- `-semihosting`; the AArch64 bootstrap uses `SYS_EXIT_EXTENDED` so test
+  failures return a nonzero QEMU status

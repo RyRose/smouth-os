@@ -7,8 +7,8 @@
 //! The helper functions (inb, outb, inw, outw, inl, outl) accept Port enum
 //! values directly, eliminating raw address literals at call sites.
 
+const builtin = @import("builtin");
 const std = @import("std");
-const arch = @import("os").arch;
 const insn = @import("insn.zig");
 
 /// x86 I/O port addresses.
@@ -162,7 +162,7 @@ test "port addresses match the x86 platform specification" {
 }
 
 test "COM1 loopback echoes transmitted bytes" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     const modem_control = inb(.com1_mcr);
     defer outb(.com1_mcr, modem_control);
@@ -180,7 +180,7 @@ test "COM1 loopback echoes transmitted bytes" {
 }
 
 test "PCI configuration access finds the QEMU host bridge" {
-    try arch.freestanding();
+    if (builtin.os.tag != .freestanding) return error.SkipZigTest;
 
     outl(.pci_config_addr, 0x8000_0000);
     const vendor_device = inl(.pci_config_data);

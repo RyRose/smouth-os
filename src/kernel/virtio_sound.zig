@@ -1,54 +1,40 @@
-//! VirtIO Sound driver using the modern PCI MMIO interface.
-//!
-//! Discovers the VirtIO sound device (PCI vendor=0x1AF4, device=0x1059),
-//! walks the PCI VirtIO capability list to find the CommonCfg and Notify
-//! MMIO regions, then initialises the control and TX queues to stream WAV
-//! audio in PCM periods.
+//! VirtIO Sound playback using the active architecture's VirtIO transport.
 
+const builtin = @import("builtin");
 const std = @import("std");
 
-const pci = @import("pci.zig");
+const arch = @import("os").arch;
 const virtio = @import("virtio.zig");
 const wav = @import("wav.zig");
 
 const log = std.log.scoped(.virtio_sound);
 
-// ── VirtIO Sound identity ─────────────────────────────────────────────────────
-
-/// PCI vendor ID assigned to all VirtIO devices.
-const virtio_vendor_id: u16 = 0x1AF4;
-/// PCI device ID for the VirtIO sound device (0x1040 + VIRTIO_ID_SOUND=25).
-const virtio_sound_dev_id: u16 = 0x1059;
-
-// ── VirtIO Sound enumerations (§5.14) ─────────────────────────────────────────
-
 /// VirtIO sound control command codes (§5.14.6.8.1).
 const CommandCode = enum(u32) {
-    /// Configure PCM stream parameters (format, rate, channels, buffer sizes).
+    /// Configure PCM stream parameters.
     set_params = 0x0101,
-    /// Prepare a PCM stream for playback.
+    /// Prepare a PCM stream.
     prepare = 0x0102,
     /// Start PCM stream playback.
     start = 0x0104,
 };
 
 /// VirtIO sound response status codes (§5.14.6.8.1).
-/// Non-exhaustive so device-returned codes not listed here are held without trapping.
 const StatusCode = enum(u32) {
     /// Command completed successfully.
     ok = 0x8000,
     _,
 };
 
-/// VirtIO sound virtqueue indices (§5.14.2).
+/// VirtIO sound queue indices (§5.14.2).
 const Queue = enum(u16) {
-    /// Control queue: carries command requests and responses.
+    /// Control request and response queue.
     control = 0,
-    /// TX queue: carries PCM audio frames from the driver to the device.
+    /// PCM playback queue.
     tx = 2,
 };
 
-/// PCM sample format codes (§5.14.6.6.1).
+/// VirtIO PCM sample-format values (§5.14.6.6.1).
 const PcmFmt = enum(u8) {
     /// Unsigned 8-bit PCM.
     u8 = 4,
@@ -56,7 +42,7 @@ const PcmFmt = enum(u8) {
     s16 = 5,
 };
 
-/// PCM sample rate codes (§5.14.6.6.2).
+/// VirtIO PCM sample-rate values (§5.14.6.6.2).
 const PcmRate = enum(u8) {
     @"8000" = 1,
     @"11025" = 2,
@@ -67,65 +53,61 @@ const PcmRate = enum(u8) {
     @"48000" = 7,
 };
 
-// ── Virtqueue static storage ──────────────────────────────────────────────────
-
-/// Number of descriptors per virtqueue. Must be a power of two.
+/// Descriptor count for each statically allocated VirtIO sound queue.
 const queue_size: u16 = 64;
 
-/// Control queue: carries command requests and responses.
+/// Control queue used for commands and responses.
 var ctrl_queue: virtio.Virtqueue(queue_size) = .{};
-/// TX queue: carries PCM audio frames from the driver to the device.
+/// PCM transmit queue used for playback frames.
 var tx_queue: virtio.Virtqueue(queue_size) = .{};
 
-// ── VirtIO Sound message structures ──────────────────────────────────────────
-
-/// Generic response header returned by the device for all control commands.
+/// Generic response header returned by control commands.
 const SndHdr = extern struct {
-    /// Response status code; StatusCode.ok (0x8000) indicates success.
+    /// Device response status.
     code: StatusCode,
 };
 
-/// Request header for PCM stream commands that target a specific stream.
+/// Request header for commands directed at a PCM stream.
 const SndPcmHdr = extern struct {
-    /// Command code (e.g. CommandCode.prepare, CommandCode.start).
+    /// PCM command code.
     code: CommandCode,
-    /// Index of the PCM stream to operate on.
+    /// Target stream identifier.
     stream_id: u32,
 };
 
-/// PCM_SET_PARAMS request: configures the stream's format before prepare/start.
+/// PCM_SET_PARAMS request (§5.14.6.8.2).
 const SndPcmSetParams = extern struct {
-    /// Command code; must be CommandCode.set_params.
+    /// PCM_SET_PARAMS command code.
     code: CommandCode,
-    /// Index of the PCM stream to configure.
+    /// Target stream identifier.
     stream_id: u32,
-    /// Total device buffer size in bytes (must be a multiple of `period_bytes`).
+    /// Total device buffer size in bytes.
     buffer_bytes: u32,
-    /// Period (interrupt granularity) size in bytes.
+    /// Playback period size in bytes.
     period_bytes: u32,
-    /// Optional feature flags (0 = none).
+    /// Optional feature flags.
     features: u32,
-    /// Number of audio channels.
+    /// Number of PCM channels.
     channels: u8,
-    /// Sample format (see PcmFmt).
+    /// PCM sample format.
     format: PcmFmt,
-    /// Sample rate (see PcmRate).
+    /// PCM sample rate.
     rate: PcmRate,
-    /// Reserved; must be zero.
+    /// Reserved zero byte.
     padding: u8,
 };
 
-/// Header prepended to each TX buffer to identify the target stream.
+/// Header prepended to each PCM transmit buffer.
 const SndPcmXfer = extern struct {
-    /// Index of the PCM stream receiving the audio data.
+    /// Stream receiving PCM frames.
     stream_id: u32,
 };
 
-/// Status written back by the device at the end of each TX descriptor chain.
+/// Status appended by the device to each PCM transmit request.
 const SndPcmStatus = extern struct {
-    /// Completion status; StatusCode.ok (0x8000) indicates success.
+    /// Device completion status.
     status: StatusCode,
-    /// Estimated device playback latency in bytes at the time of completion.
+    /// Estimated playback latency in bytes.
     latency_bytes: u32,
 };
 
@@ -133,92 +115,31 @@ comptime {
     std.debug.assert(@sizeOf(SndPcmSetParams) == 24);
 }
 
-// ── Queue helpers ─────────────────────────────────────────────────────────────
-
-// ── Control queue submit (polling, chain always starts at desc 0) ─────────────
-
-/// Submit a two-descriptor request/response chain on the control queue and
-/// spin until the device writes a completion entry to the used ring.
-fn ctrlSubmit(
-    req: []const u8,
-    resp: []u8,
-    caps: *const virtio.Caps,
-) void {
-    ctrl_queue.submit(caps, &[_]virtio.Desc{
+/// Submits a control request and waits for its response.
+fn ctrlSubmit(transport: anytype, req: []const u8, resp: []u8) void {
+    ctrl_queue.submit(transport, &.{
         .{ .addr = @intFromPtr(req.ptr), .len = @intCast(req.len), .flags = .{ .next = true }, .next = 1 },
         .{ .addr = @intFromPtr(resp.ptr), .len = @intCast(resp.len), .flags = .{ .write = true }, .next = 0 },
     });
 }
 
-// ── TX queue submit (polling, chain always starts at desc 0) ──────────────────
-
-/// Submit a three-descriptor xfer-header/pcm-data/status chain on the TX queue
-/// and spin until the device writes a completion entry to the used ring.
+/// Submits one PCM period and waits for the completion status.
 fn txSubmit(
+    transport: anytype,
     xfer: *const SndPcmXfer,
     pcm: []const u8,
     status: *SndPcmStatus,
-    caps: *const virtio.Caps,
 ) void {
-    tx_queue.submit(caps, &[_]virtio.Desc{
+    tx_queue.submit(transport, &.{
         .{ .addr = @intFromPtr(xfer), .len = @sizeOf(SndPcmXfer), .flags = .{ .next = true }, .next = 1 },
         .{ .addr = @intFromPtr(pcm.ptr), .len = @intCast(pcm.len), .flags = .{ .next = true }, .next = 2 },
         .{ .addr = @intFromPtr(status), .len = @sizeOf(SndPcmStatus), .flags = .{ .write = true }, .next = 0 },
     });
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
-
-/// Parse `data` as a WAV file and stream it through the VirtIO sound device.
-pub fn play(data: []const u8) !void {
-    const parsed = try wav.parse(data);
-    const fmt = parsed.fmt;
-
-    log.info("WAV: {}Hz {}ch {}-bit, {} bytes PCM", .{
-        fmt.sample_rate, fmt.channels, fmt.bits_per_sample, parsed.pcm.len,
-    });
-
-    const found = virtio.findDevice(virtio_vendor_id, virtio_sound_dev_id) orelse {
-        log.err("VirtIO sound device not found on PCI bus", .{});
-        return error.NoDevice;
-    };
-    log.info("VirtIO sound at PCI bus={} dev={}", .{ found.bus, found.dev });
-
-    // Enable memory decode (bit 1) and bus mastering (bit 2).
-    const dev_addr = pci.ConfigurationAddress{ .bus = found.bus, .device = found.dev };
-    var cs: pci.CommandStatus = @bitCast(pci.configRead32(dev_addr.atOffset(.command)));
-    cs.command.memory_space = true;
-    cs.command.bus_master = true;
-    pci.configWrite32(dev_addr.atOffset(.command), @bitCast(cs));
-
-    const caps = try virtio.walkCaps(found.bus, found.dev);
-    const common = caps.common;
-
-    // ── Device initialisation sequence (§3.1) ────────────────────────────────
-    common.device_status = .{}; // reset
-    common.device_status = .{ .acknowledge = true, .driver = true };
-
-    // Negotiate VIRTIO_F_VERSION_1 (feature bit 32 → select=1, bit 0).
-    common.driver_feature_select = .low;
-    common.driver_feature = .{};
-    common.driver_feature_select = .high;
-    common.driver_feature = .{ .version_1 = true };
-    common.device_status = .{ .acknowledge = true, .driver = true, .features_ok = true };
-    if (!common.device_status.features_ok) {
-        log.err("device rejected VIRTIO_F_VERSION_1", .{});
-        return error.FeaturesRejected;
-    }
-
-    // ── Queue setup ───────────────────────────────────────────────────────────
-    ctrl_queue.setup(common, @intFromEnum(Queue.control));
-    tx_queue.setup(common, @intFromEnum(Queue.tx));
-    log.debug("controlq notify_off={} txq notify_off={}", .{ ctrl_queue.notify_off, tx_queue.notify_off });
-
-    common.device_status = .{ .acknowledge = true, .driver = true, .features_ok = true, .driver_ok = true };
-
-    // ── PCM_SET_PARAMS ────────────────────────────────────────────────────────
-    const fmt_code: PcmFmt = if (fmt.bits_per_sample == 8) .u8 else .s16;
-    const rate_code: PcmRate = switch (fmt.sample_rate) {
+/// Converts a WAV sample rate to its VirtIO PCM enumeration.
+fn pcmRate(sample_rate: u32) !PcmRate {
+    return switch (sample_rate) {
         8000 => .@"8000",
         11025 => .@"11025",
         16000 => .@"16000",
@@ -226,53 +147,92 @@ pub fn play(data: []const u8) !void {
         32000 => .@"32000",
         44100 => .@"44100",
         48000 => .@"48000",
-        else => .@"44100",
+        else => error.UnsupportedSampleRate,
     };
-    const frame_bytes: u32 = @as(u32, fmt.channels) * (fmt.bits_per_sample / 8);
-    const period_bytes: u32 = 1024 * frame_bytes;
+}
+
+/// Negotiates VirtIO version 1 and prepares the sound control and TX queues.
+fn initialize(transport: anytype) !void {
+    transport.reset();
+    transport.setStatus(.{ .acknowledge = true, .driver = true });
+
+    const high_features = transport.deviceFeatures(.high);
+    if ((high_features & virtio.feature_version_1) == 0) return error.MissingVersion1;
+    transport.driverFeatures(.low, 0);
+    transport.driverFeatures(.high, virtio.feature_version_1);
+
+    transport.setStatus(.{ .acknowledge = true, .driver = true, .features_ok = true });
+    if (!transport.status().features_ok) return error.FeaturesRejected;
+
+    try ctrl_queue.setup(transport, @intFromEnum(Queue.control));
+    try tx_queue.setup(transport, @intFromEnum(Queue.tx));
+    transport.setStatus(.{
+        .acknowledge = true,
+        .driver = true,
+        .features_ok = true,
+        .driver_ok = true,
+    });
+}
+
+/// Streams parsed WAV data over an initialized architecture-specific transport.
+fn playWithTransport(data: []const u8, transport: anytype) !void {
+    const parsed = try wav.parse(data);
+    const fmt = parsed.fmt;
+    if (fmt.channels == 0 or fmt.channels > std.math.maxInt(u8)) return error.UnsupportedChannels;
+
+    const format: PcmFmt = switch (fmt.bits_per_sample) {
+        8 => .u8,
+        16 => .s16,
+        else => return error.UnsupportedFormat,
+    };
+    const rate = try pcmRate(fmt.sample_rate);
+    const frame_bytes = @as(usize, fmt.channels) * (@as(usize, fmt.bits_per_sample) / 8);
+    const period_bytes = 1024 * frame_bytes;
+    if (period_bytes > std.math.maxInt(u32)) return error.UnsupportedFormat;
+
+    log.info("WAV: {}Hz {}ch {}-bit, {} bytes PCM", .{
+        fmt.sample_rate,
+        fmt.channels,
+        fmt.bits_per_sample,
+        parsed.pcm.len,
+    });
+
+    try initialize(transport);
+
     var set_params = SndPcmSetParams{
         .code = .set_params,
         .stream_id = 0,
-        .buffer_bytes = period_bytes * 4,
-        .period_bytes = period_bytes,
+        .buffer_bytes = @intCast(period_bytes * 4),
+        .period_bytes = @intCast(period_bytes),
         .features = 0,
         .channels = @intCast(fmt.channels),
-        .format = fmt_code,
-        .rate = rate_code,
+        .format = format,
+        .rate = rate,
         .padding = 0,
     };
     var ctrl_resp = SndHdr{ .code = .ok };
-    ctrlSubmit(std.mem.asBytes(&set_params), std.mem.asBytes(&ctrl_resp), &caps);
-    log.info("SET_PARAMS resp=0x{X}", .{@intFromEnum(ctrl_resp.code)});
+    ctrlSubmit(transport, std.mem.asBytes(&set_params), std.mem.asBytes(&ctrl_resp));
     if (ctrl_resp.code != .ok) return error.SetParamsFailed;
 
-    // ── PCM_PREPARE ───────────────────────────────────────────────────────────
     var prepare_req = SndPcmHdr{ .code = .prepare, .stream_id = 0 };
     ctrl_resp.code = .ok;
-    ctrlSubmit(std.mem.asBytes(&prepare_req), std.mem.asBytes(&ctrl_resp), &caps);
-    log.info("PREPARE resp=0x{X}", .{@intFromEnum(ctrl_resp.code)});
+    ctrlSubmit(transport, std.mem.asBytes(&prepare_req), std.mem.asBytes(&ctrl_resp));
     if (ctrl_resp.code != .ok) return error.PrepareFailed;
 
-    // ── PCM_START ─────────────────────────────────────────────────────────────
     var start_req = SndPcmHdr{ .code = .start, .stream_id = 0 };
     ctrl_resp.code = .ok;
-    ctrlSubmit(std.mem.asBytes(&start_req), std.mem.asBytes(&ctrl_resp), &caps);
-    log.info("START resp=0x{X}", .{@intFromEnum(ctrl_resp.code)});
+    ctrlSubmit(transport, std.mem.asBytes(&start_req), std.mem.asBytes(&ctrl_resp));
     if (ctrl_resp.code != .ok) return error.StartFailed;
 
-    // ── TX: stream PCM data one period at a time ──────────────────────────────
     const xfer = SndPcmXfer{ .stream_id = 0 };
     var tx_status = SndPcmStatus{ .status = .ok, .latency_bytes = 0 };
     var offset: usize = 0;
-    var chunk: u32 = 0;
+    var chunk: usize = 0;
     const total_chunks = (parsed.pcm.len + period_bytes - 1) / period_bytes;
     while (offset < parsed.pcm.len) {
         const end = @min(offset + period_bytes, parsed.pcm.len);
-        txSubmit(&xfer, parsed.pcm[offset..end], &tx_status, &caps);
-        if (tx_status.status != .ok) {
-            log.err("TX chunk {} failed: status=0x{X}", .{ chunk, @intFromEnum(tx_status.status) });
-            return error.TxFailed;
-        }
+        txSubmit(transport, &xfer, parsed.pcm[offset..end], &tx_status);
+        if (tx_status.status != .ok) return error.TxFailed;
         offset = end;
         chunk += 1;
         if (chunk % 256 == 0) log.debug("TX {}/{} chunks", .{ chunk, total_chunks });
@@ -280,46 +240,40 @@ pub fn play(data: []const u8) !void {
     log.info("playback complete ({} chunks)", .{chunk});
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+/// Parses and streams `data` through the active architecture's VirtIO sound device.
+pub fn play(data: []const u8) !void {
+    var transport = try arch.self.virtio.findSoundDevice();
+    return playWithTransport(data, &transport);
+}
 
-test "SndHdr size" {
+test "VirtIO sound structure sizes" {
     try std.testing.expectEqual(4, @sizeOf(SndHdr));
-}
-
-test "SndPcmHdr size" {
     try std.testing.expectEqual(8, @sizeOf(SndPcmHdr));
-}
-
-test "SndPcmSetParams size" {
     try std.testing.expectEqual(24, @sizeOf(SndPcmSetParams));
-}
-
-test "SndPcmXfer size" {
     try std.testing.expectEqual(4, @sizeOf(SndPcmXfer));
-}
-
-test "SndPcmStatus size" {
     try std.testing.expectEqual(8, @sizeOf(SndPcmStatus));
 }
 
-test "play succeeds with minimal silent WAV" {
-    const arch = @import("os").arch;
-    try arch.freestanding();
+test "pcmRate rejects unsupported rates" {
+    try std.testing.expectError(error.UnsupportedSampleRate, pcmRate(12345));
+}
 
-    // One period of 16-bit mono silence at 44100 Hz.
+test "play succeeds with minimal silent WAV on x86" {
+    if (comptime builtin.cpu.arch != .x86) return error.SkipZigTest;
+
     const pcm_len = 1024 * 2;
     var wav_buf: [44 + pcm_len]u8 = undefined;
     @memcpy(wav_buf[0..4], "RIFF");
     std.mem.writeInt(u32, wav_buf[4..8], wav_buf.len - 8, .little);
     @memcpy(wav_buf[8..12], "WAVE");
     @memcpy(wav_buf[12..16], "fmt ");
-    std.mem.writeInt(u32, wav_buf[16..20], 16, .little); // fmt chunk size
-    std.mem.writeInt(u16, wav_buf[20..22], 1, .little); // PCM
-    std.mem.writeInt(u16, wav_buf[22..24], 1, .little); // mono
-    std.mem.writeInt(u32, wav_buf[24..28], 44100, .little); // sample rate
-    std.mem.writeInt(u32, wav_buf[28..32], 88200, .little); // byte rate
-    std.mem.writeInt(u16, wav_buf[32..34], 2, .little); // block align
-    std.mem.writeInt(u16, wav_buf[34..36], 16, .little); // bits per sample
+    std.mem.writeInt(u32, wav_buf[16..20], 16, .little);
+    std.mem.writeInt(u16, wav_buf[20..22], 1, .little);
+    std.mem.writeInt(u16, wav_buf[22..24], 1, .little);
+    std.mem.writeInt(u32, wav_buf[24..28], 44100, .little);
+    std.mem.writeInt(u32, wav_buf[28..32], 88200, .little);
+    std.mem.writeInt(u16, wav_buf[32..34], 2, .little);
+    std.mem.writeInt(u16, wav_buf[34..36], 16, .little);
     @memcpy(wav_buf[36..40], "data");
     std.mem.writeInt(u32, wav_buf[40..44], pcm_len, .little);
     @memset(wav_buf[44..], 0);

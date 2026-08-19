@@ -16,7 +16,7 @@ jobs:
       - name: Install QEMU
         uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
         with:
-          packages: qemu-system-x86
+          packages: qemu-system-x86 qemu-system-arm
           version: 1.0
       - name: Build
         run: zig build
@@ -26,3 +26,6 @@ jobs:
       - name: Test (x86)
         timeout-minutes: 2
         run: timeout 5s zig build test-x86
+      - name: Test (AArch64)
+        timeout-minutes: 2
+        run: timeout 5s zig build test-aarch64

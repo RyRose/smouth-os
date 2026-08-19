@@ -22,6 +22,22 @@ pub fn addQemuRun(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step.R
     return cmd;
 }
 
+/// Runs an AArch64 kernel executable on QEMU's `virt` machine.
+pub fn addAarch64QemuRun(b: *std.Build, exe: *std.Build.Step.Compile) *std.Build.Step.Run {
+    const cmd = b.addSystemCommand(&.{"qemu-system-aarch64"});
+    cmd.addArgs(&.{ "-machine", "virt", "-cpu", "cortex-a72", "-nographic", "-semihosting" });
+    cmd.addArgs(&.{ "-global", "virtio-mmio.force-legacy=false" });
+    cmd.addArgs(&.{ "-device", "virtio-sound-device,streams=1,audiodev=snd0" });
+    const audio_backend = switch (b.graph.host.result.os.tag) {
+        .macos => "coreaudio",
+        else => "none",
+    };
+    cmd.addArgs(&.{ "-audiodev", b.fmt("{s},id=snd0", .{audio_backend}) });
+    cmd.addArg("-kernel");
+    cmd.addFileArg(exe.getEmittedBin());
+    return cmd;
+}
+
 /// Adds the absolute and relative paths of all Zig files below `paths` as options.
 fn addSourceFileOptions(b: *std.Build, options: *std.Build.Step.Options, paths: []const []const u8) !void {
     const io = b.graph.io;
