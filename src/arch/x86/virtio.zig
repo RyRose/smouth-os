@@ -135,11 +135,6 @@ pub const Transport = struct {
         common.queue_enable = 1;
     }
 
-    /// Makes descriptor and ring writes visible before notifying the device.
-    pub fn memoryBarrier(_: *const Transport) void {
-        asm volatile ("mfence");
-    }
-
     /// Notifies the device that queue `idx` has new available descriptors.
     pub fn notifyQueue(self: *const Transport, idx: u16) void {
         const common = self.caps.common;

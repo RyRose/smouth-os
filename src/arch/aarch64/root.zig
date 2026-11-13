@@ -4,6 +4,7 @@ const std = @import("std");
 
 pub const boot = @import("boot.zig");
 pub const init = @import("init.zig");
+pub const insn = @import("insn.zig");
 pub const serial = @import("serial.zig");
 pub const shutdown = @import("shutdown.zig");
 pub const virtio = @import("virtio.zig");

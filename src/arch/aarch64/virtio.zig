@@ -124,11 +124,6 @@ pub const Transport = struct {
         self.reg(.queue_ready).* = 1;
     }
 
-    /// Orders DMA-visible queue memory accesses around device notifications.
-    pub fn memoryBarrier(_: *const Transport) void {
-        asm volatile ("dmb osh");
-    }
-
     /// Notifies the device of available descriptors on queue `idx`.
     pub fn notifyQueue(self: *const Transport, idx: u16) void {
         self.reg(.queue_notify).* = idx;

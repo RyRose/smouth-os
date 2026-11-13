@@ -9,6 +9,9 @@ const wav = @import("wav.zig");
 
 const log = std.log.scoped(.virtio_sound);
 
+/// VirtIO transport provided by the active architecture.
+const Transport = arch.self.virtio.Transport;
+
 /// VirtIO sound control command codes (§5.14.6.8.1).
 const CommandCode = enum(u32) {
     /// Configure PCM stream parameters.
@@ -116,7 +119,7 @@ comptime {
 }
 
 /// Submits a control request and waits for its response.
-fn ctrlSubmit(transport: anytype, req: []const u8, resp: []u8) void {
+fn ctrlSubmit(transport: *Transport, req: []const u8, resp: []u8) void {
     ctrl_queue.submit(transport, &.{
         .{ .addr = @intFromPtr(req.ptr), .len = @intCast(req.len), .flags = .{ .next = true }, .next = 1 },
         .{ .addr = @intFromPtr(resp.ptr), .len = @intCast(resp.len), .flags = .{ .write = true }, .next = 0 },
@@ -125,7 +128,7 @@ fn ctrlSubmit(transport: anytype, req: []const u8, resp: []u8) void {
 
 /// Submits one PCM period and waits for the completion status.
 fn txSubmit(
-    transport: anytype,
+    transport: *Transport,
     xfer: *const SndPcmXfer,
     pcm: []const u8,
     status: *SndPcmStatus,
@@ -152,7 +155,7 @@ fn pcmRate(sample_rate: u32) !PcmRate {
 }
 
 /// Negotiates VirtIO version 1 and prepares the sound control and TX queues.
-fn initialize(transport: anytype) !void {
+fn initialize(transport: *Transport) !void {
     transport.reset();
     transport.setStatus(.{ .acknowledge = true, .driver = true });
 
@@ -175,7 +178,7 @@ fn initialize(transport: anytype) !void {
 }
 
 /// Streams parsed WAV data over an initialized architecture-specific transport.
-fn playWithTransport(data: []const u8, transport: anytype) !void {
+fn playWithTransport(data: []const u8, transport: *Transport) !void {
     const parsed = try wav.parse(data);
     const fmt = parsed.fmt;
     if (fmt.channels == 0 or fmt.channels > std.math.maxInt(u8)) return error.UnsupportedChannels;

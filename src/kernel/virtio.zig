@@ -5,6 +5,8 @@
 
 const std = @import("std");
 
+const arch = @import("os").arch;
+
 /// VirtIO device status register (§2.1).
 pub const DeviceStatus = packed struct(u8) {
     /// Driver has noticed the device.
@@ -84,9 +86,8 @@ pub fn UsedRing(comptime size: u16) type {
 
 /// Returns a statically allocated VirtIO queue with `size` descriptors.
 ///
-/// The transport passed to `setup` and `submit` must provide `setupQueue` and
-/// `notifyQueue` methods. Its address space must identity-map DMA memory,
-/// which remains true through this kernel's early identity map.
+/// The transport's address space must identity-map DMA memory, which remains
+/// true through this kernel's early identity map.
 pub fn Virtqueue(comptime size: u16) type {
     return struct {
         /// Descriptor table shared with the device.
@@ -108,7 +109,7 @@ pub fn Virtqueue(comptime size: u16) type {
         }
 
         /// Registers this queue with `transport` and enables it.
-        pub fn setup(self: *Self, transport: anytype, idx: u16) !void {
+        pub fn setup(self: *Self, transport: *arch.self.virtio.Transport, idx: u16) !void {
             self.zero();
             self.idx = idx;
             try transport.setupQueue(
@@ -121,19 +122,19 @@ pub fn Virtqueue(comptime size: u16) type {
         }
 
         /// Submits `chain` and polls until the device completes it.
-        pub fn submit(self: *Self, transport: anytype, chain: []const Desc) void {
+        pub fn submit(self: *Self, transport: *arch.self.virtio.Transport, chain: []const Desc) void {
             std.debug.assert(chain.len > 0 and chain.len <= size);
             for (chain, 0..) |desc, i| self.descs[i] = desc;
 
             const avail_idx = self.avail.idx;
             self.avail.ring[avail_idx % size] = 0;
-            transport.memoryBarrier();
+            arch.self.insn.memoryBarrier();
             @as(*volatile u16, &self.avail.idx).* = avail_idx +% 1;
             transport.notifyQueue(self.idx);
 
             while (@as(*volatile u16, &self.used.idx).* != avail_idx +% 1)
                 std.atomic.spinLoopHint();
-            transport.memoryBarrier();
+            arch.self.insn.memoryBarrier();
         }
     };
 }
@@ -164,46 +165,14 @@ test "Virtqueue layout" {
     try std.testing.expectEqual(516, @sizeOf(UsedRing(64)));
 }
 
-test "Virtqueue setup clears memory and registers queue" {
-    const FakeTransport = struct {
-        idx: u16 = 0,
-        size: u16 = 0,
-        desc_addr: usize = 0,
-        avail_addr: usize = 0,
-        used_addr: usize = 0,
-
-        fn setupQueue(
-            self: *@This(),
-            idx: u16,
-            queue_size: u16,
-            desc_addr: usize,
-            avail_addr: usize,
-            used_addr: usize,
-        ) !void {
-            self.idx = idx;
-            self.size = queue_size;
-            self.desc_addr = desc_addr;
-            self.avail_addr = avail_addr;
-            self.used_addr = used_addr;
-        }
-
-        fn memoryBarrier(_: *@This()) void {}
-    };
-
-    var transport = FakeTransport{};
+test "Virtqueue zero clears queue memory" {
     var queue: Virtqueue(4) = .{};
     queue.avail.idx = 42;
     queue.used.idx = 7;
     queue.descs[0].addr = 0xDEAD;
-    try queue.setup(&transport, 3);
+    queue.zero();
 
-    try std.testing.expectEqual(@as(u16, 3), queue.idx);
     try std.testing.expectEqual(@as(u16, 0), queue.avail.idx);
     try std.testing.expectEqual(@as(u16, 0), queue.used.idx);
     try std.testing.expectEqual(@as(u64, 0), queue.descs[0].addr);
-    try std.testing.expectEqual(@as(u16, 3), transport.idx);
-    try std.testing.expectEqual(@as(u16, 4), transport.size);
-    try std.testing.expect(transport.desc_addr != 0);
-    try std.testing.expect(transport.avail_addr != 0);
-    try std.testing.expect(transport.used_addr != 0);
 }

@@ -166,7 +166,7 @@ comptime {
 pub fn Table(comptime N: usize) type {
     return struct {
         /// The interrupt descriptor table.
-        table: [N]Descriptor = [_]Descriptor{.{}} ** N,
+        table: [N]Descriptor = std.mem.zeroes([N]Descriptor),
 
         const Self = @This();
 
@@ -181,7 +181,7 @@ pub fn Table(comptime N: usize) type {
             descriptor: Descriptor,
         ) void {
             log.debug("Registering IDT entry for interrupt type {}", .{index});
-            self.table[@intFromEnum(index)] = descriptor;
+            self.table[@backingInt(index)] = descriptor;
         }
 
         /// Returns a 48-bit value to be stored in the IDTR.
@@ -206,7 +206,7 @@ pub fn Table(comptime N: usize) type {
 }
 
 comptime {
-    const table1 = @bitSizeOf(Table(1));
+    const table1 = @sizeOf(Table(1)) * 8;
     if (table1 != 64) {
         @compileError(std.fmt.comptimePrint(
             "Table(1) must be 64 bits, but found {} bits",
@@ -214,7 +214,7 @@ comptime {
         ));
     }
 
-    const table4 = @bitSizeOf(Table(4));
+    const table4 = @sizeOf(Table(4)) * 8;
     if (table4 != 256) {
         @compileError(std.fmt.comptimePrint(
             "Table(4) must be 256 bits, but found {} bits",

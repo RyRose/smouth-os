@@ -74,7 +74,7 @@ pub const SegmentType = packed struct {
         expand_down_conforming: ExpandDownConforming = .disabled,
         segment_class: SegmentClass,
     }) SegmentType {
-        return SegmentType{
+        return .{
             .accessed = args.accessed,
             .permission = args.permission,
             .expand_down_conforming = args.expand_down_conforming,
@@ -120,19 +120,17 @@ test SegmentType {
 /// |          base 15:00              |            limit 15:00            | 0
 /// |----------------------------------------------------------------------|
 ///
-/// Where each map to the following:
-/// limit => limit0, limit1
-///    limit is the max number of (4-kilo)bytes the segment described addresses.
-///    If granularity is true, then the unit is 4-kilobytes. Else, bytes. It is
-///    20 bits.
-/// base => base0, base1
-///    base is the base linear memory address for which the segment described
-///    addresses.
+/// Where the abbreviations map to the following:
+/// limit
+///    A 20-bit segment limit. If G (granularity) is false, the limit unit is 1 byte.
+///    If G is true, the limit unit is 4 Kibibytes.
+/// base
+///    The 32-bit base linear memory address for the segment, split across three
+///    fields (bits 15:0, 23:16, and 31:24).
 /// type => segment_type
-///    type corresponds whether the segment is for data or code along with read,
-///    write, execute permissions.
+///    Defines code vs. data segments, access rights, and direction/conforming behavior.
 ///
-///            Bit Index
+///           Bit Index
 ///    Hex Dec 11 10 9 8
 ///    0   0   0  0  0 0 Data Read-Only
 ///    1   1   0  0  0 1 Data Read-Only, accessed
@@ -152,26 +150,20 @@ test SegmentType {
 ///    F   15  1  1  1 1 Code Execute/Read, conforming, accessed
 ///
 /// S => descriptor_type
-///   True if the segment is a code/data segment. Else, it's a system segment.
+///    True (1) for code/data segments; False (0) for system segments (TSS, LDT, gates).
 /// DPL => dpl
-///   DPL is the descriptor privilege level.
+///    Descriptor Privilege Level (0 = Kernel, 3 = User).
 /// P => present
-///   P indicates whether the segment should be considered present by the
-///   processor.
+///    Must be 1 for the segment to be valid in memory.
 /// AVL => available
-///   AVL is set when the descriptor should be used for system software.
-///   Always set to false. Should only be used by the processor.
-///   TODO(RyRose): Why would this ever be true?
+///    Available for system software use. Ignored by the CPU.
 /// L => bit64
-///   If set, the segment type must be a code segment and it indicates the
-///   segment contains 64-bit code. Since we don't use IA-32e mode and this is
-///   for i386 processors, this is always set to false.
+///    If set, indicates 64-bit code segment (IA-32e mode). Must be 0 for 32-bit mode.
 /// DB => db
-///   db stands for for Default/Big and has different meanings based on the
-///   segment and descriptor type. Should always be set for 32-bit code/data
-///   segments and never set for 16-bit code/data segments.
+///    Default/Big flag. Sets default operand/address size (32-bit vs 16-bit) for code
+///    or the upper bound for data/stack segments.
 /// G => granularity
-///   G determines the scaling of the limit field as described above.
+///    Determines the scaling unit for the segment limit field (0 = bytes, 1 = 4 KiB pages).
 ///
 pub const Descriptor = packed struct {
     /// Lower 16 bits of the segment limit.
@@ -273,7 +265,7 @@ test Descriptor {
 /// descriptors.
 pub fn Table(comptime N: usize) type {
     return struct {
-        table: [N]Descriptor = [_]Descriptor{.{}} ** N,
+        table: [N]Descriptor = std.mem.zeroes([N]Descriptor),
 
         const Self = @This();
 

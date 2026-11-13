@@ -6,6 +6,11 @@ const builtin = @import("builtin");
 const os = @import("os");
 const std = @import("std");
 
+/// Orders DMA-visible loads and stores around device interaction.
+pub fn memoryBarrier() void {
+    asm volatile ("mfence");
+}
+
 /// Read the Time Stamp Counter (TSC) value.
 pub fn rdtsc() u64 {
     var hi: u32 = 0;

@@ -5,7 +5,8 @@ pub fn build(b: *std.Build) !void {
 
     // Create a symlink `src/std -> <zig_lib_dir>/std` so source files can be
     // embedded without copying the standard library.
-    const stdlib_std_path = b.pathJoin(&.{ b.graph.zig_lib_directory.path orelse ".", "std" });
+    const zig_bin_dir = std.fs.path.dirname(b.graph.zig_exe) orelse @panic("Zig executable has no parent directory");
+    const stdlib_std_path = b.pathResolve(&.{ zig_bin_dir, "..", "lib", "std" });
     const std_link = b.addSystemCommand(&.{ "ln", "-sfn", stdlib_std_path, "src/std" });
     const prepare_freestanding = b.step("prepare-freestanding", "Prepare freestanding build inputs.");
     prepare_freestanding.dependOn(&std_link.step);

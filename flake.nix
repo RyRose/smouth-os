@@ -14,7 +14,7 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        zigpkg = zig.packages.${system}."0.16.0";
+        zigpkg = zig.packages.${system}."0.17.1";
       in
       {
         devShell = pkgs.mkShell {

@@ -155,7 +155,7 @@ test "parse 16-bit stereo WAV" {
 }
 
 test "parse returns InvalidRiff for bad magic" {
-    const bad = [_]u8{ 'X', 'X', 'X', 'X' } ++ [_]u8{0} ** 8;
+    const bad = [_]u8{ 'X', 'X', 'X', 'X' } ++ std.mem.zeroes([8]u8);
     try std.testing.expectError(error.InvalidRiff, parse(&bad));
 }
 
